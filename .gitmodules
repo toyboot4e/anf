@@ -1,0 +1,3 @@
+[submodule "rust-fna3d"]
+	path = rust-fna3d
+	url = https://github.com/toyboot4e/rust-fna3d
