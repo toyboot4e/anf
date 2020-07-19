@@ -1,0 +1,19 @@
+[package]
+name = "anf"
+version = "0.1.0"
+authors = ["toyboot4e <toyboot4e@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+sdl2 = "0.34.1"
+fna3d = { path = "./rust-fna3d/fna3d" }
+log = "0.4.8"
+env_logger = "0.7.1"
+nalgebra = "0.21.1"
+libc = "0.2.71"
+bitflags = "1.2.1"
+lazy_static = "1.4.0"
+
+[[bin]]
+name = "anf_game"
+path = "src/bin.rs"

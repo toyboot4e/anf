@@ -67,27 +67,6 @@ pub struct Skew2f {
     pub y2: f32,
 }
 
-// &[
-//     fna3d::VertexElement::new(
-//         0,
-//         fna3d::VertexElementFormat::Vector3,
-//         fna3d::VertexElementUsage::Position,
-//         0,
-//     ),
-//     fna3d::VertexElement::new(
-//         12,
-//         fna3d::VertexElementFormat::Color,
-//         fna3d::VertexElementUsage::Color,
-//         0,
-//     ),
-//     fna3d::VertexElement::new(
-//         16,
-//         fna3d::VertexElementFormat::Vector2,
-//         fna3d::VertexElementUsage::TextureCoordinate,
-//         0,
-//     ),
-// ]
-
 impl VertexData {
     pub fn elems() -> &'static [fna3d::VertexElement] {
         &[

@@ -1,8 +1,8 @@
 //! Sampler game loop
 
-use anf::{
-    batch::{self, Batcher}, //{device::GraphicsDevice, device_utils::DeviceStatus},
-    gfx::texture::Texture2D,
+use anf::gfx::{
+    batch::{self, Batcher},
+    texture::Texture2D,
 };
 
 use fna3d::Device;
@@ -43,6 +43,7 @@ pub struct MainState {
     device: Device,
     batcher: Batcher,
     texture: Texture2D,
+    tmp: bool,
 }
 
 impl MainState {
@@ -54,27 +55,19 @@ impl MainState {
         };
 
         let batcher = Batcher::new(&mut device, win);
+
         Self {
             device,
             batcher,
             texture,
+            tmp: false,
         }
-    }
-}
-
-#[inline]
-fn clear_color() -> fna3d::Color {
-    fna3d::Color {
-        r: 100,
-        g: 149,
-        b: 237,
-        a: 0,
     }
 }
 
 impl MainState {
     fn render_scene(&mut self) {
-        use anf::batch::DrawPolicy;
+        use anf::gfx::batch::DrawPolicy;
         let policy = DrawPolicy { do_round: false };
 
         let mut push = batch::push();
@@ -84,11 +77,17 @@ impl MainState {
             b: 128,
             a: 128,
         };
+
+        // normalzied
         push.src_rect(0f32, 0f32, 576f32, 384f32);
-        push.dest_pos(0f32, 0f32);
         push.is_dest_size_in_pixels = false;
         push.dest_size(1f32, 1f32);
-        // push.dest_size(100f32, 100f32);
+
+        // in pixel
+        // push.src_rect(0f32, 0f32, 576f32, 384f32);
+        // push.is_dest_size_in_pixels = true;
+        // push.dest_pos(0f32, 0f32);
+        // push.dest_size(576f32, 384f32);
 
         push.run(&mut self.batcher.batch, &self.texture, policy, 0);
     }
@@ -100,10 +99,19 @@ impl anf::State for MainState {
     }
 
     fn render(&mut self) {
-        Batcher::clear(&mut self.device, clear_color());
+        if self.tmp {
+            return;
+        }
+        self.tmp = true;
+
+        anf::gfx::begin_frame(&mut self.device);
+        anf::gfx::clear(&mut self.device); // TODO: should not?
+
         self.batcher.begin(&mut self.device);
         self.render_scene();
         self.batcher.end(&mut self.device);
+
+        anf::gfx::end_frame(&mut self.device, &mut self.batcher);
     }
 
     fn handle_event(&mut self, ev: &sdl2::event::Event) -> anf::StateUpdateResult {

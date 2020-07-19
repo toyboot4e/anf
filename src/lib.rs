@@ -1,11 +1,10 @@
 //! ANF is an XNA-like 2D game framework in Rust powered by FNA3D
 
-pub mod batch;
 pub mod gfx;
 
 pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
-use sdl2::{event::Event, keyboard::Keycode, render::WindowCanvas};
+use sdl2::{keyboard::Keycode, render::WindowCanvas};
 use std::time::Duration;
 
 // --------------------------------------------------------------------------------

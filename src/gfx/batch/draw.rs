@@ -2,34 +2,27 @@
 //!
 //! We use `i16` for index buffers (`fna3d::IndexElementSize::Bits16`)
 
-use crate::{
+use crate::gfx::{
     batch::batch_internals::*,
-    gfx::{
-        texture::Texture2D,
-        vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
-    },
+    texture::Texture2D,
+    vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
 };
 
 /// The actual draw call to `fna3d::Device` based on rectangles
 ///
 /// Corresponds to both `SpriteBatch.DrawPrimitives` and `GraphicsDevice.DrawIndexedPrimitives` in
 /// XNA
-///
-/// * `sprite_offset`:
-///   The offset of the sprite where we start drawing
-/// * `n_draw`:
-///   The number of sprites to draw
 pub fn draw_indexed_primitives(
     device: &mut fna3d::Device,
     ibuf: &IndexBuffer,
     binds: &mut GpuBindings,
-    texture: &Texture2D,
     states: &mut GlState,
+    texture: &Texture2D,
     sprite_offset: u32,
-    n_sprites: u32,
+    sprite_len: u32,
 ) {
     // GraphicsDevice.ApplyState
-    states.on_draw(device, texture);
+    states.change_texture(device, texture);
 
     // GraphicsDevice.PrepareVertexBindingArray
     let vertex_offset = sprite_offset * 4;
@@ -41,7 +34,7 @@ pub fn draw_indexed_primitives(
         vertex_offset, // the number of vertices to skip
         0,             // the number of indices to skip.
         // base_offset * 6, // our index buffer is cyclic and we don't need to actually calculate it
-        n_sprites * 2, // the number of triangles to draw
+        sprite_len * 2, // the number of triangles to draw
         ibuf.raw(),
         ibuf.elem_size(),
     );
@@ -119,19 +112,26 @@ impl GlState {
         }
     }
 
-    /// Cooresponds to half of `GrapihcsDevice.ApplyState`
-    pub fn on_draw(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
-        // mod_sampler = only first item
-
-        {
-            let i = 0;
-            device.verify_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
-        }
-        {
-            let i = 0;
-            device.verify_vertex_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
-        }
+    pub fn change_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
+        let i = 0;
+        device.verify_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
+        device.verify_vertex_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
     }
+
+    // // TODO: is should be called only on change
+    // /// Cooresponds to half of `GrapihcsDevice.ApplyState`
+    // pub fn apply_changes(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
+    //     // mod_sampler = only first item
+
+    //     {
+    //         let i = 0;
+    //         device.verify_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
+    //     }
+    //     {
+    //         let i = 0;
+    //         device.verify_vertex_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
+    //     }
+    // }
 }
 
 // --------------------------------------------------------------------------------
@@ -173,29 +173,8 @@ impl GpuBindings {
     ///
     /// Unlike FNA, we assume that we only use one `VertexBufferBinding`.
     fn apply_vertex_buffer_bindings(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
-        // FIXME: crashes
-        // device.apply_vertex_buffer_bindings(&[self.bind], self.is_updated, base_vertex);
+        // FIXME: call `ApplyEfffects` first
+        device.apply_vertex_buffer_bindings(&[self.bind], self.is_updated, base_vertex);
         self.is_updated = false;
     }
-
-    // fn prep_vertex_binding_array(
-    //     &mut self,
-    //     device: &mut fna3d::Device,
-    //     vbuf: &mut [DynamicVertexBuffer],
-    //     base_vertex: i32,
-    // ) {
-    //     for i in 0..vbuf.len() {
-    //         vbuf[i].inner.write_to_binding(&mut self.binds[i]);
-    //         self.binds[i].vertexOffset = self.binds[i].vertexOffset;
-    //         self.binds[i].instanceFrequency = self.binds[i].instanceFrequency;
-    //     }
-
-    //     device.apply_vertex_buffer_bindings(
-    //         binds,
-    //         vertexBufferCount,
-    //         vertexBuffersUpdated,
-    //         base_vertex,
-    //     );
-    //     vertexBuffersUpdated = false;
-    // }
 }

@@ -1,69 +1,55 @@
-//! Sprite batch
-//!
-//! Corresponds to both `GraphicsDevice` and `SpriteBatch`
-
-pub mod batch_data;
-mod batch_internals;
-pub mod draw;
-
-pub mod batch_push;
-pub use batch_push::DrawPolicy;
-
+use crate::gfx::batch::{batch_data, batch_internals, draw, shader};
 use std::ffi::c_void;
-
-// TODO: make a more fluent API
-// TODO: add begin guard
-pub fn push() -> batch_push::SpritePushCommand {
-    batch_push::SpritePushCommand::default()
-}
 
 /// The main interface to render sprites
 ///
-/// `Batcher` automatically batches pushed sprites when it's possible
+/// `Batcher` automatically batches pushed sprites when it flushes
 ///
 /// # Immediate mode vs batch mode
 pub struct Batcher {
     pub batch: batch_data::BatchData,
+    is_begin_called: bool,
+    // --- rendering pipeline ---
     gbuf: draw::GpuBuffer,
     binds: draw::GpuBindings,
     state: draw::GlState,
-    is_begin_called: bool,
-    win: *mut c_void,
+    shader: shader::Shader,
+    pub(crate) win: *mut c_void,
 }
 
 impl Batcher {
     pub fn new(device: &mut fna3d::Device, win: *mut c_void) -> Self {
         let decl = batch_internals::VertexData::decl();
+        let shader = shader::Shader::from_device(device).expect("failed to make default shader");
         Self {
             batch: batch_data::BatchData::new(),
+            is_begin_called: false,
             gbuf: draw::GpuBuffer::from_device(device),
             binds: draw::GpuBindings::new(decl),
             state: draw::GlState::from_device(device),
-            is_begin_called: false,
+            shader,
             win,
         }
     }
 
-    pub fn clear(device: &mut fna3d::Device, clear_color: fna3d::Color) {
-        device.clear(fna3d::ClearOptions::Target, clear_color, 0.0, 0);
-    }
-
+    /// Begin pass
     pub fn begin(&mut self, device: &mut fna3d::Device) {
+        self.prep_render_state(device); // FIXME: should it be called..?
         self.is_begin_called = true;
-        device.begin_frame();
     }
 
+    /// End pass
     pub fn end(&mut self, device: &mut fna3d::Device) {
         if !self.is_begin_called {
-            log::warn!("`Batcher::end` is called without begin");
+            log::warn!("`Batcher::end` is called before `begin`");
             return;
         }
         self.flush(device);
-        device.swap_buffers(None, None, self.win); // `Game.EndDraw` = `GraphicsDevice.Present`
+        // `Game.EndDraw` = `GraphicsDevice.Present`
     }
 
     /// Draws all the pushed sprites
-    fn flush(&mut self, device: &mut fna3d::Device) {
+    pub(crate) fn flush(&mut self, device: &mut fna3d::Device) {
         if !self.is_begin_called {
             log::warn!("`Batcher::begin` has to be be called before flushing");
             return;
@@ -74,20 +60,45 @@ impl Batcher {
         }
 
         self.prep_render_state(device);
+        self.flush_set_vertex(device);
+        self.flush_draw(device);
 
-        // set vertex data to the device
-        {
-            let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
-            let offset = 0 as i32;
-            self.gbuf
-                .vbuf
-                .set_data(device, offset as u32, data, fna3d::SetDataOptions::None);
-            self.binds.on_set_vbuf(&mut self.gbuf.vbuf.inner, offset);
+        self.batch.n_sprites = 0;
+    }
+}
+
+impl Batcher {
+    #[inline]
+    fn flush_set_vertex(&mut self, device: &mut fna3d::Device) {
+        let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
+        let offset = 0 as i32;
+        self.gbuf
+            .vbuf
+            .set_data(device, offset as u32, data, fna3d::SetDataOptions::None);
+        // apply sampler state change
+        self.binds.on_set_vbuf(&mut self.gbuf.vbuf.inner, offset);
+    }
+
+    #[inline]
+    fn flush_draw(&mut self, device: &mut fna3d::Device) {
+        let mut iter = batch_data::BatchSpanIter::new();
+        while let Some(span) = iter.next(&mut self.batch) {
+            log::trace!(
+                "draw texture {}, {:?} at {:#?}",
+                self.batch.n_sprites,
+                &self.batch.texture_info[span.offset],
+                &self.batch.vertex_data[span.offset..(span.offset + span.len)]
+            );
+            draw::draw_indexed_primitives(
+                device,
+                &self.gbuf.ibuf,
+                &mut self.binds,
+                &mut self.state,
+                &self.batch.texture_info[span.offset],
+                span.offset as u32,
+                span.len as u32,
+            );
         }
-
-        // then actually draw the copied primitives
-        self.batch
-            .flush(device, &self.gbuf.ibuf, &mut self.binds, &mut self.state);
     }
 
     /// Does some things before flushing `BatchData`
@@ -96,7 +107,6 @@ impl Batcher {
     /// 2. set transform matrix
     /// 3. apply effect
     fn prep_render_state(&mut self, device: &mut fna3d::Device) {
-
         // GraphicsDevice.BlendState = _blendState;
         // GraphicsDevice.SamplerStates[0] = _samplerState;
         // GraphicsDevice.DepthStencilState = _depthStencilState;
@@ -120,5 +130,6 @@ impl Batcher {
 
         // // we have to Apply here because custom effects often wont have a vertex shader and we need the default SpriteEffect's
         // _spriteEffectPass.Apply();
+        self.shader.apply(device, 0);
     }
 }
