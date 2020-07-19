@@ -6,15 +6,18 @@ pub const MAX_SPRITES: usize = 2048;
 pub const MAX_VERTICES: usize = MAX_SPRITES * 4;
 pub const MAX_INDICES: usize = MAX_SPRITES * 6;
 
+// --------------------------------------------------------------------------------
+// VertexData
+
 /// The actual vertex data
 ///
 /// The data layout is dynamically specified to `fna3d::Device` as `fna3d::VertexDeclaration`
 ///
-/// * `pos`: normalized position in TODO: where? render target?
+/// * `dest`: normalized position in TODO: where? render target?
 /// * `uvs`: normalized position in texture (a.k.ak. texture coordinates)
 #[derive(Debug, Clone)]
 pub struct VertexData {
-    pub pos: Vec3f,
+    pub dest: Vec3f,
     pub color: fna3d::Color,
     pub uvs: Vec2f,
 }
@@ -30,41 +33,12 @@ impl Default for VertexData {
             a: 0,
         };
         Self {
-            pos: Vec3f::default(),
+            dest: Vec3f::default(),
             color,
             uvs: Vec2f::default(),
             // ..Default::default() // TODO: why does it result in recursive call
         }
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Vec2f {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Vec3f {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct Rect2f {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
-}
-
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct Skew2f {
-    pub x1: f32,
-    pub y1: f32,
-    pub x2: f32,
-    pub y2: f32,
 }
 
 impl VertexData {
@@ -98,10 +72,38 @@ impl VertexData {
             elements: Self::elems().as_ptr() as *mut _,
         }
     }
+}
 
-    // pub fn decl() -> fna3d::VertexDeclaration {
-    //     fna3d::VertexDeclaration::from_elems(Self::elems())
-    // }
+// --------------------------------------------------------------------------------
+// Primitives
+
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Vec2f {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Vec3f {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Rect2f {
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Skew2f {
+    pub x1: f32,
+    pub y1: f32,
+    pub x2: f32,
+    pub y2: f32,
 }
 
 impl Vec2f {

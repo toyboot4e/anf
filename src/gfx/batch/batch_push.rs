@@ -187,12 +187,13 @@ impl SpritePushCommand {
             let corner_x = (CORNER_OFFSET_X[i] - self.origin.x) * dest_size.x + skew_xs[i];
             let corner_y = (CORNER_OFFSET_Y[i] - self.origin.y) * dest_size.y - skew_ys[i];
 
-            vertex[i].pos.x = (rot_2x * corner_y) + (rot_1x * corner_x) + dest_pos.x;
-            vertex[i].pos.y = (rot_2y * corner_y) + (rot_1y * corner_x) + dest_pos.y;
-            vertex[i].pos.z = self.depth;
+            vertex[i].dest.x = (rot_2x * corner_y) + (rot_1x * corner_x) + dest_pos.x;
+            vertex[i].dest.y = (rot_2y * corner_y) + (rot_1y * corner_x) + dest_pos.y;
+            vertex[i].dest.z = self.depth;
 
-            // `^` is xor (exclusive or) operator.
-            // if `effects` (actually flips) equals to zero, `i ^ effects` == `i`
+            // Here, `^` is xor (exclusive or) operator.
+            // So if `effects` (actually flips?) equals to zero, it does nothing and
+            // `i ^ effects` == `i`
             vertex[i].uvs.x = (CORNER_OFFSET_X[i ^ effects as usize] * src_rect.w) + src_rect.x;
             vertex[i].uvs.y = (CORNER_OFFSET_Y[i ^ effects as usize] * src_rect.h) + src_rect.y;
             vertex[i].color = self.color;

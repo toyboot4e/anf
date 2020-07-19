@@ -4,7 +4,7 @@
 
 pub mod batch_data;
 mod batch_internals;
-pub mod draw;
+pub mod buffers;
 pub mod shader;
 
 pub mod batch_push;

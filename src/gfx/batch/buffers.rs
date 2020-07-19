@@ -8,38 +8,6 @@ use crate::gfx::{
     vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
 };
 
-/// The actual draw call to `fna3d::Device` based on rectangles
-///
-/// Corresponds to both `SpriteBatch.DrawPrimitives` and `GraphicsDevice.DrawIndexedPrimitives` in
-/// XNA
-pub fn draw_indexed_primitives(
-    device: &mut fna3d::Device,
-    ibuf: &IndexBuffer,
-    binds: &mut GpuBindings,
-    states: &mut GlState,
-    texture: &Texture2D,
-    sprite_offset: u32,
-    sprite_len: u32,
-) {
-    // GraphicsDevice.ApplyState
-    states.change_texture(device, texture);
-
-    // GraphicsDevice.PrepareVertexBindingArray
-    let vertex_offset = sprite_offset * 4;
-    binds.apply_vertex_buffer_bindings(device, vertex_offset as i32);
-
-    // TODO: consider custom effect
-    device.draw_indexed_primitives(
-        fna3d::PrimitiveType::TriangleList,
-        vertex_offset, // the number of vertices to skip
-        0,             // the number of indices to skip.
-        // base_offset * 6, // our index buffer is cyclic and we don't need to actually calculate it
-        sprite_len * 2, // the number of triangles to draw
-        ibuf.raw(),
-        ibuf.elem_size(),
-    );
-}
-
 // TODO: user propre name
 /// Buffer objects for actual drawing
 ///
@@ -49,7 +17,7 @@ pub fn draw_indexed_primitives(
 /// You can forget about `IndexBuffer` after creating `GpuBuffer`; it's also created and binded to
 /// `fna3d::Device`.
 #[derive(Debug)]
-pub struct GpuBuffer {
+pub struct ViBuffers {
     pub vbuf: DynamicVertexBuffer,
     pub ibuf: IndexBuffer,
     // effect: *mut fna3d::Effect;
@@ -70,7 +38,7 @@ fn gen_index_array() -> [i16; MAX_INDICES] {
     data
 }
 
-impl GpuBuffer {
+impl ViBuffers {
     pub fn from_device(device: &mut fna3d::Device) -> Self {
         // let mut device = fna3d::Device::from_params(&mut params, true);
         // device.reset_backbuffer(&mut params);
@@ -92,7 +60,7 @@ impl GpuBuffer {
 
         ibuf.set_data(device, 0, &gen_index_array());
 
-        GpuBuffer { vbuf, ibuf }
+        ViBuffers { vbuf, ibuf }
     }
 }
 
@@ -112,7 +80,7 @@ impl GlState {
         }
     }
 
-    pub fn change_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
+    pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
         let i = 0;
         device.verify_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
         device.verify_vertex_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
@@ -137,14 +105,14 @@ impl GlState {
 // --------------------------------------------------------------------------------
 
 #[derive(Debug)]
-pub struct GpuBindings {
+pub struct VBinds {
     bind: fna3d::VertexBufferBinding,
     is_updated: bool,
 }
 
-impl GpuBindings {
+impl VBinds {
     pub fn new(decl: fna3d::VertexDeclaration) -> Self {
-        Self {
+        VBinds {
             bind: fna3d::VertexBufferBinding {
                 vertexBuffer: std::ptr::null_mut(),
                 vertexDeclaration: decl,
@@ -160,7 +128,7 @@ impl GpuBindings {
     /// Corresponds to `GraphicsDevice.SetVertexBufferData`. Different from `GraphicsDevice`, we
     /// dont' use non-native `VertexBufferBinding` and this method directly updates a native
     /// (FNA3D) `VertexBuffer`.
-    pub fn on_set_vbuf(&mut self, vbuf: &mut VertexBuffer, offset: i32) {
+    pub fn update(&mut self, vbuf: &mut VertexBuffer, offset: i32) {
         self.bind.vertexBuffer = vbuf.raw();
         self.bind.vertexDeclaration = vbuf.decl.clone();
         self.bind.vertexOffset = offset;
@@ -172,8 +140,7 @@ impl GpuBindings {
     /// Cooredponds to `GraphicsDevice.PrepareVertexBindingArray`.
     ///
     /// Unlike FNA, we assume that we only use one `VertexBufferBinding`.
-    fn apply_vertex_buffer_bindings(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
-        // FIXME: call `ApplyEfffects` first
+    pub fn apply_vertex_buffer_bindings(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
         device.apply_vertex_buffer_bindings(&[self.bind], self.is_updated, base_vertex);
         self.is_updated = false;
     }

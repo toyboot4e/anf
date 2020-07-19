@@ -1,12 +1,44 @@
 //! Graphics
 
 pub mod batch;
-pub mod prelude;
 pub mod texture;
 pub mod vertices;
 
 use batch::Batcher;
 
+// FIXME: this may nonsense
+pub fn init(
+    device: &mut fna3d::Device,
+    batcher: &mut Batcher,
+    params: &fna3d::PresentationParameters,
+) {
+    // set default render state
+    let blend = fna3d::BlendState::alpha_blend();
+    device.set_blend_state(&blend);
+    let rst = fna3d::RasterizerState::default();
+    device.apply_rasterizer_state(&rst);
+    let dsst = fna3d::DepthStencilState::default();
+    device.set_depth_stencil_state(&dsst);
+
+    let viewport = fna3d::Viewport {
+        x: 0,
+        y: 0,
+        w: params.backBufferWidth as i32,
+        h: params.backBufferHeight as i32,
+        minDepth: 0 as f32,
+        maxDepth: 1 as f32,
+    };
+    device.set_viewport(&viewport)
+
+    // device.set_render_targets(
+    //     Some(&mut batcher.v_binds.bind),
+    //     1,
+    //     None, // FIXME: DepthStencilBuffer
+    //     fna3d::DepthFormat::D24S8,
+    // );
+}
+
+/// `FNA3D_BeginFrame`
 pub fn begin_frame(device: &mut fna3d::Device) {
     device.begin_frame();
 }

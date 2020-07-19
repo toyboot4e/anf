@@ -32,7 +32,7 @@ fn main() {
     let device = Device::from_params(params, true);
 
     // Run the game loop
-    let mut state = MainState::new(device, win);
+    let mut state = MainState::new(device, win, params);
     match anf::run_loop(&mut state, &mut scx) {
         Ok(()) => {}
         Err(why) => println!("Error occured: {}", why),
@@ -47,14 +47,19 @@ pub struct MainState {
 }
 
 impl MainState {
-    pub fn new(mut device: Device, win: *mut c_void) -> Self {
+    pub fn new(
+        mut device: Device,
+        win: *mut c_void,
+        params: fna3d::PresentationParameters,
+    ) -> Self {
         let texture = {
             let root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets");
             let path = root.join("a.png");
             Texture2D::from_path(&mut device, &path).expect("failed to load texture")
         };
 
-        let batcher = Batcher::new(&mut device, win);
+        let mut batcher = Batcher::new(&mut device, win);
+        anf::gfx::init(&mut device, &mut batcher, &params);
 
         Self {
             device,
@@ -81,13 +86,10 @@ impl MainState {
         // normalzied
         push.src_rect(0f32, 0f32, 576f32, 384f32);
         push.is_dest_size_in_pixels = false;
-        push.dest_size(1f32, 1f32);
 
-        // in pixel
-        // push.src_rect(0f32, 0f32, 576f32, 384f32);
-        // push.is_dest_size_in_pixels = true;
-        // push.dest_pos(0f32, 0f32);
-        // push.dest_size(576f32, 384f32);
+        // push.dest_size(1f32, 1f32);
+        push.is_dest_size_in_pixels = true;
+        push.dest_size(576f32, 384f32);
 
         push.run(&mut self.batcher.batch, &self.texture, policy, 0);
     }

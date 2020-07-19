@@ -1,18 +1,24 @@
-use crate::gfx::batch::{batch_data, batch_internals, draw, shader};
+use crate::gfx::batch::{
+    batch_data, batch_internals,
+    buffers::{GlState, VBinds, ViBuffers},
+    shader,
+};
 use std::ffi::c_void;
 
 /// The main interface to render sprites
 ///
-/// `Batcher` automatically batches pushed sprites when it flushes
+/// `Batcher` automatically batches pushed sprites when it flushes. Rendering cycle would be
+/// `anf::gfx::begin_frame`, `batcher::begin`, `anf::gfx::push`, `batcher::end` and
+/// `anf::gfx::end_framme`
 ///
 /// # Immediate mode vs batch mode
 pub struct Batcher {
     pub batch: batch_data::BatchData,
     is_begin_called: bool,
     // --- rendering pipeline ---
-    gbuf: draw::GpuBuffer,
-    binds: draw::GpuBindings,
-    state: draw::GlState,
+    bufs: ViBuffers,
+    pub(crate) v_binds: VBinds,
+    state: GlState,
     shader: shader::Shader,
     pub(crate) win: *mut c_void,
 }
@@ -24,17 +30,21 @@ impl Batcher {
         Self {
             batch: batch_data::BatchData::new(),
             is_begin_called: false,
-            gbuf: draw::GpuBuffer::from_device(device),
-            binds: draw::GpuBindings::new(decl),
-            state: draw::GlState::from_device(device),
+            bufs: ViBuffers::from_device(device),
+            v_binds: VBinds::new(decl),
+            state: GlState::from_device(device),
             shader,
             win,
         }
     }
+}
 
+/// Batch cycle
+/// ---
+impl Batcher {
     /// Begin pass
     pub fn begin(&mut self, device: &mut fna3d::Device) {
-        self.prep_render_state(device); // FIXME: should it be called..?
+        self.flush_prep_render_state(device); // FIXME: should it be called..?
         self.is_begin_called = true;
     }
 
@@ -45,7 +55,6 @@ impl Batcher {
             return;
         }
         self.flush(device);
-        // `Game.EndDraw` = `GraphicsDevice.Present`
     }
 
     /// Draws all the pushed sprites
@@ -59,54 +68,25 @@ impl Batcher {
             return;
         }
 
-        self.prep_render_state(device);
+        self.flush_prep_render_state(device);
+        // FNA3D_ApplyEffect (this is a required rendering pipeline)
+        self.shader.apply_effect(device, 0);
+        // FNA3D_SetVertexData
         self.flush_set_vertex(device);
+        // FNA3D_VerifySamplerState, FNA3D_VerifyVertexSamplerState, FNA3D_ApplyVertexBufferBindings, FNA3D_DrawIndexedPrimitives
         self.flush_draw(device);
 
         self.batch.n_sprites = 0;
     }
 }
 
+/// Sub procedures of `flush`
 impl Batcher {
-    #[inline]
-    fn flush_set_vertex(&mut self, device: &mut fna3d::Device) {
-        let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
-        let offset = 0 as i32;
-        self.gbuf
-            .vbuf
-            .set_data(device, offset as u32, data, fna3d::SetDataOptions::None);
-        // apply sampler state change
-        self.binds.on_set_vbuf(&mut self.gbuf.vbuf.inner, offset);
-    }
-
-    #[inline]
-    fn flush_draw(&mut self, device: &mut fna3d::Device) {
-        let mut iter = batch_data::BatchSpanIter::new();
-        while let Some(span) = iter.next(&mut self.batch) {
-            log::trace!(
-                "draw texture {}, {:?} at {:#?}",
-                self.batch.n_sprites,
-                &self.batch.texture_info[span.offset],
-                &self.batch.vertex_data[span.offset..(span.offset + span.len)]
-            );
-            draw::draw_indexed_primitives(
-                device,
-                &self.gbuf.ibuf,
-                &mut self.binds,
-                &mut self.state,
-                &self.batch.texture_info[span.offset],
-                span.offset as u32,
-                span.len as u32,
-            );
-        }
-    }
-
     /// Does some things before flushing `BatchData`
     ///
-    /// 1. apply data that are set with `begin`
-    /// 2. set transform matrix
-    /// 3. apply effect
-    fn prep_render_state(&mut self, device: &mut fna3d::Device) {
+    /// 1. push data set with `begin`
+    /// 2. set transform matrix to effect
+    fn flush_prep_render_state(&mut self, device: &mut fna3d::Device) {
         // GraphicsDevice.BlendState = _blendState;
         // GraphicsDevice.SamplerStates[0] = _samplerState;
         // GraphicsDevice.DepthStencilState = _depthStencilState;
@@ -127,9 +107,60 @@ impl Batcher {
 
         // Matrix.Multiply(ref _transformMatrix, ref _projectionMatrix, out _matrixTransformMatrix);
         // _spriteEffect.SetMatrixTransform(ref _matrixTransformMatrix);
+    }
 
-        // // we have to Apply here because custom effects often wont have a vertex shader and we need the default SpriteEffect's
-        // _spriteEffectPass.Apply();
-        self.shader.apply(device, 0);
+    /// Sets vertex data to `fna3d::Device` and maybe updates `VertexBufferBindings`
+    #[inline]
+    fn flush_set_vertex(&mut self, device: &mut fna3d::Device) {
+        let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
+        let offset = 0 as i32;
+        self.bufs
+            .vbuf
+            .set_data(device, offset as u32, data, fna3d::SetDataOptions::None);
+        // set texture (apply sampler state change)
+        self.v_binds.update(&mut self.bufs.vbuf.inner, offset);
+    }
+
+    /// Makes draw calls
+    ///
+    /// Vertex data is already set before is functions
+    #[inline]
+    fn flush_draw(&mut self, device: &mut fna3d::Device) {
+        let mut iter = batch_data::BatchSpanIter::new();
+        while let Some(span) = iter.next(&mut self.batch) {
+            self.make_draw_call(device, span);
+        }
+    }
+
+    /// Makes a draw call
+    #[inline]
+    fn make_draw_call(&mut self, device: &mut fna3d::Device, span: batch_data::BatchSpan) {
+        log::trace!(
+            "draw texture {}, {:?} at {:#?}",
+            self.batch.n_sprites,
+            &self.batch.texture_info[span.offset],
+            &self.batch.vertex_data[span.offset..(span.offset + span.len)]
+        );
+
+        // update sampler state
+        self.state
+            .set_texture(device, &self.batch.texture_info[span.offset]);
+
+        // "the very last thing to call before making a draw call"
+        // (`GraphicsDevice.PrepareVertexBindingArray` > `FNA3D_SetVertexBufferBindings`)
+        let vertex_offset = span.offset * 4;
+        self.v_binds
+            .apply_vertex_buffer_bindings(device, vertex_offset as i32);
+
+        // make a draw call
+        device.draw_indexed_primitives(
+            fna3d::PrimitiveType::TriangleList,
+            span.offset as u32, // the number of vertices to skip
+            0,                  // the number of indices to skip.
+            // base_offset * 6, // our index buffer is cyclic and we don't need to actually calculate it
+            span.len as u32 * 2, // the number of triangles to draw
+            self.bufs.ibuf.raw(),
+            self.bufs.ibuf.elem_size(),
+        );
     }
 }

@@ -1,9 +1,7 @@
 //! A part of rendering pipeline
 
 use std::{
-    env,
-    ffi::c_void,
-    fs,
+    env, fs,
     io::{self, Read},
     path::PathBuf,
 };
@@ -16,7 +14,7 @@ pub struct Shader {
 impl Shader {
     pub fn from_device(device: &mut fna3d::Device) -> io::Result<Self> {
         // TODO: virtual path system
-        let root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets");
+        let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets");
         let path = root.join("FNAEffects/SpriteEffect.fxb");
         log::trace!("default shader assumed to be at {}", path.display());
 
@@ -36,6 +34,7 @@ impl Shader {
                     mojo_effect.technique_count as usize,
                 );
                 eprintln!("{:?}", errs);
+                // TODO: error?
             }
         }
 
@@ -46,7 +45,7 @@ impl Shader {
     }
 
     // TODO: what is `pass`? typed?
-    pub fn apply(&mut self, device: &mut fna3d::Device, pass: u32) {
+    pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
         // no effect state change
         let state_changes = fna3d::sys::mojo::MOJOSHADER_effectStateChanges {
             render_state_change_count: 0,
