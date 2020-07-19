@@ -2,6 +2,7 @@
 
 pub mod gfx;
 
+/// The final notification from the application returned by `run_loop`
 pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
 use sdl2::{keyboard::Keycode, render::WindowCanvas};
@@ -10,13 +11,16 @@ use std::time::Duration;
 // --------------------------------------------------------------------------------
 // Window configuration
 
+/// Initial window settings
 pub struct WindowConfig {
     pub title: String,
     pub width: u32,
     pub height: u32,
 }
 
-/// You can get raw pointer to SDL window from returned `WindowCanvas`
+/// Creates a window from `WindowConfig` and returns a handle to it
+///
+/// You can get raw pointer to SDL window from the returned `WindowCanvas`
 pub fn create(cfg: &WindowConfig) -> (sdl2::Sdl, WindowCanvas) {
     // sdl2::hint::set("SDL_RENDER_DRIVER", "metal");
     let scx = sdl2::init().unwrap();
@@ -51,13 +55,14 @@ impl WindowConfig {
 // --------------------------------------------------------------------------------
 // Game loop
 
-/// Methods directly called from the game loop
+/// State with methods called from the game loop (`run_loop`)
 pub trait State {
     fn update(&mut self);
     fn render(&mut self);
     fn handle_event(&mut self, ev: &sdl2::event::Event) -> StateUpdateResult;
 }
 
+/// Way for a `State` to communicate with the game loop (`run_loop`)
 pub enum StateUpdateResult {
     Continue,
     Quit,

@@ -6,7 +6,8 @@ pub mod vertices;
 
 use batch::Batcher;
 
-// FIXME: this may nonsense
+// FIXME: this may be nonsense
+/// The first thing to call before using `fna3d::Device`
 pub fn init(
     device: &mut fna3d::Device,
     batcher: &mut Batcher,
@@ -49,6 +50,7 @@ pub fn end_frame(device: &mut fna3d::Device, batcher: &mut Batcher) {
     device.swap_buffers(None, None, batcher.win);
 }
 
+/// Clears the active draw buffers with cornflower blue i.e. (r, g, b) = (100, 149, 237)
 pub fn clear(device: &mut fna3d::Device) {
     let color = fna3d::Color {
         r: 100,

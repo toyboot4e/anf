@@ -1,4 +1,4 @@
-//! Internal utilities in `batch` module
+//! Internal types in the `batch` module
 //!
 //! We use 15bits for vertex index
 

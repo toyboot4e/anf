@@ -19,6 +19,7 @@ bitflags::bitflags! {
     }
 }
 
+/// Round or not
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DrawPolicy {
     pub do_round: bool,

@@ -1,4 +1,4 @@
-//! `BatchData` that accumulates vertex and texture data before buffering to GPU
+//! `BatchData` accumulates vertex and texture data before buffering to GPU
 //!
 //! Actually the internal implementation is based on `Batcher` in Nez
 
@@ -17,11 +17,11 @@ impl crate::gfx::vertices::AnyVertexData for FourVertexInfo {}
 /// Each info is indexed with sprite push (first, second, third, ..).
 ///
 /// * `vertex_data`:
-///   the actual vertex data to be set to `*fna3d::Buffer`
+///   the actual vertex data to be set to a `*fna3d::Buffer`
 /// * `texture_info`:
-///   each texture in it correspond to each batch
+///   each texture in it corresponds to each batch
 /// * `n_sprites`:
-///   number of sprites accumulated
+///   the number of sprites accumulated in this data
 #[derive(Debug)]
 pub struct BatchData {
     pub vertex_data: Vec<self::FourVertexInfo>,
@@ -44,13 +44,23 @@ impl BatchData {
     }
 }
 
-/// Slices `BatchData` based on `texture_info` field
+/// Slices `BatchData` into `BatchSpan`s each of which corresponds to a draw call
 ///
-/// Make sure to clear `BatchData::n_sprites` maually
+/// Make sure to clear `BatchData::n_sprites` maually after making draw calls.
+///
+/// ```no_run
+/// // batcher: &mut Batcher in scope
+/// let iter = BatchSpanIter::new();
+/// while let Some(span) = iter.next(&batcher.batch_data) {
+///     // make a draw call
+/// }
+/// batcher.batch_data.n_sprites = 0;
+/// ```
 pub struct BatchSpanIter {
     current: usize,
 }
 
+/// Span of `BatchData` for a draw call
 pub struct BatchSpan {
     pub offset: usize,
     pub len: usize,
@@ -94,52 +104,3 @@ mod test {
         assert_eq!(size_of::<FourVertexInfo>(), 96);
     }
 }
-
-// // TODO: should I extract `flush` to `draw` module
-// impl BatchData {
-//     /// Actually draws all the pushed primitives applying vertex buffer bindings
-//     pub fn flush(
-//         &mut self,
-//         device: &mut fna3d::Device,
-//         ibuf: &IndexBuffer,
-//         binds: &mut GpuBindings,
-//         state: &mut GlState,
-//     ) {
-//         let mut current = 0;
-//         for i in 1..self.n_sprites {
-//             if &self.texture_info[i] != &self.texture_info[current] {
-//                 // TODO: set texture
-//                 draw::draw_indexed_primitives(
-//                     device,
-//                     &ibuf,
-//                     binds,
-//                     &self.texture_info[i],
-//                     state,
-//                     current as u32,
-//                     (i - current) as u32,
-//                 );
-//                 current = i;
-//             }
-//         }
-
-//         log::trace!(
-//             "draw texture {}, {:?} at {:#?}",
-//             self.n_sprites,
-//             &self.texture_info[current],
-//             &self.vertex_data[current..(current + self.n_sprites)]
-//         );
-
-//         // TODO: how to set texture (maybe VertexBufferBinding?)
-//         draw::draw_indexed_primitives(
-//             device,
-//             &ibuf,
-//             binds,
-//             &self.texture_info[current],
-//             state,
-//             current as u32,
-//             (self.n_sprites - current) as u32,
-//         );
-
-//         self.n_sprites = 0;
-//     }
-// }

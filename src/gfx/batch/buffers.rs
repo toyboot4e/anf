@@ -1,4 +1,4 @@
-//! `GpuBuffer` for drawing rectangle sprites as primitive triangles
+//! Internal buffers
 //!
 //! We use `i16` for index buffers (`fna3d::IndexElementSize::Bits16`)
 
@@ -104,6 +104,7 @@ impl GlState {
 
 // --------------------------------------------------------------------------------
 
+// TODO: FIXME: what is this. is this not needed?
 #[derive(Debug)]
 pub struct VBinds {
     bind: fna3d::VertexBufferBinding,
