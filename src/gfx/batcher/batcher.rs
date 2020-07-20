@@ -1,21 +1,19 @@
-//! Re-exported to `batcher` module
+//! Re-exported to the super module
 
-use crate::gfx::{
+use crate::gfx::batcher::{
     batch::{batch_data, batch_internals},
-    batcher::{
-        buffers::{GlState, VBinds, ViBuffers},
-        shader,
-    },
+    buffers::{GlState, VBinds, ViBuffers},
+    shader,
 };
 use std::ffi::c_void;
 
 /// The main interface for users to render 2D sprites
 ///
-/// `Batcher` automatically batches pushed sprites when it flushes. Rendering cycle would be
-/// `anf::gfx::begin_frame`, `batcher::begin`, `anf::gfx::push`, `batcher::end` and
-/// `anf::gfx::end_framme`
+/// `Batcher` automatically batches pushed sprites when it flushes.
 ///
 /// # Immediate mode vs batch mode
+///
+/// TODO: discuss. Probablly we always can prefer batch mode
 pub struct Batcher {
     pub batch: batch_data::BatchData,
     is_begin_called: bool,

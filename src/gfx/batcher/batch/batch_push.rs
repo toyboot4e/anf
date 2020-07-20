@@ -3,7 +3,7 @@
 //! Actually the internal implementation is based on `Batcher` in Nez
 
 use crate::gfx::{
-    batch::{batch_data::BatchData, batch_internals::*},
+    batcher::batch::{batch_data::BatchData, batch_internals::*},
     texture::Texture2D,
 };
 

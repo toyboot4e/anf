@@ -2,11 +2,13 @@
 //!
 //! Corresponds to both `GraphicsDevice` and `SpriteBatch` in FNA
 
+pub mod batch;
+pub use batch::batch_push::{DrawPolicy, SpritePushCommand};
+
 pub mod buffers;
 pub mod shader;
 
 mod batcher;
-pub use crate::gfx::batch::batch_push::{DrawPolicy, SpritePushCommand};
 pub use batcher::Batcher;
 
 // TODO: make a more fluent API

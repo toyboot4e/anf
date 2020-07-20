@@ -1,10 +1,3 @@
-= WIP
-
-* [ ] draw something on screen
-** [ ] `Graphics/Vertices/*`
-** [ ] `GraphicsDevice`
-** [ ] `SpriteBatch`
-
 = ANF
 
 ANF is an FNA-like framework for 2D games in Rust. It's powered by https://github.com/FNA-XNA/FNA3D[FNA3D] and https://www.libsdl.org/[SDL2].

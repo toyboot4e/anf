@@ -1,6 +1,5 @@
 //! 2D graphics
 
-pub mod batch;
 pub mod batcher;
 pub mod texture;
 pub mod vertices;

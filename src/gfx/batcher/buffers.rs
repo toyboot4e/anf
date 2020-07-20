@@ -3,7 +3,7 @@
 //! We use `i16` for index buffers as defined in `batch_internals`
 
 use crate::gfx::{
-    batch::batch_internals::*,
+    batcher::batch::batch_internals::*,
     texture::Texture2D,
     vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
 };
