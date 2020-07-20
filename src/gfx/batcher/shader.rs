@@ -1,4 +1,6 @@
-//! A part of rendering pipeline
+//! Also known as `Effect` in FNA
+//!
+//! It's a part of the rendering pipeline and cannot be skipped.
 
 use std::{
     env, fs,

@@ -1,7 +1,7 @@
 //! Sampler game loop
 
 use anf::gfx::{
-    batch::{self, Batcher},
+    batcher::{self, Batcher},
     texture::Texture2D,
 };
 
@@ -52,14 +52,14 @@ impl MainState {
         win: *mut c_void,
         params: fna3d::PresentationParameters,
     ) -> Self {
+        anf::gfx::init(&mut device, &params);
+        let batcher = Batcher::new(&mut device, win);
+
         let texture = {
             let root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets");
             let path = root.join("a.png");
             Texture2D::from_path(&mut device, &path).expect("failed to load texture")
         };
-
-        let mut batcher = Batcher::new(&mut device, win);
-        anf::gfx::init(&mut device, &mut batcher, &params);
 
         Self {
             device,
@@ -72,10 +72,9 @@ impl MainState {
 
 impl MainState {
     fn render_scene(&mut self) {
-        use anf::gfx::batch::DrawPolicy;
-        let policy = DrawPolicy { do_round: false };
+        let policy = batcher::DrawPolicy { do_round: false };
 
-        let mut push = batch::push();
+        let mut push = batcher::push();
         push.color = fna3d::Color {
             r: 128,
             g: 128,
@@ -104,7 +103,7 @@ impl anf::State for MainState {
         if self.tmp {
             return;
         }
-        self.tmp = true;
+        // self.tmp = true;
 
         anf::gfx::begin_frame(&mut self.device);
         anf::gfx::clear(&mut self.device); // TODO: should not?

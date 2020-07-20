@@ -1,6 +1,6 @@
 //! Internal buffers
 //!
-//! We use `i16` for index buffers (`fna3d::IndexElementSize::Bits16`)
+//! We use `i16` for index buffers as defined in `batch_internals`
 
 use crate::gfx::{
     batch::batch_internals::*,
@@ -8,14 +8,15 @@ use crate::gfx::{
     vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
 };
 
-// TODO: user propre name
+// TODO: user proper name
 /// Buffer objects for actual drawing
 ///
-/// Component of `SpriteBatch` in XNA. `IndexBuffer` is rather static because we only draw
-/// rectangle sprites.
+/// `IndexBuffer` is rather static because we only draw rectangle sprites represented as two
+/// triangles. Each triangle is specified with three vertices and three indices. Since indices
+/// pattern is cyclic and static, it's automatically generated and you can forget about
+/// `IndexBuffer` after creating `ViBuffers`.
 ///
-/// You can forget about `IndexBuffer` after creating `GpuBuffer`; it's also created and binded to
-/// `fna3d::Device`.
+/// Component of `SpriteBatch` in XNA.
 #[derive(Debug)]
 pub struct ViBuffers {
     pub vbuf: DynamicVertexBuffer,
@@ -66,6 +67,8 @@ impl ViBuffers {
 
 // --------------------------------------------------------------------------------
 
+// TODO: proper name
+/// Tracks `SamplerState` modifications
 pub struct GlState {
     pub samplers: Vec<fna3d::SamplerState>,
     pub v_samplers: Vec<fna3d::SamplerState>,
@@ -105,6 +108,7 @@ impl GlState {
 // --------------------------------------------------------------------------------
 
 // TODO: FIXME: what is this. is this not needed?
+/// Vertex buffer bindings
 #[derive(Debug)]
 pub struct VBinds {
     bind: fna3d::VertexBufferBinding,

@@ -1,9 +1,11 @@
-//! The main interface for users to render 2D sprites
+//! Re-exported to `batcher` module
 
-use crate::gfx::batch::{
-    batch_data, batch_internals,
-    buffers::{GlState, VBinds, ViBuffers},
-    shader,
+use crate::gfx::{
+    batch::{batch_data, batch_internals},
+    batcher::{
+        buffers::{GlState, VBinds, ViBuffers},
+        shader,
+    },
 };
 use std::ffi::c_void;
 
@@ -116,10 +118,11 @@ impl Batcher {
     fn flush_set_vertex(&mut self, device: &mut fna3d::Device) {
         let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
         let offset = 0 as i32;
+        // FNA3D_SetVertexBufferData
         self.bufs
             .vbuf
             .set_data(device, offset as u32, data, fna3d::SetDataOptions::None);
-        // set texture (apply sampler state change)
+        // update vertex bindings
         self.v_binds.update(&mut self.bufs.vbuf.inner, offset);
     }
 

@@ -1,16 +1,17 @@
-//! Graphics
+//! 2D graphics
 
 pub mod batch;
+pub mod batcher;
 pub mod texture;
 pub mod vertices;
 
-use batch::Batcher;
+use batcher::Batcher;
 
 // FIXME: this may be nonsense
-/// The first thing to call before using `fna3d::Device`
+/// The first thing to call after making `Device`
 pub fn init(
     device: &mut fna3d::Device,
-    batcher: &mut Batcher,
+    // batcher: &mut Batcher,
     params: &fna3d::PresentationParameters,
 ) {
     // set default render state
@@ -44,7 +45,7 @@ pub fn begin_frame(device: &mut fna3d::Device) {
     device.begin_frame();
 }
 
-/// Makes sure the `Batcher` flushes and swaps buffers
+/// Makes sure the `Batcher` flushes and actually swaps the buffers
 pub fn end_frame(device: &mut fna3d::Device, batcher: &mut Batcher) {
     batcher.flush(device);
     device.swap_buffers(None, None, batcher.win);

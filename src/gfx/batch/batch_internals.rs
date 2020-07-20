@@ -1,9 +1,12 @@
-//! Internal types in the `batch` module
+//! Internal data types in the `batch` module and some constants
 //!
-//! We use 15bits for vertex index
+//! We use 16 bits for vertex index
 
+/// 2048
 pub const MAX_SPRITES: usize = 2048;
+/// 2048 * 4
 pub const MAX_VERTICES: usize = MAX_SPRITES * 4;
+/// 2048 * 4 * 6 = 49152 < 65536 = 2^16
 pub const MAX_INDICES: usize = MAX_SPRITES * 6;
 
 // --------------------------------------------------------------------------------
@@ -11,9 +14,10 @@ pub const MAX_INDICES: usize = MAX_SPRITES * 6;
 
 /// The actual vertex data
 ///
-/// The data layout is dynamically specified to `fna3d::Device` as `fna3d::VertexDeclaration`
+/// The data layout is dynamically specified as `fna3d::VertexDeclaration`
 ///
 /// * `dest`: normalized position in TODO: where? render target?
+/// * `color`: color
 /// * `uvs`: normalized position in texture (a.k.ak. texture coordinates)
 #[derive(Debug, Clone)]
 pub struct VertexData {
@@ -22,7 +26,7 @@ pub struct VertexData {
     pub uvs: Vec2f,
 }
 
-impl crate::gfx::vertices::AnyVertexData for VertexData {}
+impl crate::gfx::vertices::SomeVertexData for VertexData {}
 
 impl Default for VertexData {
     fn default() -> Self {
@@ -90,6 +94,7 @@ pub struct Vec3f {
     pub z: f32,
 }
 
+/// Top-left and size
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Rect2f {
     pub x: f32,
@@ -98,6 +103,7 @@ pub struct Rect2f {
     pub h: f32,
 }
 
+/// Top-left and bottom-right
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Skew2f {
     pub x1: f32,

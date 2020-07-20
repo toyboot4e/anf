@@ -1,24 +1,7 @@
-//! Sprite batch
+//! Batch data used by `Batcher`
 //!
-//! Corresponds to both `GraphicsDevice` and `SpriteBatch`
+//! This is internals of `Batcher` and ANF users don't need to see this module.
 
-// sub modules
 pub mod batch_data;
-mod batch_internals;
-pub mod buffers;
-pub mod shader;
-
-// re-exported to root
-mod batch_push;
-pub use batch_push::{DrawPolicy, SpritePushCommand};
-mod batcher;
-pub use batcher::Batcher;
-
-// TODO: make a more fluent API
-// TODO: add begin guard
-// TODO: flush if it's out of capacity
-
-/// Begins a builder to push a sprite to `Batcher`
-pub fn push() -> SpritePushCommand {
-    batch_push::SpritePushCommand::default()
-}
+pub mod batch_internals;
+pub mod batch_push;

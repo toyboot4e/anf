@@ -10,18 +10,21 @@ use crate::gfx::{
 /// The actual vertex data per rectangle sprite
 type FourVertexInfo = [VertexData; 4];
 
-impl crate::gfx::vertices::AnyVertexData for FourVertexInfo {}
+impl crate::gfx::vertices::SomeVertexData for FourVertexInfo {}
 
 /// Local data before buffering to GPU
 ///
-/// Each info is indexed with sprite push (first, second, third, ..).
+/// Each info is indexed with sprite push (first, second, third, ..). Each batch can be iterated
+/// via [`BatchSpanIter`].
 ///
 /// * `vertex_data`:
-///   the actual vertex data to be set to a `*fna3d::Buffer`
+///   the actual vertex data to be set to `VertexBuffer`
 /// * `texture_info`:
 ///   each texture in it corresponds to each batch
 /// * `n_sprites`:
 ///   the number of sprites accumulated in this data
+///
+/// [`BatchSpanIter`]: ./struct.BatchSpanIter.html
 #[derive(Debug)]
 pub struct BatchData {
     pub vertex_data: Vec<self::FourVertexInfo>,
