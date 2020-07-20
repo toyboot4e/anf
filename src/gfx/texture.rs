@@ -5,6 +5,10 @@ use std::{
     os::raw::c_void,
 };
 
+/// Wraps a texture handle with some metadata and `SurfaceFormat`
+///
+/// * `level_count:`
+///   TODO: what is this
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture2D {
     raw: *mut fna3d::Texture,
@@ -133,7 +137,25 @@ impl Texture2D {
         return Some(texture);
     }
 
-    /// Set texture data from a pointer
+    /// Sets texture data from a slice
+    pub fn set_data<T>(
+        &mut self,
+        device: &mut fna3d::Device,
+        level: u32,
+        // TODO: what is this
+        rect: Option<[u32; 4]>,
+        data: &[T],
+    ) {
+        self.set_data_ptr(
+            device,
+            level,
+            rect,
+            data as *const _ as *mut _,
+            (std::mem::size_of::<T>() * data.len()) as u32,
+        )
+    }
+
+    /// Sets texture data from a pointer
     pub fn set_data_ptr(
         &mut self,
         device: &mut fna3d::Device,

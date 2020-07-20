@@ -15,10 +15,8 @@ pub struct Shader {
 
 impl Shader {
     pub fn from_device(device: &mut fna3d::Device) -> io::Result<Self> {
-        // TODO: virtual path system
-        let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets");
-        let path = root.join("FNAEffects/SpriteEffect.fxb");
-        log::trace!("default shader assumed to be at {}", path.display());
+        let path = crate::vfs::default_shader();
+        log::trace!("default shader located at {}", path.display());
 
         let mut f = fs::File::open(&path)?;
         let mut buf = Vec::new();

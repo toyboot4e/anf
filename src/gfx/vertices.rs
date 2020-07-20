@@ -1,11 +1,12 @@
-//! Index buffer and vertex buffer
+//! `VertexBuffer` and `IndexBuffer`
 //!
-//! Each buffer is rather dynamic and dynamically "typed" with specific objects
+//! Each buffer is dynamically "typed" by users with specific objects. In our case it is `Batcher`
+//! and declarations are defined in `anf::gfx::batcher::batch::batch_internals`.
 
-/// Guard of "vertex data"
+/// Marker of "vertex data"
 ///
-/// A vertex data is composed of `fna3d::VertexElement`s which are dynamically "typed" with
-/// `fna3d::VertexElement`
+/// A vertex data is typed with `fna3d::VertexDeclarations` which is composed of
+/// `fna3d::VertexElement`s . This trait is used to mark such types.
 pub trait SomeVertexData {}
 
 // --------------------------------------------------------------------------------
@@ -65,8 +66,6 @@ impl IndexBuffer {
 
 // --------------------------------------------------------------------------------
 // Vertex buffer (vbuf)
-
-// TODO: add lifetime?
 
 /// Vertex buffer that is indexed by `IndexBuffer`
 ///

@@ -77,6 +77,13 @@ pub struct GlState {
 impl GlState {
     pub fn from_device(device: &fna3d::Device) -> Self {
         let (max_textures, max_vertex_textures) = device.get_max_texture_slots();
+        log::info!("device max_textures: {}", max_textures);
+        log::info!("device max_vertex_textures: {}", max_vertex_textures);
+        assert!(
+            max_textures != 0 && max_vertex_textures != 0,
+            "Error on max texture slots. FNA3D may have been compiled in a wrong way: max_textures={}, max_vertex_textures={}",
+            max_textures, max_vertex_textures
+        );
         Self {
             samplers: vec![fna3d::SamplerState::linear_wrap(); max_textures],
             v_samplers: vec![fna3d::SamplerState::linear_wrap(); max_vertex_textures],
@@ -86,7 +93,7 @@ impl GlState {
     pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
         let i = 0;
         device.verify_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
-        device.verify_vertex_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
+        device.verify_vertex_sampler(i as i32, texture.raw(), &mut self.v_samplers[i]);
     }
 
     // // TODO: is should be called only on change

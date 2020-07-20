@@ -1,8 +1,11 @@
 //! Sampler game loop
 
-use anf::gfx::{
-    batcher::{self, Batcher},
-    texture::Texture2D,
+use anf::{
+    gfx::{
+        batcher::{self, Batcher},
+        texture::Texture2D,
+    },
+    vfs,
 };
 
 use fna3d::Device;
@@ -23,12 +26,21 @@ fn main() {
     self::setup();
 
     // Create a window using SDL2
-    let cfg = anf::WindowConfig::default();
+    let cfg = {
+        let mut cfg = anf::WindowConfig::default();
+        // cfg.width = cfg.width / 2;
+        cfg
+    };
     let (mut scx, canvas) = anf::create(&cfg);
 
     // Set up FNA3D for rendering
-    let win = canvas.window().raw() as *mut _; // FIXME: do not use Canvas
-    let params = fna3d::utils::params_from_window_handle(win);
+    let win = canvas.window().raw() as *mut _;
+    let params = {
+        let mut params = fna3d::utils::params_from_window_handle(win);
+        params.backBufferWidth = cfg.width as i32;
+        params.backBufferHeight = cfg.height as i32;
+        params
+    };
     let device = Device::from_params(params, true);
 
     // Run the game loop
@@ -56,8 +68,7 @@ impl MainState {
         let batcher = Batcher::new(&mut device, win);
 
         let texture = {
-            let root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets");
-            let path = root.join("a.png");
+            let path = vfs::get("a.png");
             Texture2D::from_path(&mut device, &path).expect("failed to load texture")
         };
 
@@ -85,10 +96,10 @@ impl MainState {
         // normalzied
         push.src_rect(0f32, 0f32, 576f32, 384f32);
         push.is_dest_size_in_pixels = false;
+        push.dest_size(1f32, 1f32);
 
-        // push.dest_size(1f32, 1f32);
-        push.is_dest_size_in_pixels = true;
-        push.dest_size(576f32, 384f32);
+        // push.is_dest_size_in_pixels = true;
+        // push.dest_size(576f32, 384f32);
 
         push.run(&mut self.batcher.batch, &self.texture, policy, 0);
     }
@@ -103,7 +114,7 @@ impl anf::State for MainState {
         if self.tmp {
             return;
         }
-        // self.tmp = true;
+        self.tmp = true;
 
         anf::gfx::begin_frame(&mut self.device);
         anf::gfx::clear(&mut self.device); // TODO: should not?

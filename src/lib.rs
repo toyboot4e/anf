@@ -1,6 +1,10 @@
-//! ANF is an XNA-like 2D game framework in Rust powered by FNA3D
+//! ANF is an FNA-like 2D game framework in Rust powered by FNA3D
+//!
+//! ANF is also intended to introduce FNA3D and the documentation goes into internals details.
+//! However, you don't have to read them all if you only want to use ANF.
 
 pub mod gfx;
+pub mod vfs;
 
 /// The final notification from the application returned by `run_loop`
 pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;

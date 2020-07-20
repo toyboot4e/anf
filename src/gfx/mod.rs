@@ -1,4 +1,9 @@
 //! 2D graphics
+//!
+//! Call `init` to begin with. The rendering cycle goes in `begin_frame`, [`Batcher::flush`] and
+//! `end_frame`.
+//!
+//! [`Batcher::flush`]: ./batcher/struct.Batcher.html#method.flush
 
 pub mod batcher;
 pub mod texture;
@@ -52,11 +57,10 @@ pub fn end_frame(device: &mut fna3d::Device, batcher: &mut Batcher) {
 
 /// Clears the active draw buffers with cornflower blue i.e. (r, g, b) = (100, 149, 237)
 pub fn clear(device: &mut fna3d::Device) {
-    let color = fna3d::Color {
-        r: 100,
-        g: 149,
-        b: 237,
-        a: 0,
-    };
-    device.clear(fna3d::ClearOptions::Target, color, 0.0, 0);
+    device.clear(
+        fna3d::ClearOptions::Target,
+        fna3d::colors::CORNFLOWER_BLUE,
+        0.0,
+        0,
+    );
 }
