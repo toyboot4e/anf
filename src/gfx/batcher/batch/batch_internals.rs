@@ -16,7 +16,7 @@ pub const MAX_INDICES: usize = MAX_SPRITES * 6;
 ///
 /// The data layout is dynamically specified as `fna3d::VertexDeclaration`
 ///
-/// * `dest`: normalized position in TODO: where? render target?
+/// * `dest`: position in pixels in target
 /// * `color`: color
 /// * `uvs`: normalized position in texture (a.k.ak. texture coordinates)
 #[derive(Debug, Clone)]

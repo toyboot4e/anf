@@ -4,6 +4,7 @@ use anf::{
     gfx::{
         batcher::{self, Batcher},
         texture::Texture2D,
+        Pipeline,
     },
     vfs,
 };
@@ -37,8 +38,8 @@ fn main() {
     let win = canvas.window().raw() as *mut _;
     let params = {
         let mut params = fna3d::utils::params_from_window_handle(win);
-        params.backBufferWidth = cfg.width as i32;
-        params.backBufferHeight = cfg.height as i32;
+        params.backBufferWidth = cfg.w as i32;
+        params.backBufferHeight = cfg.h as i32;
         params
     };
     let device = Device::from_params(params, true);
@@ -53,6 +54,7 @@ fn main() {
 
 pub struct MainState {
     device: Device,
+    pipeline: Pipeline,
     batcher: Batcher,
     texture: Texture2D,
     tmp: bool,
@@ -65,15 +67,18 @@ impl MainState {
         params: fna3d::PresentationParameters,
     ) -> Self {
         anf::gfx::init(&mut device, &params);
+
+        let gd = Pipeline::from_device(&mut device);
         let batcher = Batcher::new(&mut device, win);
 
         let texture = {
-            let path = vfs::get("a.png");
+            let path = vfs::get("b.png");
             Texture2D::from_path(&mut device, &path).expect("failed to load texture")
         };
 
         Self {
             device,
+            pipeline: gd,
             batcher,
             texture,
             tmp: false,
@@ -93,13 +98,16 @@ impl MainState {
             a: 128,
         };
 
-        // normalzied
-        push.src_rect(0f32, 0f32, 576f32, 384f32);
-        push.is_dest_size_in_pixels = false;
-        push.dest_size(1f32, 1f32);
+        // in pixels. will be normalzied
+        let w = 168 as f32;
+        let h = 176 as f32;
+        push.src_rect(0f32, 0f32, w, h);
 
-        // push.is_dest_size_in_pixels = true;
-        // push.dest_size(576f32, 384f32);
+        // push.is_dest_size_in_pixels = false;
+        // push.dest_size(1f32, 1f32);
+
+        push.is_dest_size_in_pixels = true;
+        push.dest_size(w, h);
 
         push.run(&mut self.batcher.batch, &self.texture, policy, 0);
     }
@@ -121,9 +129,9 @@ impl anf::State for MainState {
 
         self.batcher.begin(&mut self.device);
         self.render_scene();
-        self.batcher.end(&mut self.device);
+        self.batcher.end(&mut self.device, &mut self.pipeline);
 
-        anf::gfx::end_frame(&mut self.device, &mut self.batcher);
+        anf::gfx::end_frame(&mut self.device, &mut self.pipeline, &mut self.batcher);
     }
 
     fn handle_event(&mut self, ev: &sdl2::event::Event) -> anf::StateUpdateResult {

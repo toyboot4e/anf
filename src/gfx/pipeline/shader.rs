@@ -3,11 +3,11 @@
 //! It's a part of the rendering pipeline and cannot be skipped.
 
 use std::{
-    env, fs,
+    fs,
     io::{self, Read},
-    path::PathBuf,
 };
 
+#[derive(Debug)]
 pub struct Shader {
     effect: *mut fna3d::Effect,
     mojo_effect: *mut fna3d::mojo::Effect,

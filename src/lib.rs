@@ -1,7 +1,6 @@
 //! ANF is an FNA-like 2D game framework in Rust powered by FNA3D
 //!
-//! ANF is also intended to introduce FNA3D and the documentation goes into internals details.
-//! However, you don't have to read them all if you only want to use ANF.
+//! ANF is also intended to introduce FNA3D so the documentation goes into internals details.
 
 pub mod gfx;
 pub mod vfs;
@@ -12,14 +11,16 @@ pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;
 use sdl2::{keyboard::Keycode, render::WindowCanvas};
 use std::time::Duration;
 
+// TODO: FPS
+
 // --------------------------------------------------------------------------------
-// Window configuration
+// Window configuration & creation
 
 /// Initial window settings
 pub struct WindowConfig {
     pub title: String,
-    pub width: u32,
-    pub height: u32,
+    pub w: u32,
+    pub h: u32,
 }
 
 /// Creates a window from `WindowConfig` and returns a handle to it
@@ -42,14 +43,14 @@ impl WindowConfig {
     pub fn default() -> Self {
         Self {
             title: "† ANF †".to_string(),
-            width: 1280,
-            height: 720,
+            w: 1280,
+            h: 720,
         }
     }
 
     fn create_window(&self, video: sdl2::VideoSubsystem) -> sdl2::video::Window {
         video
-            .window(&self.title, self.width, self.height)
+            .window(&self.title, self.w, self.h)
             .position_centered()
             .build()
             .unwrap()
@@ -57,7 +58,7 @@ impl WindowConfig {
 }
 
 // --------------------------------------------------------------------------------
-// Game loop
+// Game state & loop
 
 /// State with methods called from the game loop (`run_loop`)
 pub trait State {
@@ -89,6 +90,7 @@ pub fn run_loop(state: &mut impl State, scx: &mut sdl2::Sdl) -> GameResult {
         state.update();
         state.render();
 
+        // FXIME: FPS handling and GameTime
         let fps = 60;
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / fps));
     }

@@ -1,17 +1,20 @@
-//! Virtual file system which provides absolute path from `assets` directory
+//! Virtual file system
 //!
-//! Not so good yet
+//! It just locates the root; it's not so much a file system (yet).
 
 use std::path::{Path, PathBuf};
 
-/// Get an absolute path to a file from a **relative path** from `assets` directory.
-pub fn get(p: impl AsRef<Path>) -> PathBuf {
-    // FIXME:
-    let root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets");
-    root.join(p.as_ref())
+// FIXME:
+fn root() -> PathBuf {
+    PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets")
 }
 
-/// Get an absolute path to a file from a **relative path** from `assets` directory.
+/// Returns an absolute path to a file from a **relative path** from `assets` directory.
+pub fn get(p: impl AsRef<Path>) -> PathBuf {
+    root().join(p.as_ref())
+}
+
+/// Returns a path to the default shader file
 pub fn default_shader() -> PathBuf {
     self::get("FNAEffects/SpriteEffect.fxb")
 }

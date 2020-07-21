@@ -43,7 +43,7 @@ const CORNER_OFFSET_Y: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 /// * `dest_rect`: in pixels or normalized
 ///
 /// * `is_dest_size_in_pixels`:
-///   If false, `src_rect` is assumed to be normaliezd
+///   If false, `src_rect` is assumed to have been normaliezd
 #[derive(Debug)]
 pub struct SpritePushCommand {
     pub src_rect: Rect2f,
@@ -84,7 +84,7 @@ impl Default for SpritePushCommand {
 /// Builder methods
 /// ---
 impl SpritePushCommand {
-    /// In pixels
+    /// In pixels (automatically normalized)
     pub fn src_rect(&mut self, x: f32, y: f32, w: f32, h: f32) {
         self.src_rect = Rect2f { x, y, w, h };
     }
@@ -94,6 +94,7 @@ impl SpritePushCommand {
         self.dest_rect.y = y;
     }
 
+    // TODO: dest_size_normalized
     pub fn dest_size(&mut self, w: f32, h: f32) {
         self.dest_rect.w = w;
         self.dest_rect.h = h;
@@ -115,7 +116,9 @@ impl SpritePushCommand {
         let inv_tex_w = 1.0 / texture.w as f32;
         let inv_tex_h = 1.0 / texture.h as f32;
         self.push_vertices(batch, inv_tex_w, inv_tex_h, policy, effects);
-        batch.texture_info[batch.n_sprites] = texture.clone(); // TODO: use Rc
+        // TODO: is this working?
+        // TODO: use Rc
+        batch.texture_slots[batch.n_sprites] = texture.clone();
         batch.n_sprites += 1;
     }
 
@@ -128,9 +131,10 @@ impl SpritePushCommand {
         policy: DrawPolicy,
         effects: u8,
     ) {
+        // TODO: flush batch if nexessary
         // TODO: overwriting fields vs use local variables
 
-        // it's in pixels
+        // let it be normalized
         let src_rect = Rect2f {
             x: self.src_rect.x * inv_tex_w,
             y: self.src_rect.y * inv_tex_h,
@@ -141,6 +145,7 @@ impl SpritePushCommand {
         self.origin.x = (self.origin.x / src_rect.w) * inv_tex_w;
         self.origin.y = (self.origin.y / src_rect.h) * inv_tex_h;
 
+        // destination is NOT normalized
         let dest_pos = {
             let mut pos = self.src_rect.left_up();
             if policy.do_round {
@@ -150,17 +155,16 @@ impl SpritePushCommand {
         };
 
         let dest_size = {
-            // TODO: should I round size
             let mut size = self.dest_rect.size();
             if !self.is_dest_size_in_pixels {
-                size.x *= src_rect.w;
-                size.y *= src_rect.h;
+                size.x *= self.src_rect.w;
+                size.y *= self.src_rect.h;
             }
             size
         };
 
         // rotation matrix
-        let (rot_1x, rot_1y, rot_2x, rot_2y) = if self.rot <= f32::EPSILON {
+        let (rot_1x, rot_1y, rot_2x, rot_2y) = if self.rot >= f32::EPSILON {
             let sin = self.rot.sin();
             let cos = self.rot.cos();
             (cos, sin, -sin, cos)
@@ -197,6 +201,7 @@ impl SpritePushCommand {
             // `i ^ effects` == `i`
             vertex[i].uvs.x = (CORNER_OFFSET_X[i ^ effects as usize] * src_rect.w) + src_rect.x;
             vertex[i].uvs.y = (CORNER_OFFSET_Y[i ^ effects as usize] * src_rect.h) + src_rect.y;
+
             vertex[i].color = self.color;
         }
     }

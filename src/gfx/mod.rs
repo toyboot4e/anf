@@ -6,13 +6,15 @@
 //! [`Batcher::flush`]: ./batcher/struct.Batcher.html#method.flush
 
 pub mod batcher;
+mod pipeline;
 pub mod texture;
 pub mod vertices;
 
 use batcher::Batcher;
+pub use pipeline::Pipeline;
 
 // FIXME: this may be nonsense
-/// The first thing to call after making `Device`
+/// The first thing to call after making `gfx::Device`
 pub fn init(
     device: &mut fna3d::Device,
     // batcher: &mut Batcher,
@@ -34,7 +36,15 @@ pub fn init(
         minDepth: 0 as f32,
         maxDepth: 1 as f32,
     };
-    device.set_viewport(&viewport)
+    device.set_viewport(&viewport);
+
+    let scissor = fna3d::Rect {
+        x: 0,
+        y: 0,
+        w: params.backBufferWidth,
+        h: params.backBufferHeight,
+    };
+    device.set_scissor_rect(&scissor);
 
     // device.set_render_targets(
     //     Some(&mut batcher.v_binds.bind),
@@ -49,9 +59,9 @@ pub fn begin_frame(device: &mut fna3d::Device) {
     device.begin_frame();
 }
 
-/// Makes sure the `Batcher` flushes and actually swaps the buffers
-pub fn end_frame(device: &mut fna3d::Device, batcher: &mut Batcher) {
-    batcher.flush(device);
+/// Swaps the front/back buffers (after making sure the `Batcher` is flushed)
+pub fn end_frame(device: &mut fna3d::Device, p: &mut Pipeline, batcher: &mut Batcher) {
+    batcher.flush(device, p);
     device.swap_buffers(None, None, batcher.win);
 }
 

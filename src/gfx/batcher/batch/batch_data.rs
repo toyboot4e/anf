@@ -29,19 +29,19 @@ impl crate::gfx::vertices::SomeVertexData for FourVertexInfo {}
 pub struct BatchData {
     pub vertex_data: Vec<self::FourVertexInfo>,
     // TODO: use Rc
-    pub texture_info: Vec<Texture2D>,
+    pub texture_slots: Vec<Texture2D>,
     pub n_sprites: usize,
 }
 
 impl BatchData {
     pub fn new() -> Self {
         let v = vec![self::FourVertexInfo::default(); MAX_SPRITES];
-        // FIXME: what size should I use?
+        // FIXME: use max texture slot?
         let t = vec![Texture2D::empty(); 16];
 
         Self {
             vertex_data: v,
-            texture_info: t,
+            texture_slots: t,
             n_sprites: 0,
         }
     }
@@ -54,16 +54,19 @@ impl BatchData {
 /// ```no_run
 /// // batcher: &mut Batcher in scope
 /// let iter = BatchSpanIter::new();
-/// while let Some(span) = iter.next(&batcher.batch_data) {
+/// while let Some((slot, span)) = iter.next(&batcher.batch_data) {
 ///     // make a draw call
 /// }
 /// batcher.batch_data.n_sprites = 0;
 /// ```
+#[derive(Debug)]
 pub struct BatchSpanIter {
     current: usize,
+    nth: usize,
 }
 
 /// Span of `BatchData` for a draw call
+#[derive(Debug)]
 pub struct BatchSpan {
     pub offset: usize,
     pub len: usize,
@@ -71,29 +74,37 @@ pub struct BatchSpan {
 
 impl BatchSpanIter {
     pub fn new() -> Self {
-        Self { current: 0 }
+        Self { current: 0, nth: 0 }
     }
 
-    pub fn next(&mut self, batch: &BatchData) -> Option<BatchSpan> {
+    pub fn next(&mut self, batch: &BatchData) -> Option<(usize, BatchSpan)> {
         if self.current >= batch.n_sprites {
             return None;
         }
+        let nth = self.nth;
+        self.nth += 1;
         let lo = self.current;
         for hi in 1..batch.n_sprites {
-            if &batch.texture_info[hi] != &batch.texture_info[lo] {
+            if &batch.texture_slots[hi] != &batch.texture_slots[lo] {
                 self.current = hi;
-                return Some(BatchSpan {
-                    offset: lo,
-                    len: hi - lo,
-                });
+                Some((
+                    nth,
+                    BatchSpan {
+                        offset: lo,
+                        len: hi - lo,
+                    },
+                ));
             }
         }
         let hi = batch.n_sprites;
         self.current = hi;
-        return Some(BatchSpan {
-            offset: lo,
-            len: hi - lo,
-        });
+        Some((
+            nth,
+            BatchSpan {
+                offset: lo,
+                len: hi - lo,
+            },
+        ))
     }
 }
 
