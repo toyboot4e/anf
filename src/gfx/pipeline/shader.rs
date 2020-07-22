@@ -47,7 +47,7 @@ impl Shader {
     // TODO: what is `pass`? typed?
     pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
         // no effect state change
-        let state_changes = fna3d::sys::mojo::MOJOSHADER_effectStateChanges {
+        let state_changes = fna3d::mojo::EffectStateChanges {
             render_state_change_count: 0,
             render_state_changes: std::ptr::null(),
             sampler_state_change_count: 0,

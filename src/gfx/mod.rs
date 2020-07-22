@@ -20,7 +20,7 @@ pub fn init(
     // batcher: &mut Batcher,
     params: &fna3d::PresentationParameters,
 ) {
-    return;
+    // return;
 
     // set default render state
     let blend = fna3d::BlendState::alpha_blend();
@@ -61,16 +61,16 @@ pub fn begin_frame(device: &mut fna3d::Device) {
     device.begin_frame();
 }
 
-/// Swaps the front/back buffers (after making sure the `Batcher` is flushed)
+/// Swaps the front/back buffers
 pub fn end_frame(device: &mut fna3d::Device, p: &mut Pipeline, batcher: &mut Batcher) {
-    batcher.flush(device, p);
+    // batcher.flush(device, p);
     device.swap_buffers(None, None, batcher.win);
 }
 
 /// Clears the active draw buffers with cornflower blue i.e. (r, g, b) = (100, 149, 237)
 pub fn clear(device: &mut fna3d::Device) {
     device.clear(
-        fna3d::ClearOptions::Target,
+        fna3d::ClearOptions::TARGET,
         fna3d::colors::CORNFLOWER_BLUE,
         0.0,
         0,

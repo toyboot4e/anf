@@ -142,7 +142,7 @@ impl DynamicVertexBuffer {
         }
     }
 
-    /// Sets vertex data to thsi buffer
+    /// Sets vertex data to this buffer
     pub fn set_data<T: SomeVertexData>(
         &mut self,
         device: &mut fna3d::Device,

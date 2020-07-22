@@ -1,4 +1,4 @@
-//! `BatchData` accumulates vertex and texture data before buffering to GPU
+//! `BatchData` accumulates vertex/texture data
 //!
 //! Actually the internal implementation is based on `Batcher` in Nez
 
@@ -13,7 +13,7 @@ type FourVertexInfo = [VertexData; 4];
 impl crate::gfx::vertices::SomeVertexData for FourVertexInfo {}
 
 // TODO: more efficient slot handling
-/// Vertex data sliced with `Texture2D`s
+/// Accumulates vertex data with related `Texture2D` (s)
 ///
 /// Each info is indexed with sprite push (first, second, third, ..). Each batch can be iterated
 /// via [`BatchSpanIter`].
@@ -66,7 +66,7 @@ pub struct BatchSpanIter {
     nth: usize,
 }
 
-/// Span of `BatchData` for a draw call
+/// Span of `BatchData` for a draw call generated with `BatchSpanIter`
 ///
 /// `lo` multipled by 2 is the base vertex index
 #[derive(Debug)]

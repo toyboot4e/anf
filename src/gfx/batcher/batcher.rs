@@ -11,7 +11,7 @@ use std::ffi::c_void;
 
 /// The main interface to render 2D sprites
 ///
-/// Sprites are rectangles (more generally a quadrilateral) and `Batcher` is focused on quads
+/// Sprites are rectangles (more generally quadrilaterals) and `Batcher` is focused on them
 ///
 /// # Immediate mode vs batch mode
 ///
@@ -70,17 +70,18 @@ impl Batcher {
     /// * `FNA3D_SetVertexData`:
     ///   Sets our `VertexData` to `VertexBuffer`
     /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`:
-    ///   Run only when necessary (e.g. when the texture changes)
+    ///   Sets `SamplerState` (`Texture` etc.) to `Device`
     /// * `FNA3D_ApplyVertexBufferBindings`:
-    ///   Prepares shader program ("the last thing to do" before drawing).
+    ///   Sets our `VertexBuffer` to `Device` and prepares shader program ("the last thing to do" before drawing).
     /// * `FNA3D_DrawIndexedPrimitives`:
-    ///   Finally draw a rectangle sprites as primitives (triangles)
+    ///   Finally draw rectangle sprites as primitives (triangles)
     pub fn flush(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
         // FIXME: `flush` can be called if it's not begun (in end_frame)
         if !self.is_begin_called {
             log::warn!("`Batcher::flush` has to be called after `begin`");
             return;
         }
+        self.is_begin_called = false;
 
         if self.batch.n_sprites == 0 {
             return;
@@ -90,10 +91,10 @@ impl Batcher {
 
         // FNA3D_ApplyEffect (this is a required rendering pipeline)
         p.apply_effect(device, 0);
-        // FNA3D_SetVertexData
-        self.flush_set_vertex(device, p);
+        // FNA3D_SetVertexData (copies vertex data from `BatchData` to `VertexBuffer`)
+        self.flush_set_vertex(device);
         // FNA3D_VerifySamplerState, FNA3D_VerifyVertexSamplerState,
-        // FNA3D_ApplyVertexBufferBindings,
+        // FNA3D_ApplyVertexBufferBindings (slices `VertexBuffer` to `VertexBufferBinding`)
         // FNA3D_DrawIndexedPrimitives
         self.flush_draw(device, p);
 
@@ -131,9 +132,11 @@ impl Batcher {
         // _spriteEffect.SetMatrixTransform(ref _matrixTransformMatrix);
     }
 
-    /// Sets vertex data to `fna3d::Device`
+    // FIXME: is this copy needed?
+    // FIXME: when do we send our data to GPU? when calling apply_vertex_buffer_bindings?
+    /// Copies vertex data in `BatchData` to `VertexBuffer`
     #[inline]
-    fn flush_set_vertex(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
+    fn flush_set_vertex(&mut self, device: &mut fna3d::Device) {
         let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
         let offset = 0 as i32;
         // FNA3D_SetVertexBufferData
@@ -146,10 +149,10 @@ impl Batcher {
     ///
     /// Vertex data is already set before is functions
     #[inline]
-    fn flush_draw(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
+    fn flush_draw(&mut self, device: &mut fna3d::Device, pipeline: &mut Pipeline) {
         let mut iter = batch_data::BatchSpanIter::new();
         while let Some((slot, span)) = iter.next(&mut self.batch) {
-            self.make_draw_call(device, p, slot, span);
+            self.make_draw_call(device, pipeline, slot, span);
         }
     }
 
@@ -190,7 +193,7 @@ impl Batcher {
         // GraphicsDevice.PrepareVertexBindingArray
 
         // update vertex bindings
-        p.bind_vertex_buffer(&mut self.bufs.vbuf.inner, 0);
+        p.rebind_vertex_buffer(&mut self.bufs.vbuf.inner, 0);
 
         // "the very last thing to call before making a draw call"
         // (`GraphicsDevice.PrepareVertexBindingArray` > `FNA3D_SetVertexBufferBindings`)

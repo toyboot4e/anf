@@ -1,3 +1,5 @@
+//! Re-exported to the root of the module
+
 use crate::gfx::{
     batcher::batch_data::batch_internals::VertexData, pipeline::shader::Shader, texture::Texture2D,
     vertices::VertexBuffer,
@@ -7,9 +9,10 @@ use crate::gfx::{
 ///
 /// Corresponds to `GraphicsDevice` in FNA.
 ///
-/// Contains methods to call:
+/// Contains methods correspond to:
 ///
 /// * `FNA3D_ApplyEffect`
+/// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
 /// * `FNA3D_ApplyVertexBufferBindings`
 #[derive(Debug)]
 pub struct Pipeline {
@@ -31,6 +34,7 @@ impl Pipeline {
     // ----------------------------------------
     // Shader
 
+    /// `FNA3D_ApplyEffect`
     pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
         self.shader.apply_effect(device, pass);
     }
@@ -38,6 +42,7 @@ impl Pipeline {
     // ----------------------------------------
     // Sampler state & materials?
 
+    /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
     pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
         self.state.set_texture(device, texture);
     }
@@ -45,17 +50,18 @@ impl Pipeline {
     // ----------------------------------------
     // Vertex binding
 
-    pub fn bind_vertex_buffer(&mut self, vbuf: &mut VertexBuffer, offset: i32) {
+    pub fn rebind_vertex_buffer(&mut self, vbuf: &mut VertexBuffer, offset: i32) {
         self.v_binds.bind(vbuf, offset);
     }
 
-    /// Applices the binded vertex data to the `fna3d::Device`
+    /// * `FNA3D_ApplyVertexBufferBindings`
     pub fn apply_vertex_buffer_bindings(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
         self.v_binds.apply(device, base_vertex);
     }
 }
 
 // --------------------------------------------------------------------------------
+// Internals (very WIP)
 
 // TODO: what is this. what is instance drawing/frequency
 /// Vertex buffer bindings
@@ -64,7 +70,7 @@ impl Pipeline {
 ///
 /// A part of the rendering pipeline. Component of `GraphicsDevice` in FNA3D.
 #[derive(Debug)]
-pub struct VBind {
+struct VBind {
     bind: fna3d::VertexBufferBinding,
     // is_updated: bool,
 }
@@ -97,7 +103,7 @@ impl VBind {
 
     /// Cooredponds to `GraphicsDevice.PrepareVertexBindingArray`.
     ///
-    /// Unlike FNA, we assume that we only use one `VertexBufferBinding`.
+    /// Unlike FNA, we only use one `VertexBufferBinding`.
     pub fn apply(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
         device.apply_vertex_buffer_bindings(&[self.bind], true, base_vertex);
         // self.is_updated = false;
@@ -106,15 +112,13 @@ impl VBind {
     // pub fn clear(&mut self) { }
 }
 
-// --------------------------------------------------------------------------------
-
 /// Tracks `SamplerState` modifications
 ///
 /// TODO: explain what is sampler
 ///
 /// Component of `GraphicsDevice` in FNA
 #[derive(Debug)]
-pub struct SamplerTrack {
+struct SamplerTrack {
     pub samplers: Vec<fna3d::SamplerState>,
     pub v_samplers: Vec<fna3d::SamplerState>,
 }

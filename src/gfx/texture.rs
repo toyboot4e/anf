@@ -141,8 +141,8 @@ impl Texture2D {
     }
 
     // pub fn from_reader<R: BufRead + Seek>(
-    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, reader: R) -> Option<Self> {
-        // this is broken
+    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, mut reader: R) -> Option<Self> {
+        // this is broken?
         // use sdl2::image::ImageRWops;
         // let mut buf = Vec::new();
         // let x = sdl2::rwops::RWops::from_read(&mut reader, &mut buf).unwrap();
@@ -151,13 +151,17 @@ impl Texture2D {
         // let h = sur.height();
         // let len = sur.pitch();
         // let pixels = unsafe { (*sur.raw()).pixels };
+        // let _ = reader.seek(std::io::SeekFrom::Start(0));
+
+        // FIXME: is this borken?
+        let (pixels, len, [w, h]) = fna3d::img::load_image_from_reader(reader, None, false);
 
         // is this broken?
         // TODO: try loading image using something else
-        let (pixels, len, [w, h]) = fna3d::img::load_image_from_reader(reader, None, false);
-        if pixels.is_null() {
-            return None;
-        }
+        // let (pixels, len, [w, h]) = fna3d::img::load_image_from_reader(reader, None, false);
+        // if pixels.is_null() {
+        //     return None;
+        // }
 
         log::trace!(
             "load texture: {{ len: {}, w: {}, h: {} }}, pixels at {:?}",
@@ -170,9 +174,9 @@ impl Texture2D {
         let mut texture = Self::with_size(device, w, h);
         texture.set_data_ptr(device, 0, None, pixels as *mut _, len as u32);
 
-        unsafe {
-            fna3d::sys::FNA3D_Image_Free(pixels);
-        }
+        // unsafe {
+        //     fna3d::sys::FNA3D_Image_Free(pixels);
+        // }
 
         return Some(texture);
     }

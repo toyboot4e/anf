@@ -1,6 +1,4 @@
-//! `Batcher` is the main interface to render 2D sprites
-//!
-//! Corresponds to both `GraphicsDevice` and `SpriteBatch` in FNA.
+//! The main interface to render 2D sprites
 
 pub mod batch_data;
 

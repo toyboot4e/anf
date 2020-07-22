@@ -1,6 +1,4 @@
-//! Internal buffers
-//!
-//! Components of `GraphicsDevice` and `Batcher`.
+//! Internal buffers of `Batcher`
 
 use crate::gfx::{
     batcher::batch_data::batch_internals::*,
@@ -8,15 +6,13 @@ use crate::gfx::{
 };
 
 // TODO: user proper name
-/// Buffer objects for actual drawing
+/// Vertex/index buffer
 ///
-/// Both vertex/index buffer in FNA3D are dynamically "typed" with specific objects. They are
-/// defined in `batch_internals`.
+/// We need to copy the buffer to `fna3d::Device` be calling `fna3d::Device::set_vertex_data`.
 ///
 /// `IndexBuffer` is rather static because we only draw rectangle sprites represented as two
-/// triangles. Each triangle is specified with three vertices and three indices. Since the index
-/// pattern is cyclic and static, `IndexBuffer` is automatically generated to fill buffer and you
-/// can forget about it after creating `ViBuffers`.
+/// triangles. Since index pattern is cyclic and static, `IndexBuffer` is automatically generated
+/// to fill buffer and you can forget about it after creating `ViBuffers`.
 ///
 /// Component of `SpriteBatch` in XNA.
 #[derive(Debug)]
