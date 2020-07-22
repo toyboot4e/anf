@@ -12,7 +12,8 @@ type FourVertexInfo = [VertexData; 4];
 
 impl crate::gfx::vertices::SomeVertexData for FourVertexInfo {}
 
-/// Local data before buffering to GPU
+// TODO: more efficient slot handling
+/// Vertex data sliced with `Texture2D`s
 ///
 /// Each info is indexed with sprite push (first, second, third, ..). Each batch can be iterated
 /// via [`BatchSpanIter`].
@@ -66,10 +67,21 @@ pub struct BatchSpanIter {
 }
 
 /// Span of `BatchData` for a draw call
+///
+/// `lo` multipled by 2 is the base vertex index
 #[derive(Debug)]
 pub struct BatchSpan {
-    pub offset: usize,
-    pub len: usize,
+    pub lo: usize,
+    pub hi: usize,
+}
+
+impl BatchSpan {
+    /// Corresponds to the number of sprites to draw
+    ///
+    /// `len` multipled by 2 is the number of triangles
+    pub fn len(&self) -> usize {
+        self.hi - self.lo
+    }
 }
 
 impl BatchSpanIter {
@@ -87,24 +99,12 @@ impl BatchSpanIter {
         for hi in 1..batch.n_sprites {
             if &batch.texture_slots[hi] != &batch.texture_slots[lo] {
                 self.current = hi;
-                Some((
-                    nth,
-                    BatchSpan {
-                        offset: lo,
-                        len: hi - lo,
-                    },
-                ));
+                Some((nth, BatchSpan { lo, hi }));
             }
         }
         let hi = batch.n_sprites;
         self.current = hi;
-        Some((
-            nth,
-            BatchSpan {
-                offset: lo,
-                len: hi - lo,
-            },
-        ))
+        Some((nth, BatchSpan { lo, hi }))
     }
 }
 

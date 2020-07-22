@@ -20,6 +20,8 @@ pub fn init(
     // batcher: &mut Batcher,
     params: &fna3d::PresentationParameters,
 ) {
+    return;
+
     // set default render state
     let blend = fna3d::BlendState::alpha_blend();
     device.set_blend_state(&blend);

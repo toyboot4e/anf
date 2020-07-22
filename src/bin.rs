@@ -68,7 +68,7 @@ impl MainState {
     ) -> Self {
         anf::gfx::init(&mut device, &params);
 
-        let gd = Pipeline::from_device(&mut device);
+        let p = Pipeline::from_device(&mut device);
         let batcher = Batcher::new(&mut device, win);
 
         let texture = {
@@ -78,7 +78,7 @@ impl MainState {
 
         Self {
             device,
-            pipeline: gd,
+            pipeline: p,
             batcher,
             texture,
             tmp: false,

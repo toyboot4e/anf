@@ -4,7 +4,7 @@ ANF is an FNA-like framework for 2D games in Rust. It's powered by https://githu
 
 == About
 
-ANF and https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D] is still early in progress and it **only runs on macOS** out of the box (or you may have to manually link to FNA3D). I've been learning.
+ANF and https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D] is still early in progress and it **only runs on macOS** out of the box (or you may have to manually link to FNA3D, which I don't know how. I've been learning).
 
 Installation:
 

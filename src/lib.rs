@@ -2,6 +2,9 @@
 //!
 //! ANF is also intended to introduce FNA3D so the documentation goes into internals details.
 
+pub use fna3d;
+pub use sdl2;
+
 pub mod gfx;
 pub mod vfs;
 

@@ -13,11 +13,9 @@ use crate::gfx::{
 /// * `FNA3D_ApplyVertexBufferBindings`
 #[derive(Debug)]
 pub struct Pipeline {
-    // rendering pipeline
-    pub v_binds: VBind,
-    pub shader: Shader,
-    // state
-    pub state: SamplerTrack,
+    v_binds: VBind,
+    shader: Shader,
+    state: SamplerTrack,
 }
 
 impl Pipeline {
@@ -29,6 +27,32 @@ impl Pipeline {
             shader: Shader::from_device(device).unwrap(),
         }
     }
+
+    // ----------------------------------------
+    // Shader
+
+    pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
+        self.shader.apply_effect(device, pass);
+    }
+
+    // ----------------------------------------
+    // Sampler state
+
+    pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
+        self.state.set_texture(device, texture);
+    }
+
+    // ----------------------------------------
+    // Vertex binding
+
+    pub fn bind_vertex_buffer(&mut self, vbuf: &mut VertexBuffer, offset: i32) {
+        self.v_binds.bind(vbuf, offset);
+    }
+
+    /// Applices the binded vertex data to the `fna3d::Device`
+    pub fn apply_vertex_buffer_bindings(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
+        self.v_binds.apply(device, base_vertex);
+    }
 }
 
 // --------------------------------------------------------------------------------
@@ -36,17 +60,17 @@ impl Pipeline {
 // TODO: what is this. what is instance drawing/frequency
 /// Vertex buffer bindings
 ///
-/// Binded to a range of `VertexBuffer` before actually drawing primitives.
+/// This is actually a slice of vertex buffer where `fna3d::Device` reads.
 ///
 /// A part of the rendering pipeline. Component of `GraphicsDevice` in FNA3D.
 #[derive(Debug)]
 pub struct VBind {
     bind: fna3d::VertexBufferBinding,
-    is_updated: bool,
+    // is_updated: bool,
 }
 
 impl VBind {
-    pub fn new(decl: fna3d::VertexDeclaration) -> Self {
+    fn new(decl: fna3d::VertexDeclaration) -> Self {
         VBind {
             bind: fna3d::VertexBufferBinding {
                 vertexBuffer: std::ptr::null_mut(),
@@ -54,31 +78,32 @@ impl VBind {
                 vertexOffset: 0,
                 instanceFrequency: 0,
             },
-            is_updated: false,
+            // is_updated: false,
         }
     }
 
-    /// Updates bindings
-    ///
-    /// Corresponds to `GraphicsDevice.SetVertexBufferData`. Different from `GraphicsDevice`, we
-    /// dont' use non-native `VertexBufferBinding` and this method directly updates a native
-    /// (FNA3D) `VertexBuffer`.
-    pub fn bind(&mut self, vbuf: &mut VertexBuffer, offset: i32) {
+    pub fn bind(&mut self, vbuf: &mut VertexBuffer, base_vertex: i32) {
         self.bind.vertexBuffer = vbuf.raw();
         self.bind.vertexDeclaration = vbuf.decl.clone();
-        self.bind.vertexOffset = offset;
-        self.is_updated = true; // so it's always true. is it ok?
+        self.bind.vertexOffset = base_vertex;
     }
 
-    // pub fn clear(&mut self) { }
+    // /// Updates bindings (updates the slice)
+    // ///
+    // /// Corresponds to `GraphicsDevice.SetVertexBufferData`.
+    // pub fn update(&mut self, vbuf: &mut VertexBuffer, base_vertex: i32) {
+    //     // self.is_updated = true; // so it's always true. is it ok?
+    // }
 
     /// Cooredponds to `GraphicsDevice.PrepareVertexBindingArray`.
     ///
     /// Unlike FNA, we assume that we only use one `VertexBufferBinding`.
-    pub fn apply_vertex_buffer_bindings(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
-        device.apply_vertex_buffer_bindings(&[self.bind], self.is_updated, base_vertex);
-        self.is_updated = false;
+    pub fn apply(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
+        device.apply_vertex_buffer_bindings(&[self.bind], true, base_vertex);
+        // self.is_updated = false;
     }
+
+    // pub fn clear(&mut self) { }
 }
 
 // --------------------------------------------------------------------------------

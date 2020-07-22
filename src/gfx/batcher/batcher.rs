@@ -41,7 +41,6 @@ impl Batcher {
 impl Batcher {
     /// Begins a pass
     pub fn begin(&mut self, device: &mut fna3d::Device) {
-        self.flush_prep_render_state(device); // FIXME: should it be called..?
         self.is_begin_called = true;
     }
 
@@ -86,12 +85,14 @@ impl Batcher {
         }
 
         self.flush_prep_render_state(device);
+
         // FNA3D_ApplyEffect (this is a required rendering pipeline)
-        p.shader.apply_effect(device, 0);
+        p.apply_effect(device, 0);
         // FNA3D_SetVertexData
         self.flush_set_vertex(device, p);
         // FNA3D_VerifySamplerState, FNA3D_VerifyVertexSamplerState,
-        // FNA3D_ApplyVertexBufferBindings, FNA3D_DrawIndexedPrimitives
+        // FNA3D_ApplyVertexBufferBindings,
+        // FNA3D_DrawIndexedPrimitives
         self.flush_draw(device, p);
 
         self.batch.n_sprites = 0;
@@ -128,7 +129,7 @@ impl Batcher {
         // _spriteEffect.SetMatrixTransform(ref _matrixTransformMatrix);
     }
 
-    /// Sets vertex data to `fna3d::Device` and maybe updates `VertexBufferBindings`
+    /// Sets vertex data to `fna3d::Device`
     #[inline]
     fn flush_set_vertex(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
         let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
@@ -137,8 +138,6 @@ impl Batcher {
         self.bufs
             .vbuf
             .set_data(device, offset as u32, data, fna3d::SetDataOptions::None);
-        // update vertex bindings
-        p.v_binds.bind(&mut self.bufs.vbuf.inner, offset);
     }
 
     /// Makes draw calls
@@ -152,7 +151,9 @@ impl Batcher {
         }
     }
 
-    /// Makes a draw call
+    /// Makes a draw call over a sprite batch
+    ///
+    /// Corresponds to `GraphicsDevice.DrawIndexedPrimitives`
     ///
     /// Calls these methods:
     ///
@@ -172,26 +173,41 @@ impl Batcher {
             "draw call with with span {:?} with texture {:?} with vertices\n{:#?}",
             span,
             &self.batch.texture_slots[slot],
-            &self.batch.vertex_data[span.offset..(span.offset + span.len)]
+            &self.batch.vertex_data[span.lo..span.hi]
         );
+
+        // ----------------------------------------
+        // GraphicsDevice.ApplyState
 
         // update sampler state
         // TODO: only when it's necessary (like when making a texture)
-        p.state.set_texture(device, &self.batch.texture_slots[slot]);
+        // TODO: BlendState, depth stencil state and rasterizer state
+        p.set_texture(device, &self.batch.texture_slots[slot]);
+
+        // ----------------------------------------
+        // GraphicsDevice.PrepareVertexBindingArray
+
+        // update vertex bindings
+        p.bind_vertex_buffer(&mut self.bufs.vbuf.inner, 0);
 
         // "the very last thing to call before making a draw call"
         // (`GraphicsDevice.PrepareVertexBindingArray` > `FNA3D_SetVertexBufferBindings`)
-        let vertex_offset = span.offset * 4;
-        p.v_binds
-            .apply_vertex_buffer_bindings(device, vertex_offset as i32);
+        let base_vertex = span.lo * 4;
+        p.apply_vertex_buffer_bindings(device, base_vertex as i32);
 
-        // make a draw call
+        // ----------------------------------------
+        // Make a draw call
+
+        let n_primitives = span.len() as u32 * 2;
+        log::trace!("n_primitives: {}, base: {} ", n_primitives, base_vertex);
+
         device.draw_indexed_primitives(
             fna3d::PrimitiveType::TriangleList,
-            span.offset as u32, // the number of vertices to skip
-            0,                  // the number of indices to skip.
+            // FIXME: is this OK?
+            base_vertex as u32, // the number of vertices to skip
             // base_offset * 6, // our index buffer is cyclic and we don't need to actually calculate it
-            span.len as u32 * 2, // the number of triangles to draw
+            0, // the number of indices to skip.
+            n_primitives,
             self.bufs.ibuf.raw(),
             self.bufs.ibuf.elem_size(),
         );

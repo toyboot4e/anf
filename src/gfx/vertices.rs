@@ -39,11 +39,11 @@ impl IndexBuffer {
         usage: fna3d::BufferUsage,
         is_dynamic: bool, // TODO: why not make a `StaticIndexBuffer`
     ) -> Self {
-        let stride = match index_elem_size {
+        let n_bytes = match index_elem_size {
             fna3d::IndexElementSize::Bits16 => 2,
             fna3d::IndexElementSize::Bits32 => 4,
         };
-        let size_in_bytes = n_indices * stride;
+        let size_in_bytes = n_indices * n_bytes;
         let buf = device.gen_index_buffer(is_dynamic, usage, size_in_bytes);
 
         Self {

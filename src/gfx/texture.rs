@@ -140,10 +140,8 @@ impl Texture2D {
         Self::from_reader(device, reader)
     }
 
-    pub fn from_reader<R: BufRead + Seek>(
-        device: &mut fna3d::Device,
-        mut reader: R,
-    ) -> Option<Self> {
+    // pub fn from_reader<R: BufRead + Seek>(
+    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, reader: R) -> Option<Self> {
         // this is broken
         // use sdl2::image::ImageRWops;
         // let mut buf = Vec::new();

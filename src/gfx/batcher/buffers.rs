@@ -56,6 +56,7 @@ impl ViBuffers {
 
         let mut ibuf = IndexBuffer::new(
             device,
+            // TODO: use more explicit thing. maybe trait
             fna3d::IndexElementSize::Bits16, // WE USE `i16` FOR INDEX BUFFERS
             MAX_INDICES as u32,
             fna3d::BufferUsage::WriteOnly, // what is this
