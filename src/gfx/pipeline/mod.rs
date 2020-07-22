@@ -2,6 +2,8 @@
 //!
 //! Or internals of `GraphicsDevice` in FNA
 
+// TODO: add Material
+
 pub mod shader;
 
 mod pipeline;

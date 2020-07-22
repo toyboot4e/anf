@@ -11,6 +11,8 @@ use std::ffi::c_void;
 
 /// The main interface to render 2D sprites
 ///
+/// Sprites are rectangles (more generally a quadrilateral) and `Batcher` is focused on quads
+///
 /// # Immediate mode vs batch mode
 ///
 /// TODO: discuss. Probablly we can always prefer batch mode
@@ -181,7 +183,7 @@ impl Batcher {
 
         // update sampler state
         // TODO: only when it's necessary (like when making a texture)
-        // TODO: BlendState, depth stencil state and rasterizer state
+        // TODO: Material (BlendState, depth stencil state and rasterizer state)
         p.set_texture(device, &self.batch.texture_slots[slot]);
 
         // ----------------------------------------

@@ -4,7 +4,6 @@
 
 use crate::gfx::{
     batcher::batch::batch_internals::*,
-    texture::Texture2D,
     vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
 };
 
@@ -56,8 +55,7 @@ impl ViBuffers {
 
         let mut ibuf = IndexBuffer::new(
             device,
-            // TODO: use more explicit thing. maybe trait
-            fna3d::IndexElementSize::Bits16, // WE USE `i16` FOR INDEX BUFFERS
+            INDEX_ELEM_SIZE,
             MAX_INDICES as u32,
             fna3d::BufferUsage::WriteOnly, // what is this
             false,

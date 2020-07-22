@@ -36,7 +36,7 @@ impl Pipeline {
     }
 
     // ----------------------------------------
-    // Sampler state
+    // Sampler state & materials?
 
     pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
         self.state.set_texture(device, texture);

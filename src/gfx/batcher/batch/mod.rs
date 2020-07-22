@@ -4,4 +4,3 @@
 
 pub mod batch_data;
 pub mod batch_internals;
-pub mod batch_push;

@@ -8,6 +8,7 @@ pub const MAX_SPRITES: usize = 2048;
 pub const MAX_VERTICES: usize = MAX_SPRITES * 4;
 /// 2048 * 4 * 6 = 49152 < 65536 = 2^16
 pub const MAX_INDICES: usize = MAX_SPRITES * 6;
+pub const INDEX_ELEM_SIZE: fna3d::IndexElementSize = fna3d::IndexElementSize::Bits16;
 
 // --------------------------------------------------------------------------------
 // VertexData
