@@ -2,7 +2,7 @@
 //!
 //! Corresponds to both `GraphicsDevice` and `SpriteBatch` in FNA.
 
-pub mod batch;
+pub mod batch_data;
 
 mod batch_push;
 pub use batch_push::{DrawPolicy, SpritePushCommand};

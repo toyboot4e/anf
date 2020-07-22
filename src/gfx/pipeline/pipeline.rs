@@ -1,5 +1,5 @@
 use crate::gfx::{
-    batcher::batch::batch_internals::VertexData, pipeline::shader::Shader, texture::Texture2D,
+    batcher::batch_data::batch_internals::VertexData, pipeline::shader::Shader, texture::Texture2D,
     vertices::VertexBuffer,
 };
 

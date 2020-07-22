@@ -1,23 +1,23 @@
 //! Push command to `BatchData`
 //!
-//! Actually the internal implementation is based on `Batcher` in Nez
+//! The internal implementation is based on `Batcher` in Nez
 
 use crate::gfx::{
-    batcher::batch::{batch_data::BatchData, batch_internals::*},
+    batcher::batch_data::{batch_data::BatchData, batch_internals::*},
     texture::Texture2D,
 };
 
-bitflags::bitflags! {
-    /// `SpriteEffects` in FNA
-    pub struct Flips: u8 {
-        /// Render the sprite as it is
-        const None = 0;
-        /// Render the sprite reversed along the X axis
-        const FlipH = 1;
-        /// Render the sprite reversed along the Y axis
-        const FlipV = 2;
-    }
-}
+// bitflags::bitflags! {
+//     /// `SpriteEffects` in FNA
+//     pub struct Flips: u8 {
+//         /// Render the sprite as it is
+//         const None = 0;
+//         /// Render the sprite reversed along the X axis
+//         const FlipH = 1;
+//         /// Render the sprite reversed along the Y axis
+//         const FlipV = 2;
+//     }
+// }
 
 /// Round or not
 #[derive(Debug, Clone, Copy, PartialEq)]

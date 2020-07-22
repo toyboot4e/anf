@@ -2,7 +2,7 @@
 
 use crate::gfx::{
     batcher::{
-        batch::{batch_data, batch_internals},
+        batch_data::{batch_data, batch_internals},
         buffers::ViBuffers,
     },
     Pipeline,

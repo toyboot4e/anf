@@ -3,7 +3,7 @@
 //! Components of `GraphicsDevice` and `Batcher`.
 
 use crate::gfx::{
-    batcher::batch::batch_internals::*,
+    batcher::batch_data::batch_internals::*,
     vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
 };
 
