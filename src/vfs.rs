@@ -14,7 +14,7 @@ pub fn get(p: impl AsRef<Path>) -> PathBuf {
     root().join(p.as_ref())
 }
 
-/// Returns a path to the default shader file
+/// Returns the path to the default shader file
 pub fn default_shader() -> PathBuf {
     self::get("FNAEffects/SpriteEffect.fxb")
 }

@@ -1,4 +1,12 @@
 //! The main interface to render 2D sprites
+//!
+//! # Internals
+//!
+//! A sprite is a rectangle that is represented as two triangles. And they are four vertices and
+//! six indices.
+//!
+//! * TODO: make a more fluent sprite push API
+//! * TODO: flush on push if it's out of capacity
 
 pub mod batch_data;
 
@@ -9,12 +17,6 @@ pub mod buffers;
 
 mod batcher;
 pub use batcher::Batcher;
-
-// TODO: make a more fluent API.
-//       batcher.begin(device).with_target(rt).rect(0,0,230,32).run()
-// set render target to null means the draw call goes to screen
-
-// TODO: flush if it's out of capacity
 
 /// Begins a builder to push a sprite to `Batcher`
 pub fn push() -> SpritePushCommand {

@@ -8,8 +8,6 @@ use crate::gfx::{
 // TODO: user proper name
 /// Vertex/index buffer
 ///
-/// We need to copy the buffer to `fna3d::Device` be calling `fna3d::Device::set_vertex_data`.
-///
 /// `IndexBuffer` is rather static because we only draw rectangle sprites represented as two
 /// triangles. Since index pattern is cyclic and static, `IndexBuffer` is automatically generated
 /// to fill buffer and you can forget about it after creating `ViBuffers`.
@@ -44,7 +42,7 @@ impl ViBuffers {
 
         let vbuf = DynamicVertexBuffer::new(
             device,
-            VertexData::decl(),
+            ColoredVertexData::decl(),
             MAX_VERTICES as u32,
             fna3d::BufferUsage::WriteOnly,
         );

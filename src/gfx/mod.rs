@@ -1,7 +1,10 @@
 //! 2D graphics
 //!
-//! Call `init` to begin with. The rendering cycle goes in `begin_frame`, [`Batcher::flush`] and
-//! `end_frame`.
+//! Call `init` to begin with.
+//!
+//! # The rendering cycle
+//!
+//! `begin_frame` → [`Batcher::flush`] → `end_frame`
 //!
 //! [`Batcher::flush`]: ./batcher/struct.Batcher.html#method.flush
 
@@ -13,47 +16,39 @@ pub mod vertices;
 use batcher::Batcher;
 pub use pipeline::Pipeline;
 
-// FIXME: this may be nonsense
 /// The first thing to call after making `gfx::Device`
 pub fn init(
     device: &mut fna3d::Device,
     // batcher: &mut Batcher,
     params: &fna3d::PresentationParameters,
 ) {
-    // return;
+    return;
 
-    // set default render state
-    let blend = fna3d::BlendState::alpha_blend();
-    device.set_blend_state(&blend);
-    let rst = fna3d::RasterizerState::default();
-    device.apply_rasterizer_state(&rst);
-    let dsst = fna3d::DepthStencilState::default();
-    device.set_depth_stencil_state(&dsst);
+    // // set default render state
+    // let blend = fna3d::BlendState::alpha_blend();
+    // device.set_blend_state(&blend);
+    // let rst = fna3d::RasterizerState::default();
+    // device.apply_rasterizer_state(&rst);
+    // let dsst = fna3d::DepthStencilState::default();
+    // device.set_depth_stencil_state(&dsst);
 
-    let viewport = fna3d::Viewport {
-        x: 0,
-        y: 0,
-        w: params.backBufferWidth as i32,
-        h: params.backBufferHeight as i32,
-        minDepth: 0 as f32,
-        maxDepth: 1 as f32,
-    };
-    device.set_viewport(&viewport);
+    // let viewport = fna3d::Viewport {
+    //     x: 0,
+    //     y: 0,
+    //     w: params.backBufferWidth as i32,
+    //     h: params.backBufferHeight as i32,
+    //     minDepth: 0 as f32,
+    //     maxDepth: 1 as f32,
+    // };
+    // device.set_viewport(&viewport);
 
-    let scissor = fna3d::Rect {
-        x: 0,
-        y: 0,
-        w: params.backBufferWidth,
-        h: params.backBufferHeight,
-    };
-    device.set_scissor_rect(&scissor);
-
-    // device.set_render_targets(
-    //     Some(&mut batcher.v_binds.bind),
-    //     1,
-    //     None, // FIXME: DepthStencilBuffer
-    //     fna3d::DepthFormat::D24S8,
-    // );
+    // let scissor = fna3d::Rect {
+    //     x: 0,
+    //     y: 0,
+    //     w: params.backBufferWidth,
+    //     h: params.backBufferHeight,
+    // };
+    // device.set_scissor_rect(&scissor);
 }
 
 /// `FNA3D_BeginFrame`

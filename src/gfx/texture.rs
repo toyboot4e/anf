@@ -1,16 +1,19 @@
 //! `Texture2D`
 //!
-//! TODO: explain what are sampler and surface
+//! This is very much work in progress and dirty
+//!
+//! * TODO: Explain what are sampler and surface
+//! * TODO: `Rc`?
+//! * TODO: Consider adding `Material`
+//! * TODO: add helper for pixel texture with color
+//! * TODO: lifetime
 
 use std::{
     io::{BufRead, Read, Seek},
     os::raw::c_void,
 };
 
-// TODO: add helper for pixel texture with color
-// TODO: lifetime
-
-/// Wraps a texture handle with some metadata and `SurfaceFormat`
+/// Wraps a texture handle with some metadata
 ///
 /// * `level_count:`
 ///   TODO: what is this
@@ -239,7 +242,7 @@ impl Texture2D {
 
 // TODO: add RenderTargetBindings to pipeline
 
-/// Wrapper around `Texture2D` as a render target (a.k.a. canvas)
+/// Wraps `Texture2D` as a render target (a.k.a. canvas)
 pub struct RenderTarget2D {
     tx: Texture2D,
     ds_fmt: fna3d::DepthFormat,

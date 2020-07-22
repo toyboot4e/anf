@@ -1,13 +1,16 @@
 //! `VertexBuffer` and `IndexBuffer`
 //!
 //! Each buffer is dynamically "typed" by users with specific objects. In our case it is `Batcher`
-//! and declarations are defined in `anf::gfx::batcher::batch::batch_internals`.
+//! and declarations are defined in `anf::gfx::batcher::batch_data::batch_internals`.
+//!
+//! * TODO: what are differences between VertexBuffer and DynamicVertexBuffer
+//! * TODO: what is `BufferUsage`
 
 /// Marker of "vertex data"
 ///
 /// A vertex data is typed with `fna3d::VertexDeclarations` which is composed of
 /// `fna3d::VertexElement`s . This trait is used to mark such types.
-pub trait SomeVertexData {}
+pub trait VertexData {}
 
 // --------------------------------------------------------------------------------
 // Index buffer (ibuf)
@@ -69,7 +72,7 @@ impl IndexBuffer {
 
 /// Vertex buffer that is indexed by `IndexBuffer`
 ///
-/// Dynamically "typed" with `fna3d::VertexDeclaration`.
+/// "Typed" with `fna3d::VertexDeclaration`
 #[derive(Debug)]
 pub struct VertexBuffer {
     raw: *mut fna3d::Buffer,
@@ -111,7 +114,7 @@ impl VertexBuffer {
     }
 
     /// Sets vertex data to thsi buffer
-    pub fn set_data<T: SomeVertexData>(
+    pub fn set_data<T: VertexData>(
         &mut self,
         device: &mut fna3d::Device,
         offset_in_bytes: u32,
@@ -143,7 +146,7 @@ impl DynamicVertexBuffer {
     }
 
     /// Sets vertex data to this buffer
-    pub fn set_data<T: SomeVertexData>(
+    pub fn set_data<T: VertexData>(
         &mut self,
         device: &mut fna3d::Device,
         buf_offset_in_bytes: u32,

@@ -34,14 +34,10 @@ const CORNER_OFFSET_Y: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
 // TODO: what is depth. is it considered by Device
 
-/// How to push a sprite into `BatchData`
-///
-/// A sprite is a rectangle that is represented as two triangles i.e. four vertices and six
-/// indices
+/// Command to push a sprite into `BatchData`
 ///
 /// * `src_rect`: in pixels
 /// * `dest_rect`: in pixels or normalized
-///
 /// * `is_dest_size_in_pixels`:
 ///   If false, `src_rect` is assumed to have been normaliezd
 #[derive(Debug)]

@@ -28,7 +28,7 @@ pub struct Batcher {
 
 impl Batcher {
     pub fn new(device: &mut fna3d::Device, win: *mut c_void) -> Self {
-        let decl = batch_internals::VertexData::decl();
+        let decl = batch_internals::ColoredVertexData::decl();
         Self {
             batch: batch_data::BatchData::new(),
             is_begin_called: false,
@@ -63,18 +63,18 @@ impl Batcher {
     /// `end`, `anf::gfx::end_frame` or when pushing vertices and they saturate (out of capaicty of
     /// `BatchData`).
     ///
-    /// Contains the rendering pipeline to draw sprites with FNA3D:
+    /// Contains the following rendering pipeline calls:
     ///
-    /// * `FNA3D_ApplyEffect`:
+    /// * `FNA3D_ApplyEffect` (`Pipeline::apply_effect`):
     ///   Yes a shader is required even if we do nothing with it.
-    /// * `FNA3D_SetVertexData`:
+    /// * `FNA3D_SetVertexData` (`IndexBuffer::set_data`):
     ///   Sets our `VertexData` to `VertexBuffer`
-    /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`:
+    /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState` (`Pipeline::set_texture`):
     ///   Sets `SamplerState` (`Texture` etc.) to `Device`
-    /// * `FNA3D_ApplyVertexBufferBindings`:
-    ///   Sets our `VertexBuffer` to `Device` and prepares shader program ("the last thing to do" before drawing).
+    /// * `FNA3D_ApplyVertexBufferBindings` (`Pipeline::apply_vertex_buffer_bindings`):
+    ///   Sets our `VertexBuffer` to `fna3d::Device` and prepares shader program ("the last thing to do" before drawing).
     /// * `FNA3D_DrawIndexedPrimitives`:
-    ///   Finally draw rectangle sprites as primitives (triangles)
+    ///   Finally draw rectangle sprites (quads) as primitives (triangles)
     pub fn flush(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
         // FIXME: `flush` can be called if it's not begun (in end_frame)
         if !self.is_begin_called {

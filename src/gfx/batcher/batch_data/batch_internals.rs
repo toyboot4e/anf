@@ -21,15 +21,15 @@ pub const MAX_INDICES: usize = MAX_SPRITES * 6;
 /// * `color`: color
 /// * `uvs`: normalized position in texture (a.k.ak. texture coordinates)
 #[derive(Debug, Clone)]
-pub struct VertexData {
+pub struct ColoredVertexData {
     pub dest: Vec3f,
     pub color: fna3d::Color,
     pub uvs: Vec2f,
 }
 
-impl crate::gfx::vertices::SomeVertexData for VertexData {}
+impl crate::gfx::vertices::VertexData for ColoredVertexData {}
 
-impl Default for VertexData {
+impl Default for ColoredVertexData {
     fn default() -> Self {
         let color = fna3d::Color {
             r: 0,
@@ -46,7 +46,7 @@ impl Default for VertexData {
     }
 }
 
-impl VertexData {
+impl ColoredVertexData {
     pub fn elems() -> &'static [fna3d::VertexElement] {
         &[
             fna3d::VertexElement {

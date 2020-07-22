@@ -1,15 +1,16 @@
 //! Re-exported to the root of the module
 
 use crate::gfx::{
-    batcher::batch_data::batch_internals::VertexData, pipeline::shader::Shader, texture::Texture2D,
-    vertices::VertexBuffer,
+    batcher::batch_data::batch_internals::ColoredVertexData, pipeline::shader::Shader,
+    texture::Texture2D, vertices::VertexBuffer,
 };
 
-/// Rendering pipeline data
+/// Data of the rendering pipeline
 ///
-/// Corresponds to `GraphicsDevice` in FNA.
+/// Corresponds to `GraphicsDevice` in FNA. ANF users don't have to use it directly. Refer to
+/// `Batcher` instead!
 ///
-/// Contains methods correspond to:
+/// Contains methods corresponding to:
 ///
 /// * `FNA3D_ApplyEffect`
 /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
@@ -24,7 +25,7 @@ pub struct Pipeline {
 impl Pipeline {
     pub fn from_device(device: &mut fna3d::Device) -> Self {
         Self {
-            v_binds: VBind::new(VertexData::decl()),
+            v_binds: VBind::new(ColoredVertexData::decl()),
             state: SamplerTrack::from_device(device),
             // TODO: don't unwrap?
             shader: Shader::from_device(device).unwrap(),
@@ -42,7 +43,8 @@ impl Pipeline {
     // ----------------------------------------
     // Sampler state & materials?
 
-    /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
+    /// * `FNA3D_VerifySamplerState`
+    /// * `FNA3D_VerifyVertexSamplerState`
     pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
         self.state.set_texture(device, texture);
     }
@@ -50,6 +52,7 @@ impl Pipeline {
     // ----------------------------------------
     // Vertex binding
 
+    /// Updates the vertex buffer binding
     pub fn rebind_vertex_buffer(&mut self, vbuf: &mut VertexBuffer, offset: i32) {
         self.v_binds.bind(vbuf, offset);
     }

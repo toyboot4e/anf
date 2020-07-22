@@ -1,8 +1,8 @@
 //! Rendering pipeline
 //!
 //! Or internals of `GraphicsDevice` in FNA
-
-// TODO: add Material
+//!
+//! * TODO: add Material
 
 pub mod shader;
 

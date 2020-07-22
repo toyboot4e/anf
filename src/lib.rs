@@ -18,7 +18,6 @@ pub trait State {
     fn handle_event(&mut self, ev: &sdl2::event::Event) -> StateUpdateResult;
 }
 
-/// Way for a `State` to communicate with the game loop (`run_loop`)
 pub enum StateUpdateResult {
     Continue,
     Quit,

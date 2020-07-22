@@ -3,14 +3,14 @@
 //! Actually the internal implementation is based on `Batcher` in Nez
 
 use crate::gfx::{
-    batcher::batch_data::batch_internals::{VertexData, MAX_SPRITES},
+    batcher::batch_data::batch_internals::{ColoredVertexData, MAX_SPRITES},
     texture::Texture2D,
 };
 
 /// The actual vertex data per rectangle sprite
-type FourVertexInfo = [VertexData; 4];
+type FourVertexInfo = [ColoredVertexData; 4];
 
-impl crate::gfx::vertices::SomeVertexData for FourVertexInfo {}
+impl crate::gfx::vertices::VertexData for FourVertexInfo {}
 
 // TODO: more efficient slot handling
 /// Accumulates vertex data with related `Texture2D` (s)
@@ -114,7 +114,7 @@ mod test {
     use std::mem::size_of;
     #[test]
     fn test_size() {
-        assert_eq!(size_of::<VertexData>(), 24);
+        assert_eq!(size_of::<ColoredVertexData>(), 24);
         assert_eq!(size_of::<FourVertexInfo>(), 96);
     }
 }
