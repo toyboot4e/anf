@@ -1,0 +1,18 @@
+= Rust FFI to C
+
+== Binding
+
+https://crates.io/crates/bindgen/[bindgen]
+
+== Bundling compiled library with output binary
+
+* static linking
+* dynamic linking
+
+== Wrapping
+
+=== Strict typing (`bool`, `enum` and bitflags)
+
+=== Error handling
+
+=== Lifetime

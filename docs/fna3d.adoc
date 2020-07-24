@@ -1,0 +1,9 @@
+= Using FNA3D
+
+== Learning graphics
+
+When I started making ANF and Rust-FNA3D, I was completely new to graphics and I got lost. Also there was no particular tutorial on FNA3D. However, https://learnopengl.com[Learn OpenGL] maps well to FNA3D, so probablly I got the picture. Especially the https://learnopengl.com/Getting-started/Hello-Triangle[Hello Triangle] chapter was helpful.
+
+== XNA vocabulary
+
+* `Effect` = (what kind of?) shader
