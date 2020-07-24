@@ -3,8 +3,7 @@
 use anf::{
     gfx::{
         batcher::{self, Batcher},
-        texture::Texture2D,
-        Pipeline,
+        Pipeline, Texture2D,
     },
     vfs,
 };
@@ -17,6 +16,8 @@ use std::ffi::c_void;
 // State & callbacks for the game loop
 
 pub struct MainState {
+    // TODO: where
+    params: fna3d::PresentationParameters,
     device: Device,
     pipeline: Pipeline,
     batcher: Batcher,
@@ -38,10 +39,10 @@ impl anf::State for MainState {
         if self.is_first_frame {
             return;
         }
-        self.is_first_frame = true;
+        // self.is_first_frame = true;
 
         anf::gfx::begin_frame(&mut self.device);
-        anf::gfx::clear(&mut self.device); // TODO: should not?
+        anf::gfx::clear(&mut self.device);
 
         self.batcher.begin(&mut self.device);
         self.render_scene(); // defined below
@@ -103,11 +104,12 @@ impl MainState {
         let batcher = Batcher::new(&mut device, win);
 
         let texture = {
-            let path = vfs::get("b.png");
+            let path = vfs::get("a.png");
             Texture2D::from_path(&mut device, &path).expect("failed to load texture")
         };
 
         Self {
+            params,
             device,
             pipeline: p,
             batcher,
@@ -117,16 +119,9 @@ impl MainState {
     }
 }
 
-fn setup() {
-    env_logger::init();
-    log::info!("FNA version {}", fna3d::linked_version());
-
-    let _flags = fna3d::prepare_window_attributes();
-    fna3d::hook_log_functions_default();
-}
-
 fn main() {
-    self::setup();
+    env_logger::init();
+    fna3d::hook_log_functions_default();
 
     // Create a window using SDL2
     let cfg = anf::window::Config::default();

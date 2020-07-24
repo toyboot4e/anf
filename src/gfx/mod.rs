@@ -1,6 +1,7 @@
 //! 2D graphics
 //!
-//! Call `init` to begin with.
+//! Call `init` to begin with (or you can't do other than clear screen even if you don't see
+//! erroors).
 //!
 //! # The rendering cycle
 //!
@@ -9,46 +10,43 @@
 //! [`Batcher::flush`]: ./batcher/struct.Batcher.html#method.flush
 
 pub mod batcher;
-mod pipeline;
-pub mod texture;
+pub mod pipeline;
 pub mod vertices;
+
+mod texture;
+pub use texture::Texture2D;
 
 use batcher::Batcher;
 pub use pipeline::Pipeline;
 
 /// The first thing to call after making `gfx::Device`
+///
+/// FNA3D requires us to set viewport and rasterizer state first and **if this is skipped, we
+/// can't draw sprites** (without any error).
 pub fn init(
     device: &mut fna3d::Device,
     // batcher: &mut Batcher,
     params: &fna3d::PresentationParameters,
 ) {
-    return;
+    let viewport = fna3d::Viewport {
+        x: 0,
+        y: 0,
+        w: params.backBufferWidth as i32,
+        h: params.backBufferHeight as i32,
+        minDepth: 0 as f32,
+        maxDepth: 1 as f32,
+    };
+    device.set_viewport(&viewport);
 
-    // // set default render state
-    // let blend = fna3d::BlendState::alpha_blend();
-    // device.set_blend_state(&blend);
-    // let rst = fna3d::RasterizerState::default();
-    // device.apply_rasterizer_state(&rst);
-    // let dsst = fna3d::DepthStencilState::default();
-    // device.set_depth_stencil_state(&dsst);
-
-    // let viewport = fna3d::Viewport {
-    //     x: 0,
-    //     y: 0,
-    //     w: params.backBufferWidth as i32,
-    //     h: params.backBufferHeight as i32,
-    //     minDepth: 0 as f32,
-    //     maxDepth: 1 as f32,
-    // };
-    // device.set_viewport(&viewport);
-
-    // let scissor = fna3d::Rect {
-    //     x: 0,
-    //     y: 0,
-    //     w: params.backBufferWidth,
-    //     h: params.backBufferHeight,
-    // };
-    // device.set_scissor_rect(&scissor);
+    // set material
+    {
+        let bst = fna3d::BlendState::alpha_blend();
+        device.set_blend_state(&bst);
+        // let dsst = fna3d::DepthStencilState::default();
+        // device.set_depth_stencil_state(&dsst);
+        let rst = fna3d::RasterizerState::default();
+        device.apply_rasterizer_state(&rst);
+    }
 }
 
 /// `FNA3D_BeginFrame`

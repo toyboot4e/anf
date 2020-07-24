@@ -134,7 +134,7 @@ impl Batcher {
 
     // FIXME: is this copy needed?
     // FIXME: when do we send our data to GPU? when calling apply_vertex_buffer_bindings?
-    /// Copies vertex data in `BatchData` to `VertexBuffer`
+    /// Copies vertex data from `BatchData` to `VertexBuffer`
     #[inline]
     fn flush_set_vertex(&mut self, device: &mut fna3d::Device) {
         let data = &mut self.batch.vertex_data[0..self.batch.n_sprites];
@@ -175,7 +175,7 @@ impl Batcher {
         span: batch_data::BatchSpan,
     ) {
         log::trace!(
-            "draw call with with span {:?} with texture {:?} with vertices\n{:#?}",
+            "draw call with {:?} with {:?} with vertices\n{:#?}",
             span,
             &self.batch.texture_slots[slot],
             &self.batch.vertex_data[span.lo..span.hi]
@@ -185,7 +185,7 @@ impl Batcher {
         // GraphicsDevice.ApplyState
 
         // update sampler state
-        // TODO: only when it's necessary (like when making a texture)
+        // TODO: call it only when it's necessary (like when making a texture)
         // TODO: Material (BlendState, depth stencil state and rasterizer state)
         p.set_texture(device, &self.batch.texture_slots[slot]);
 
@@ -195,6 +195,8 @@ impl Batcher {
         // update vertex bindings
         p.rebind_vertex_buffer(&mut self.bufs.vbuf.inner, 0);
 
+        p.update_shader(); // FIXME: put it in proper place
+
         // "the very last thing to call before making a draw call"
         // (`GraphicsDevice.PrepareVertexBindingArray` > `FNA3D_SetVertexBufferBindings`)
         let base_vertex = span.lo * 4;
@@ -202,10 +204,10 @@ impl Batcher {
 
         // ----------------------------------------
         // Make a draw call
+        //
+        // TODO: using draw_primitives?
 
         let n_primitives = span.len() as u32 * 2;
-        log::trace!("n_primitives: {}, base: {} ", n_primitives, base_vertex);
-
         device.draw_indexed_primitives(
             fna3d::PrimitiveType::TriangleList,
             // FIXME: is this OK?

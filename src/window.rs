@@ -13,7 +13,10 @@ pub struct Config {
 ///
 /// You can get raw pointer to SDL window from the returned `WindowCanvas`
 pub fn create(cfg: &Config) -> (sdl2::Sdl, WindowCanvas) {
-    // sdl2::hint::set("SDL_RENDER_DRIVER", "metal");
+    log::info!("FNA version {}", fna3d::linked_version());
+    // TODO: should I use the flags
+    let _flags = fna3d::prepare_window_attributes();
+
     let scx = sdl2::init().unwrap();
     let canvas = self::create_canvas(&scx, &cfg);
     (scx, canvas)

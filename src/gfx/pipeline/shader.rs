@@ -1,12 +1,11 @@
 //! Also known as `Effect` in FNA
-//!
-//! It's a part of the rendering pipeline and cannot be skipped.
 
 use std::{
     fs,
     io::{self, Read},
 };
 
+/// Part of the required rendering pipeline
 #[derive(Debug)]
 pub struct Shader {
     effect: *mut fna3d::Effect,
@@ -22,7 +21,6 @@ impl Shader {
         let mut buf = Vec::new();
         let len = f.read_to_end(&mut buf)?; // TODO: use anyhow or like that
 
-        // TODO: can we forget about `Effect`?
         let (effect, mojo_effect) = device.create_effect(buf.as_mut_ptr(), len as u32);
 
         unsafe {
@@ -44,7 +42,9 @@ impl Shader {
         })
     }
 
-    // TODO: what is `pass`? typed?
+    /// A requierd rendering pipeline cycle
+    ///
+    /// * TODO: what is `pass`? is it actually typed?
     pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
         // no effect state change
         let state_changes = fna3d::mojo::EffectStateChanges {
@@ -56,5 +56,59 @@ impl Shader {
             vertex_sampler_state_changes: std::ptr::null(),
         };
         device.apply_effect(self.effect, pass, &state_changes);
+    }
+
+    /// A requierd rendering pipeline cycle
+    ///
+    /// TODO: what is this. add proper name and document
+    pub unsafe fn update(&mut self) {
+        let count = (*self.mojo_effect).param_count;
+        log::trace!("shader param count: {}", count);
+
+        for i in 0..(*self.mojo_effect).param_count as isize {
+            let name = (*(*self.mojo_effect).params.offset(i)).value.name;
+            if std::ffi::CStr::from_ptr(name)
+                // FIXME: do not allocate a new string..
+                    == std::ffi::CString::new("MatrixTransform")
+                        .unwrap()
+                        .as_c_str()
+            {
+                log::trace!("shader materix transform at {}", i);
+                // OrthographicOffCenter Matrix - value copied from XNA project
+                // todo: Do I need to worry about row-major/column-major?
+                let proj_mat: [f32; 16] = [
+                    0.0015625 as f32,
+                    0 as f32,
+                    0 as f32,
+                    -1 as f32,
+                    0 as f32,
+                    -0.00277777785 as f32,
+                    0 as f32,
+                    1 as f32,
+                    0 as f32,
+                    0 as f32,
+                    1 as f32,
+                    0 as f32,
+                    0 as f32,
+                    0 as f32,
+                    0 as f32,
+                    1 as f32,
+                ];
+                use std::io::Write;
+                let len = std::mem::size_of::<f32>() * 16;
+                let mut dest = std::slice::from_raw_parts_mut(
+                    (*(*self.mojo_effect).params.offset(i))
+                        .value
+                        .__bindgen_anon_1
+                        .values as *mut u8,
+                    len,
+                );
+                let src = std::slice::from_raw_parts_mut(proj_mat.as_ptr() as *mut u8, len);
+                dest.write(src)
+                    .expect("failed to write universal effect data");
+
+                break; // TODO: why break. look at FNA
+            }
+        }
     }
 }

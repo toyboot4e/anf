@@ -5,7 +5,7 @@ use crate::gfx::{
     texture::Texture2D, vertices::VertexBuffer,
 };
 
-/// Data of the rendering pipeline
+/// The required rendering pipeline by FNA3D
 ///
 /// Corresponds to `GraphicsDevice` in FNA. ANF users don't have to use it directly. Refer to
 /// `Batcher` instead!
@@ -19,6 +19,7 @@ use crate::gfx::{
 pub struct Pipeline {
     v_binds: VBind,
     shader: Shader,
+    // TODO: multiple samplers? when?
     state: SamplerTrack,
 }
 
@@ -47,6 +48,12 @@ impl Pipeline {
     /// * `FNA3D_VerifyVertexSamplerState`
     pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
         self.state.set_texture(device, texture);
+    }
+
+    pub fn update_shader(&mut self) {
+        unsafe {
+            self.shader.update();
+        }
     }
 
     // ----------------------------------------
@@ -136,30 +143,19 @@ impl SamplerTrack {
             "Error on max texture slots. FNA3D may have been compiled in a wrong way: max_textures={}, max_vertex_textures={}",
             max_tx, max_v_tx
         );
+        let mut s = fna3d::SamplerState::linear_clamp();
+        s.set_address_u(fna3d::TextureAddressMode::Wrap);
+        s.set_filter(fna3d::TextureFilter::Point);
         Self {
-            samplers: vec![fna3d::SamplerState::linear_wrap(); max_tx],
-            v_samplers: vec![fna3d::SamplerState::linear_wrap(); max_v_tx],
+            samplers: vec![s.clone(); max_tx],
+            v_samplers: vec![s; max_v_tx],
         }
     }
 
     pub fn set_texture(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
         let slot = 0;
         device.verify_sampler(slot as i32, texture.raw(), &self.samplers[slot]);
+        // TODO: is this needed??
         device.verify_vertex_sampler(slot as i32, texture.raw(), &self.v_samplers[slot]);
     }
-
-    // // TODO: is should be called only on change
-    // /// Cooresponds to half of `GrapihcsDevice.ApplyState`
-    // pub fn apply_changes(&mut self, device: &mut fna3d::Device, texture: &Texture2D) {
-    //     // mod_sampler = only first item
-
-    //     {
-    //         let i = 0;
-    //         device.verify_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
-    //     }
-    //     {
-    //         let i = 0;
-    //         device.verify_vertex_sampler(i as i32, texture.raw(), &mut self.samplers[i]);
-    //     }
-    // }
 }

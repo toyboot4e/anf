@@ -1,6 +1,11 @@
 //! ANF is an FNA-like 2D game framework in Rust powered by FNA3D
 //!
 //! ANF is also intended to introduce FNA3D so the documentation goes into internals details.
+//!
+//! * TODO: free memory on neessary
+//! * TODO: copy FNA3D to output
+//! * TODO: copy `assets/` to output
+//! * TODO: FPS
 
 pub use fna3d;
 pub use sdl2;

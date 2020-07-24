@@ -21,8 +21,9 @@ pub const MAX_INDICES: usize = MAX_SPRITES * 6;
 /// * `color`: color
 /// * `uvs`: normalized position in texture (a.k.ak. texture coordinates)
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct ColoredVertexData {
-    pub dest: Vec3f,
+    pub dest: Vec3f, // TODO: use 2D dest vec
     pub color: fna3d::Color,
     pub uvs: Vec2f,
 }
@@ -53,7 +54,7 @@ impl ColoredVertexData {
                 offset: 0,
                 vertexElementFormat: fna3d::VertexElementFormat::Vector3 as u32,
                 vertexElementUsage: fna3d::VertexElementUsage::Position as u32,
-                usageIndex: 0,
+                usageIndex: 0, // TODO: what's this
             },
             fna3d::VertexElement {
                 offset: 12,
@@ -82,12 +83,14 @@ impl ColoredVertexData {
 // --------------------------------------------------------------------------------
 // Primitives
 
+#[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec2f {
     pub x: f32,
     pub y: f32,
 }
 
+#[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec3f {
     pub x: f32,

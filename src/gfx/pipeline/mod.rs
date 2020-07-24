@@ -1,10 +1,11 @@
-//! Rendering pipeline
+//! The required rendering pipeline
 //!
-//! Or internals of `GraphicsDevice` in FNA
+//! Also the internals of `GraphicsDevice` in FNA
 //!
 //! * TODO: add Material
 
-pub mod shader;
+mod shader;
+pub use shader::Shader;
 
 mod pipeline;
 pub use pipeline::Pipeline;

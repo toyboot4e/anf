@@ -1,6 +1,6 @@
 //! Virtual file system
 //!
-//! It just locates the root; it's not so much a file system (yet).
+//! It just locates the root; it's not so much a file system (for now).
 
 use std::path::{Path, PathBuf};
 

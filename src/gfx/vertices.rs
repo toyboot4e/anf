@@ -40,7 +40,7 @@ impl IndexBuffer {
         index_elem_size: fna3d::IndexElementSize,
         n_indices: u32,
         usage: fna3d::BufferUsage,
-        is_dynamic: bool, // TODO: why not make a `StaticIndexBuffer`
+        is_dynamic: bool, // TODO: what is this. why not make a `StaticIndexBuffer`
     ) -> Self {
         let n_bytes = match index_elem_size {
             fna3d::IndexElementSize::Bits16 => 2,

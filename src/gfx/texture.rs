@@ -118,6 +118,14 @@ impl Texture2D {
             1
         };
         let fmt = self::get_init_format(fmt, is_render_target);
+        log::trace!(
+            "new texture with size [{}, {}] surface format {:?} level count {}, is_render_target {}",
+            w,
+            h,
+            fmt,
+            level_count,
+            is_render_target
+        );
         let raw = device.create_texture_2d(fmt, w, h, level_count, is_render_target);
 
         Self {
@@ -157,7 +165,20 @@ impl Texture2D {
         // let _ = reader.seek(std::io::SeekFrom::Start(0));
 
         // FIXME: is this borken?
-        let (pixels, len, [w, h]) = fna3d::img::load_image_from_reader(reader, None, false);
+        // let (pixels, len, [w, h]) = fna3d::img::load_image_from_reader(reader, None, false);
+
+        use stb_image::image::{Image, LoadResult};
+        let (pixels, len, [w, h]) = match stb_image::image::load(crate::vfs::get("a.png")) {
+            LoadResult::Error(x) => panic!("{}", x),
+            LoadResult::ImageU8(i) => (
+                i.data.as_ptr() as *mut u8,
+                i.data.len(),
+                [i.width as u32, i.height as u32],
+            ),
+            LoadResult::ImageF32(i) => {
+                panic!("32");
+            }
+        };
 
         // is this broken?
         // TODO: try loading image using something else
@@ -175,7 +196,7 @@ impl Texture2D {
         );
 
         let mut texture = Self::with_size(device, w, h);
-        texture.set_data_ptr(device, 0, None, pixels as *mut _, len as u32);
+        texture.set_data_with_ptr(device, 0, None, pixels as *mut _, len as u32);
 
         // unsafe {
         //     fna3d::sys::FNA3D_Image_Free(pixels);
@@ -193,7 +214,7 @@ impl Texture2D {
         rect: Option<[u32; 4]>,
         data: &[T],
     ) {
-        self.set_data_ptr(
+        self.set_data_with_ptr(
             device,
             level,
             rect,
@@ -203,7 +224,7 @@ impl Texture2D {
     }
 
     /// Sets texture data from a pointer
-    pub fn set_data_ptr(
+    pub fn set_data_with_ptr(
         &mut self,
         device: &mut fna3d::Device,
         level: u32,
@@ -228,6 +249,7 @@ impl Texture2D {
             self.fmt,
             x,
             y,
+            // FIXME: is this [w, h] (in pixels) correct
             w,
             h,
             level,
