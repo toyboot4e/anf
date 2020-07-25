@@ -55,16 +55,10 @@ pub struct SpritePushCommand {
 
 impl Default for SpritePushCommand {
     fn default() -> Self {
-        let color = fna3d::Color {
-            r: 0,
-            g: 0,
-            b: 0,
-            a: 0,
-        };
         Self {
             src_rect: Rect2f::normalized(), // set it in pixel
             dest_rect: Rect2f::default(),
-            color,
+            color: fna3d::colors::default(),
             origin: Vec2f::default(),
             rot: 0f32,
             depth: 0f32,
@@ -143,7 +137,7 @@ impl SpritePushCommand {
 
         // destination is NOT normalized
         let dest_pos = {
-            let mut pos = self.src_rect.left_up();
+            let mut pos = self.dest_rect.left_up();
             if policy.do_round {
                 pos.round();
             }

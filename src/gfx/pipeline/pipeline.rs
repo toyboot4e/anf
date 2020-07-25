@@ -51,9 +51,7 @@ impl Pipeline {
     }
 
     pub fn update_shader(&mut self) {
-        unsafe {
-            self.shader.update();
-        }
+        self.shader.update();
     }
 
     // ----------------------------------------
@@ -156,6 +154,6 @@ impl SamplerTrack {
         let slot = 0;
         device.verify_sampler(slot as i32, texture.raw(), &self.samplers[slot]);
         // TODO: is this needed??
-        device.verify_vertex_sampler(slot as i32, texture.raw(), &self.v_samplers[slot]);
+        // device.verify_vertex_sampler(slot as i32, texture.raw(), &self.v_samplers[slot]);
     }
 }

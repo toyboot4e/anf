@@ -212,8 +212,7 @@ impl Batcher {
             fna3d::PrimitiveType::TriangleList,
             // FIXME: is this OK?
             base_vertex as u32, // the number of vertices to skip
-            // base_offset * 6, // our index buffer is cyclic and we don't need to actually calculate it
-            0, // the number of indices to skip.
+            span.lo as u32 * 6, // our index buffer is cyclic and we don't need to actually calculate it
             n_primitives,
             self.bufs.ibuf.raw(),
             self.bufs.ibuf.elem_size(),

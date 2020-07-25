@@ -2,7 +2,7 @@
 
 == Tools and crates
 
-* Tiled map editor and the https://crates.io/crates/tiled[tiled] crate
+* https://www.mapeditor.org/[Tiled] map editor and the https://crates.io/crates/tiled[tiled] crate
 * https://ogmo-editor-3.github.io/[Ogmo editor 3] and https://crates.io/crates/ogmo[ogmo] crate
 
 == Other projects using FNA3D
