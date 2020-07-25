@@ -78,31 +78,42 @@ impl WindowConfig {
 
     /// Creates a window from `WindowConfig` and returns a handle to it
     ///
-    /// You can get raw pointer to SDL window from the returned `WindowCanvas`
+    /// NOTE: `WindowCanvas` drops `SDL_Window` when it goes out of scopes
     pub fn create(
         &self,
     ) -> (
         sdl2::Sdl,
+        WindowCanvas,
         fna3d::PresentationParameters,
         fna3d::Device,
-        *mut sdl2::sys::SDL_Window,
     ) {
         log::info!("FNA version {}", fna3d::linked_version());
-        let _flags = fna3d::prepare_window_attributes();
-        // TODO: should I use the window flags?
+        let flags = fna3d::prepare_window_attributes();
 
         let sdl = sdl2::init().unwrap();
-        let canvas = self.canvas(&sdl);
+        let canvas = self.canvas(&sdl, flags.0);
         let win = canvas.window().raw();
         let (params, device) = self.device(win as *mut _);
 
-        (sdl, params, device, win)
+        (sdl, canvas, params, device)
     }
 
-    pub fn device(
-        &self,
-        win: *mut std::ffi::c_void,
-    ) -> (fna3d::PresentationParameters, fna3d::Device) {
+    fn canvas(&self, sdl: &sdl2::Sdl, flags: u32) -> WindowCanvas {
+        let video = sdl.video().unwrap();
+        let win = self.window(video, flags);
+        win.into_canvas().build().unwrap()
+    }
+
+    fn window(&self, video: sdl2::VideoSubsystem, flags: u32) -> sdl2::video::Window {
+        video
+            .window(&self.title, self.w, self.h)
+            .set_window_flags(flags)
+            .position_centered()
+            .build()
+            .unwrap()
+    }
+
+    fn device(&self, win: *mut std::ffi::c_void) -> (fna3d::PresentationParameters, fna3d::Device) {
         let params = {
             let mut params = fna3d::utils::params_from_window_handle(win);
             params.backBufferWidth = self.w as i32;
@@ -111,19 +122,5 @@ impl WindowConfig {
         };
         let device = fna3d::Device::from_params(params, true);
         (params, device)
-    }
-
-    fn canvas(&self, sdl: &sdl2::Sdl) -> WindowCanvas {
-        let video = sdl.video().unwrap();
-        let win = self.window(video);
-        win.into_canvas().build().unwrap()
-    }
-
-    fn window(&self, video: sdl2::VideoSubsystem) -> sdl2::video::Window {
-        video
-            .window(&self.title, self.w, self.h)
-            .position_centered()
-            .build()
-            .unwrap()
     }
 }
