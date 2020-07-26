@@ -1,11 +1,21 @@
 //! ANF is an FNA-like 2D game framework in Rust powered by FNA3D
 //!
+//! # What does it provide?
+//!
+//! Game loop, `TextureGen` and `Batcher`.
+//!
+//! # About the documentation
+//!
 //! ANF is also intended to introduce FNA3D so the documentation goes into internals details.
+//!
+//! # TODOs:
 //!
 //! * TODO: free memory on neessary
 //! * TODO: copy FNA3D to output
 //! * TODO: copy `assets/` to output
 //! * TODO: FPS
+//! * TODO: ensure dropping `Texture2D`
+//! * TODO: content loader (cache `Teture2D`)
 
 pub use fna3d;
 pub use sdl2;
@@ -45,7 +55,7 @@ pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;
 /// The game loop
 pub fn run_loop(state: &mut impl State, sdl: &mut sdl2::Sdl) -> GameResult {
     let mut events = sdl.event_pump().unwrap();
-    log::trace!("Start game loop");
+    log::trace!("Start ANF game loop");
 
     'main_loop: loop {
         // pump events
@@ -76,9 +86,10 @@ impl WindowConfig {
         }
     }
 
-    /// Creates a window from `WindowConfig` and returns a handle to it
+    /// Returns (sdl, canvas, params, device)
     ///
-    /// NOTE: `WindowCanvas` drops `SDL_Window` when it goes out of scopes
+    /// `WindowCanvas` holds `SDL_Window` and drops it when it goes out of scopes. You can get raw
+    /// pointer to `SDL_Window` from `WindowCanvas`.
     pub fn create(
         &self,
     ) -> (
@@ -113,7 +124,10 @@ impl WindowConfig {
             .unwrap()
     }
 
-    fn device(&self, win: *mut std::ffi::c_void) -> (fna3d::PresentationParameters, fna3d::Device) {
+    pub fn device(
+        &self,
+        win: *mut std::ffi::c_void,
+    ) -> (fna3d::PresentationParameters, fna3d::Device) {
         let params = {
             let mut params = fna3d::utils::params_from_window_handle(win);
             params.backBufferWidth = self.w as i32;

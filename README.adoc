@@ -23,7 +23,7 @@ $ mkdir build && cd build
 $ cmake .. && make
 ```
 
-Document can be generated and opened with `cargo doc --no-deps --open`.
+API documentation can be generated and opened with `cargo doc --no-deps --open`.
 
 == Acknowledgements
 
