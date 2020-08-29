@@ -73,22 +73,22 @@ impl Shader {
                     // OrthographicOffCenter Matrix - value copied from XNA project
                     // todo: Do I need to worry about row-major/column-major?
                     let proj_mat: [f32; 16] = [
-                        0.0015625 as f32,
-                        0 as f32,
-                        0 as f32,
-                        -1 as f32,
-                        0 as f32,
-                        -0.00277777785 as f32,
-                        0 as f32,
-                        1 as f32,
-                        0 as f32,
-                        0 as f32,
-                        1 as f32,
-                        0 as f32,
-                        0 as f32,
-                        0 as f32,
-                        0 as f32,
-                        1 as f32,
+                        0.0015625,
+                        0.0,
+                        0.0,
+                        -1.0,
+                        0.0,
+                        -0.00277777785,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
                     ];
 
                     use std::io::Write;

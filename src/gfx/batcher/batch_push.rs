@@ -299,10 +299,10 @@ fn set_quad(
 
     // flip our skew values if we have a flipped sprite
     if effects != 0 {
-        skew.y1 *= -1 as f32;
-        skew.y2 *= -1 as f32;
-        skew.x1 *= -1 as f32;
-        skew.x2 *= -1 as f32;
+        skew.y1 *= -1.0;
+        skew.y2 *= -1.0;
+        skew.x1 *= -1.0;
+        skew.x2 *= -1.0;
     }
 
     // top, top, bottom, bottom

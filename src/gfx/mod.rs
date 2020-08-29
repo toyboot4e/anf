@@ -27,8 +27,8 @@ pub fn init(
         y: 0,
         w: params.backBufferWidth as i32,
         h: params.backBufferHeight as i32,
-        minDepth: 0 as f32,
-        maxDepth: 1 as f32,
+        minDepth: 0.0,
+        maxDepth: 1.0,
     };
     device.set_viewport(&viewport);
 
@@ -60,12 +60,9 @@ pub fn clear(device: &mut fna3d::Device, color: fna3d::Color) {
 
 /// The main interface to render 2D sprites
 pub struct DrawContext {
-    pub params: fna3d::PresentationParameters,
     pub device: fna3d::Device,
     pub batcher: Batcher,
     pub pipe: Pipeline,
-    pub win: *mut std::ffi::c_void,
-    // TODO: images
 }
 
 impl DrawContext {

@@ -112,10 +112,10 @@ impl Vec2f {
 impl Rect2f {
     pub fn normalized() -> Self {
         Self {
-            x: 0 as f32,
-            y: 0 as f32,
-            w: 1 as f32,
-            h: 1 as f32,
+            x: 0.0,
+            y: 0.0,
+            w: 1.0,
+            h: 1.0,
         }
     }
 

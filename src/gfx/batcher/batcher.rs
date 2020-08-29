@@ -19,7 +19,7 @@ pub struct Batcher {
 // TODO: draw sprites.. why does it not work? I'm in hell
 
 impl Batcher {
-    pub fn new(device: &mut fna3d::Device) -> Self {
+    pub fn from_device(device: &mut fna3d::Device) -> Self {
         let decl = batch_internals::ColoredVertexData::decl();
         Self {
             batch: batch_data::BatchData::new(),
