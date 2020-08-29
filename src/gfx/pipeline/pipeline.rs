@@ -5,16 +5,15 @@ use crate::gfx::{
     texture::Texture2D, vertices::VertexBuffer,
 };
 
-/// The required rendering pipeline by FNA3D
-///
-/// Corresponds to `GraphicsDevice` in FNA. ANF users don't have to use it directly. Refer to
-/// `Batcher` instead!
+/// Rendering states or the required rendering pipeline by FNA3D
 ///
 /// Contains methods corresponding to:
 ///
 /// * `FNA3D_ApplyEffect`
 /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
 /// * `FNA3D_ApplyVertexBufferBindings`
+///
+/// * TODO: multiple texture/vertex slots
 #[derive(Debug)]
 pub struct Pipeline {
     v_binds: VBind,
@@ -71,12 +70,13 @@ impl Pipeline {
 // --------------------------------------------------------------------------------
 // Internals (very WIP)
 
-// TODO: what is this. what is instance drawing/frequency
-/// Vertex buffer bindings
+/// Vertex buffer that can be sent to GPU
 ///
 /// This is actually a slice of vertex buffer where `fna3d::Device` reads.
 ///
 /// A part of the rendering pipeline. Component of `GraphicsDevice` in FNA3D.
+///
+/// * TODO: what is instance drawing/frequency
 #[derive(Debug)]
 struct VBind {
     bind: fna3d::VertexBufferBinding,

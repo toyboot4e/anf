@@ -1,10 +1,6 @@
-//! ANF is an FNA-like 2D game framework in Rust powered by FNA3D
+//! ANF is an FNA-like 2D framework powered by FNA3D
 //!
-//! # What does it provide?
-//!
-//! Game loop, `TextureGen` and `Batcher`.
-//!
-//! # About the documentation
+//! WIP: It offers game loop, `TextureGen`  and `Batcher`.
 //!
 //! ANF is also intended to introduce FNA3D so the documentation goes into internals details.
 //!
@@ -14,7 +10,7 @@
 //! * TODO: copy FNA3D to output
 //! * TODO: copy `assets/` to output
 //! * TODO: FPS
-//! * TODO: ensure dropping `Texture2D`
+//! * TODO: `Texture2D` with or without lifetime
 //! * TODO: content loader (cache `Teture2D`)
 
 pub use fna3d;
@@ -83,6 +79,8 @@ impl WindowConfig {
             title: "† ANF †".to_string(),
             w: 1280,
             h: 720,
+            // w: 640,
+            // h: 360,
         }
     }
 
@@ -108,7 +106,9 @@ impl WindowConfig {
 
         (sdl, canvas, params, device)
     }
+}
 
+impl WindowConfig {
     fn canvas(&self, sdl: &sdl2::Sdl, flags: u32) -> WindowCanvas {
         let video = sdl.video().unwrap();
         let win = self.window(video, flags);

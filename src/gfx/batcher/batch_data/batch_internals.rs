@@ -32,12 +32,7 @@ impl crate::gfx::vertices::VertexData for ColoredVertexData {}
 
 impl Default for ColoredVertexData {
     fn default() -> Self {
-        let color = fna3d::Color {
-            r: 0,
-            g: 0,
-            b: 0,
-            a: 0,
-        };
+        let color = fna3d::Color::rgba(0, 0, 0, 0);
         Self {
             dest: Vec3f::default(),
             color,
@@ -105,15 +100,6 @@ pub struct Rect2f {
     pub y: f32,
     pub w: f32,
     pub h: f32,
-}
-
-/// Top-left and bottom-right
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct Skew2f {
-    pub x1: f32,
-    pub y1: f32,
-    pub x2: f32,
-    pub y2: f32,
 }
 
 impl Vec2f {

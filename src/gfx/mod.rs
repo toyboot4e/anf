@@ -2,12 +2,6 @@
 //!
 //! Call `init` to begin with (or you can't do other than clear screen even if you don't see
 //! erroors).
-//!
-//! # The rendering cycle
-//!
-//! `begin_frame` → [`Batcher::flush`] → `end_frame`
-//!
-//! [`Batcher::flush`]: ./batcher/struct.Batcher.html#method.flush
 
 pub mod batcher;
 pub mod pipeline;
@@ -16,7 +10,7 @@ pub mod vertices;
 mod texture;
 pub use texture::Texture2D;
 
-use batcher::Batcher;
+pub use batcher::Batcher;
 pub use pipeline::Pipeline;
 
 /// The first thing to call after making `gfx::Device`
@@ -49,23 +43,42 @@ pub fn init(
     }
 }
 
-/// `FNA3D_BeginFrame`
-pub fn begin_frame(device: &mut fna3d::Device) {
-    device.begin_frame();
-}
-
 /// Swaps the front/back buffers
-pub fn end_frame(device: &mut fna3d::Device, p: &mut Pipeline, batcher: &mut Batcher) {
+pub fn end_frame(device: &mut fna3d::Device, win: *mut std::ffi::c_void) {
     // batcher.flush(device, p);
-    device.swap_buffers(None, None, batcher.win);
+    device.swap_buffers(None, None, win);
 }
 
-/// Clears the active draw buffers with cornflower blue i.e. (r, g, b) = (100, 149, 237)
-pub fn clear(device: &mut fna3d::Device) {
+pub fn clear(device: &mut fna3d::Device, color: fna3d::Color) {
     device.clear(
         fna3d::ClearOptions::TARGET,
-        fna3d::colors::CORNFLOWER_BLUE,
+        fna3d::Color::cornflower_blue(),
         0.0,
         0,
     );
+}
+
+/// The main interface to render 2D sprites
+pub struct DrawContext {
+    pub params: fna3d::PresentationParameters,
+    pub device: fna3d::Device,
+    pub batcher: Batcher,
+    pub pipe: Pipeline,
+    pub win: *mut std::ffi::c_void,
+    // TODO: images
+}
+
+impl DrawContext {
+    pub fn begin(&mut self) {
+        self.batcher.begin(&mut self.device);
+    }
+
+    /// Ends the pass and flushes batch data to actually draw to a render target
+    pub fn end(&mut self) {
+        self.batcher.end(&mut self.device, &mut self.pipe);
+    }
+}
+
+pub struct AssetStore {
+    textures: std::collections::HashMap<String, Texture2D>,
 }

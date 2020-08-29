@@ -6,6 +6,8 @@ use std::{
 };
 
 /// Part of the required rendering pipeline
+///
+/// * TODO: is this vertex shader or fragment shader?
 #[derive(Debug)]
 pub struct Shader {
     effect: *mut fna3d::Effect,
@@ -60,7 +62,7 @@ impl Shader {
 
     /// A requierd rendering pipeline cycle
     ///
-    /// * TODO: what is this. add proper name and document
+    /// Inlined `OrthographicOffCenter` matrix
     pub fn update(&mut self) {
         unsafe {
             for i in 0..(*self.mojo_effect).param_count as isize {

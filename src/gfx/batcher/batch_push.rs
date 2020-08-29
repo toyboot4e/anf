@@ -3,7 +3,7 @@
 //! The internal implementation is based on `Batcher` in Nez
 
 use crate::gfx::{
-    batcher::batch_data::{batch_data::BatchData, batch_internals::*},
+    batcher::batch_data::{batch_internals::*, BatchData, FourVertexInfo},
     texture::Texture2D,
 };
 
@@ -32,10 +32,37 @@ const CORNER_OFFSET_X: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
 /// Normalized y offsets at top-left, top-right, bottom-left, bottom-right
 const CORNER_OFFSET_Y: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
-// TODO: what is depth. is it considered by Device
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Rect2u {
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
+
+/// Top-left and bottom-right
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Skew2f {
+    pub x1: f32,
+    pub y1: f32,
+    pub x2: f32,
+    pub y2: f32,
+}
+
+/// Top-left and bottom-right
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Rot2f {
+    pub x1: f32,
+    pub y1: f32,
+    pub x2: f32,
+    pub y2: f32,
+}
+
+// TODO: what is depth. is it considered by Device?
 
 /// Command to push a sprite into `BatchData`
 ///
+/// * `origin`: in pixels
 /// * `src_rect`: in pixels
 /// * `dest_rect`: in pixels or normalized
 /// * `is_dest_size_in_pixels`:
@@ -58,7 +85,7 @@ impl Default for SpritePushCommand {
         Self {
             src_rect: Rect2f::normalized(), // set it in pixel
             dest_rect: Rect2f::default(),
-            color: fna3d::colors::default(),
+            color: fna3d::Color::white(),
             origin: Vec2f::default(),
             rot: 0f32,
             depth: 0f32,
@@ -102,97 +129,201 @@ impl SpritePushCommand {
 }
 
 impl SpritePushCommand {
-    pub fn run(self, batch: &mut BatchData, texture: &Texture2D, policy: DrawPolicy, effects: u8) {
-        let inv_tex_w = 1.0 / texture.w as f32;
-        let inv_tex_h = 1.0 / texture.h as f32;
-        self.push_vertices(batch, inv_tex_w, inv_tex_h, policy, effects);
-        // TODO: is this working?
-        // TODO: use Rc
-        batch.texture_slots[batch.n_sprites] = texture.clone();
-        batch.n_sprites += 1;
-    }
-
-    #[inline]
-    fn push_vertices(
+    // TODO: maybe flush batch if nexessary
+    pub fn run(
         mut self,
         batch: &mut BatchData,
-        inv_tex_w: f32,
-        inv_tex_h: f32,
+        texture: &Texture2D,
         policy: DrawPolicy,
         effects: u8,
     ) {
-        // TODO: flush batch if nexessary
-        // TODO: overwriting fields vs use local variables
+        let inv_tex_w = 1.0 / texture.w as f32;
+        let inv_tex_h = 1.0 / texture.h as f32;
 
         // let it be normalized
-        let src_rect = Rect2f {
+        let uvs = Rect2f {
             x: self.src_rect.x * inv_tex_w,
             y: self.src_rect.y * inv_tex_h,
             w: self.src_rect.w * inv_tex_w,
             h: self.src_rect.h * inv_tex_h,
         };
 
-        self.origin.x = (self.origin.x / src_rect.w) * inv_tex_w;
-        self.origin.y = (self.origin.y / src_rect.h) * inv_tex_h;
+        self.origin.x = (self.origin.x / uvs.w) * inv_tex_w;
+        self.origin.y = (self.origin.y / uvs.h) * inv_tex_h;
 
-        // destination is NOT normalized
-        let dest_pos = {
-            let mut pos = self.dest_rect.left_up();
-            if policy.do_round {
-                pos.round();
+        // destination (NOT normalized)
+        let dest = {
+            let dest_pos = {
+                let mut pos = self.dest_rect.left_up();
+                if policy.do_round {
+                    pos.round();
+                }
+                pos
+            };
+
+            let dest_size = {
+                let mut size = self.dest_rect.size();
+                if !self.is_dest_size_in_pixels {
+                    size.x *= self.src_rect.w;
+                    size.y *= self.src_rect.h;
+                }
+                size
+            };
+
+            Rect2f {
+                x: dest_pos.x,
+                y: dest_pos.y,
+                w: dest_size.x,
+                h: dest_size.y,
             }
-            pos
         };
 
-        let dest_size = {
-            let mut size = self.dest_rect.size();
-            if !self.is_dest_size_in_pixels {
-                size.x *= self.src_rect.w;
-                size.y *= self.src_rect.h;
-            }
-            size
-        };
+        self::push_quad(
+            batch,
+            &texture,
+            self.origin,
+            &uvs,
+            &dest,
+            &mut self.skew,
+            self.color,
+            self.rot,
+            self.depth,
+            effects,
+        );
+    }
+}
 
-        // rotation matrix
-        let (rot_1x, rot_1y, rot_2x, rot_2y) = if self.rot >= f32::EPSILON {
-            let sin = self.rot.sin();
-            let cos = self.rot.cos();
-            (cos, sin, -sin, cos)
-        } else {
-            (1.0, 0.0, 0.0, 1.0)
-        };
+// --------------------------------------------------------------------------------
+// Sprite
 
-        // flip our skew values if we have a flipped sprite
-        if self.effects != 0 {
-            self.skew.y1 *= -1 as f32;
-            self.skew.y2 *= -1 as f32;
-            self.skew.x1 *= -1 as f32;
-            self.skew.x2 *= -1 as f32;
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sprite<'a> {
+    uvs: Rect2f, // texture coordinates (normalized source rectangle)
+    uvs_in_pixels: Rect2u,
+    tex: &'a Texture2D,
+}
+
+/// Pushes a sprite i.e. a subtexture
+///
+/// * `dest`: scale values
+pub fn push_sprite(
+    batch: &mut BatchData,
+    sprite: &Sprite,
+    mut dest: Rect2f,
+    color: fna3d::Color,
+    origin: Vec2f,
+    rot: f32,
+    depth: f32,
+    effects: u8,
+    mut skew: Skew2f,
+) {
+    // batch.flush();
+
+    let origin = Vec2f {
+        x: (origin.x / sprite.uvs.x) / sprite.tex.w as f32,
+        y: (origin.y / sprite.uvs.y) / sprite.tex.h as f32,
+    };
+
+    dest.w *= sprite.uvs_in_pixels.w as f32;
+    dest.h *= sprite.uvs_in_pixels.h as f32;
+
+    self::push_quad(
+        batch,
+        &sprite.tex,
+        origin,
+        &sprite.uvs,
+        &dest,
+        &mut skew,
+        color,
+        rot,
+        depth,
+        effects,
+    );
+}
+
+// --------------------------------------------------------------------------------
+// Core
+
+#[inline]
+fn push_quad(
+    batch: &mut BatchData,
+    texture: &Texture2D,
+    origin: Vec2f,    // ??
+    uv_rect: &Rect2f, // normalized (uvs, texture coordinates)
+    dest: &Rect2f,    // NOT normalized
+    skew: &mut Skew2f,
+    color: fna3d::Color,
+    rot: f32,
+    depth: f32,
+    effects: u8, // TODO: use enum
+) {
+    let vertex = &mut batch.vertex_data[batch.n_quads];
+    self::set_quad(
+        vertex, skew, origin, uv_rect, dest, color, rot, depth, effects,
+    );
+    // TODO: use Rc?
+    batch.texture_slots[batch.n_quads] = texture.clone();
+    batch.n_quads += 1;
+}
+
+/// Sets up four vertices that correspond to a quad (rect)
+#[inline]
+fn set_quad(
+    vertex: &mut FourVertexInfo,
+    skew: &mut Skew2f,
+    origin: Vec2f,    // ??
+    uv_rect: &Rect2f, // normalized (uvs, texture coordinates)
+    dest: &Rect2f,    // NOT normalized
+    color: fna3d::Color,
+    rot: f32,
+    depth: f32,
+    effects: u8, // TODO: use enum
+) {
+    let rot = if rot >= f32::EPSILON {
+        let sin = rot.sin();
+        let cos = rot.cos();
+        Rot2f {
+            x1: cos,
+            y1: sin,
+            x2: -sin,
+            y2: cos,
         }
-
-        let vertex = &mut batch.vertex_data[batch.n_sprites];
-
-        // top, top, bottom, bottom
-        let skew_xs = [self.skew.x1, self.skew.x1, self.skew.x2, self.skew.x2];
-        // left, right, right, left
-        let skew_ys = [self.skew.y1, self.skew.y2, self.skew.y1, self.skew.y2];
-
-        // push four vertices: top-left, top-right, bottom-left, and bottom-right, respectively
-        for i in 0..4 {
-            let corner_x = (CORNER_OFFSET_X[i] - self.origin.x) * dest_size.x + skew_xs[i];
-            let corner_y = (CORNER_OFFSET_Y[i] - self.origin.y) * dest_size.y - skew_ys[i];
-
-            vertex[i].dest.x = (rot_2x * corner_y) + (rot_1x * corner_x) + dest_pos.x;
-            vertex[i].dest.y = (rot_2y * corner_y) + (rot_1y * corner_x) + dest_pos.y;
-            vertex[i].dest.z = self.depth;
-
-            // Here, `^` is xor (exclusive or) operator.
-            // So if `effects` (actually flips?) equals to zero, it does nothing and
-            // `i ^ effects` == `i`
-            vertex[i].uvs.x = (CORNER_OFFSET_X[i ^ effects as usize] * src_rect.w) + src_rect.x;
-            vertex[i].uvs.y = (CORNER_OFFSET_Y[i ^ effects as usize] * src_rect.h) + src_rect.y;
-
-            vertex[i].color = self.color;
+    } else {
+        Rot2f {
+            x1: 1.0,
+            y1: 0.0,
+            x2: 0.0,
+            y2: 1.0,
         }
+    };
+
+    // flip our skew values if we have a flipped sprite
+    if effects != 0 {
+        skew.y1 *= -1 as f32;
+        skew.y2 *= -1 as f32;
+        skew.x1 *= -1 as f32;
+        skew.x2 *= -1 as f32;
+    }
+
+    // top, top, bottom, bottom
+    let skew_xs = [skew.x1, skew.x1, skew.x2, skew.x2];
+    // left, right, right, left
+    let skew_ys = [skew.y1, skew.y2, skew.y1, skew.y2];
+
+    // push four vertices: top-left, top-right, bottom-left, and bottom-right, respectively
+    for i in 0..4 {
+        let corner_x = (CORNER_OFFSET_X[i] - origin.x) * dest.w + skew_xs[i];
+        let corner_y = (CORNER_OFFSET_Y[i] - origin.y) * dest.h - skew_ys[i];
+
+        vertex[i].dest.x = (rot.x2 * corner_y) + (rot.x1 * corner_x) + dest.x;
+        vertex[i].dest.y = (rot.y2 * corner_y) + (rot.y1 * corner_x) + dest.y;
+        vertex[i].dest.z = depth;
+
+        // Here, `^` is xor (exclusive or) operator. So if `effects` (actually flips?) equals to
+        // zero, it does nothing and `i ^ effects` == `i`
+        vertex[i].uvs.x = (CORNER_OFFSET_X[i ^ effects as usize] * uv_rect.w) + uv_rect.x;
+        vertex[i].uvs.y = (CORNER_OFFSET_Y[i ^ effects as usize] * uv_rect.h) + uv_rect.y;
+
+        vertex[i].color = color;
     }
 }

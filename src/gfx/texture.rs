@@ -13,10 +13,10 @@ use std::{
     os::raw::c_void,
 };
 
-/// Wraps a texture handle with some metadata
+/// A 2D texture handle
 ///
-/// * `level_count:`
-///   TODO: what is this
+/// * TODO: what is `level_count`
+/// * TODO: do we need `SurfaceFormat` and where is it set if it's not at `FNA3D_CreateTexture2D`
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture2D {
     raw: *mut fna3d::Texture,
@@ -30,7 +30,7 @@ pub struct Texture2D {
 fn calc_mip_levels(w: u32, h: u32, depth: u32) -> u32 {
     use std::cmp::max;
     let mut levels = 1;
-    let mut size = max(max(w, h), depth);
+    let mut size = max(max(w, h), depth); // FIXME:
     while size > 1 {
         size /= 2;
         levels += 1;
@@ -77,6 +77,33 @@ impl Texture2D {
         }
     }
 
+    fn new_impl(
+        device: &mut fna3d::Device,
+        w: u32,
+        h: u32,
+        do_mip_map: bool,
+        fmt: fna3d::SurfaceFormat,
+        is_render_target: bool,
+    ) -> Self {
+        let level_count = if do_mip_map {
+            self::calc_mip_levels(w, h, 0)
+        } else {
+            1 // FIXME: not 0? isn't it mip map level
+        };
+        let fmt = self::get_init_format(fmt, is_render_target);
+        let raw = device.create_texture_2d(fmt, w, h, level_count, is_render_target);
+
+        Self {
+            raw,
+            w,
+            h,
+            fmt,
+            level_count,
+        }
+    }
+}
+
+impl Texture2D {
     pub fn with_size(device: &mut fna3d::Device, w: u32, h: u32) -> Self {
         Self::new(device, w, h, false, fna3d::SurfaceFormat::Color)
     }
@@ -104,41 +131,6 @@ impl Texture2D {
         Self::new_impl(device, w, h, do_mip_map, fmt, true)
     }
 
-    fn new_impl(
-        device: &mut fna3d::Device,
-        w: u32,
-        h: u32,
-        do_mip_map: bool,
-        fmt: fna3d::SurfaceFormat,
-        is_render_target: bool,
-    ) -> Self {
-        let level_count = if do_mip_map {
-            self::calc_mip_levels(w, h, 0)
-        } else {
-            1
-        };
-        let fmt = self::get_init_format(fmt, is_render_target);
-        log::trace!(
-            "new texture with size [{}, {}] surface format {:?} level count {}, is_render_target {}",
-            w,
-            h,
-            fmt,
-            level_count,
-            is_render_target
-        );
-        let raw = device.create_texture_2d(fmt, w, h, level_count, is_render_target);
-
-        Self {
-            raw,
-            w,
-            h,
-            fmt,
-            level_count,
-        }
-    }
-}
-
-impl Texture2D {
     pub fn from_path(
         device: &mut fna3d::Device,
         path: impl AsRef<std::path::Path>,
@@ -147,45 +139,32 @@ impl Texture2D {
         let reader = std::fs::File::open(path)
             .ok()
             .unwrap_or_else(|| panic!("failed to open file {}", path.display()));
-        let reader = std::io::BufReader::new(reader);
-        Self::from_reader(device, reader)
+
+        // from_reader
+        let mut reader = std::io::BufReader::new(reader);
+        let mut buf = vec![];
+        reader
+            .read_to_end(&mut buf)
+            .unwrap_or_else(|_e| panic!("Error while reading file {}", path.display()));
+        Self::from_bytes(device, &buf)
     }
 
-    // pub fn from_reader<R: BufRead + Seek>(
-    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, mut reader: R) -> Option<Self> {
-        // this is broken?
-        // use sdl2::image::ImageRWops;
-        // let mut buf = Vec::new();
-        // let x = sdl2::rwops::RWops::from_read(&mut reader, &mut buf).unwrap();
-        // let sur = x.load().unwrap();
-        // let w = sur.width();
-        // let h = sur.height();
-        // let len = sur.pitch();
-        // let pixels = unsafe { (*sur.raw()).pixels };
-        // let _ = reader.seek(std::io::SeekFrom::Start(0));
+    // pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, mut reader: R) -> Option<Self> {
 
-        // FIXME: is this borken?
-        // let (pixels, len, [w, h]) = fna3d::img::load_image_from_reader(reader, None, false);
-
-        use stb_image::image::{Image, LoadResult};
-        let (pixels, len, [w, h]) = match stb_image::image::load(crate::vfs::get("a.png")) {
+    /// TODO: use FNA3D_Image or SDL2 RWops
+    pub fn from_bytes(device: &mut fna3d::Device, bytes: &[u8]) -> Option<Self> {
+        use stb_image::image::LoadResult;
+        let (pixels, len, [w, h]) = match stb_image::image::load_from_memory(bytes) {
             LoadResult::Error(x) => panic!("{}", x),
-            LoadResult::ImageU8(i) => (
-                i.data.as_ptr() as *mut u8,
-                i.data.len(),
-                [i.width as u32, i.height as u32],
+            LoadResult::ImageU8(img) => (
+                img.data.as_ptr() as *mut u8,
+                img.data.len(),
+                [img.width as u32, img.height as u32],
             ),
-            LoadResult::ImageF32(i) => {
+            LoadResult::ImageF32(_img) => {
                 panic!("32");
             }
         };
-
-        // is this broken?
-        // TODO: try loading image using something else
-        // let (pixels, len, [w, h]) = fna3d::img::load_image_from_reader(reader, None, false);
-        // if pixels.is_null() {
-        //     return None;
-        // }
 
         log::trace!(
             "load texture: {{ len: {}, w: {}, h: {} }}, pixels at {:?}",
@@ -196,7 +175,8 @@ impl Texture2D {
         );
 
         let mut texture = Self::with_size(device, w, h);
-        texture.set_data_with_ptr(device, 0, None, pixels as *mut _, len as u32);
+        let pixels = unsafe { std::slice::from_raw_parts(pixels, len) };
+        texture.set_data(device, 0, None, pixels);
 
         // unsafe {
         //     fna3d::sys::FNA3D_Image_Free(pixels);
@@ -205,33 +185,13 @@ impl Texture2D {
         return Some(texture);
     }
 
-    /// Sets texture data from a slice
-    pub fn set_data<T>(
-        &mut self,
-        device: &mut fna3d::Device,
-        level: u32,
-        // TODO: what is this
-        rect: Option<[u32; 4]>,
-        data: &[T],
-    ) {
-        self.set_data_with_ptr(
-            device,
-            level,
-            rect,
-            data as *const _ as *mut _,
-            (std::mem::size_of::<T>() * data.len()) as u32,
-        )
-    }
-
     /// Sets texture data from a pointer
-    pub fn set_data_with_ptr(
+    pub fn set_data(
         &mut self,
         device: &mut fna3d::Device,
         level: u32,
-        // TODO: what is this
-        rect: Option<[u32; 4]>,
-        data: *mut c_void,
-        data_len_in_bytes: u32,
+        rect: Option<[u32; 4]>, // TODO: it this for mipmaps
+        data: &[u8],
     ) {
         let (x, y, w, h) = if let Some(xs) = rect {
             (xs[0], xs[1], xs[2], xs[3])
@@ -249,12 +209,11 @@ impl Texture2D {
             self.fmt,
             x,
             y,
-            // FIXME: is this [w, h] (in pixels) correct
             w,
             h,
             level,
-            data,
-            data_len_in_bytes,
+            data as *const [u8] as *mut c_void,
+            data.len() as u32,
         );
     }
 }
