@@ -49,6 +49,7 @@ impl Pipeline {
         self.state.set_texture(device, texture);
     }
 
+    /// Resets shader uniforms
     pub fn update_shader(&mut self) {
         self.shader.update();
     }

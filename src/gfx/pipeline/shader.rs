@@ -60,52 +60,57 @@ impl Shader {
         device.apply_effect(self.effect, pass, &state_changes);
     }
 
-    /// A requierd rendering pipeline cycle
+    /// Sets `OrthographicOffCenter` matrix
     ///
-    /// Inlined `OrthographicOffCenter` matrix
+    /// A requierd rendering pipeline cycle
     pub fn update(&mut self) {
         unsafe {
-            for i in 0..(*self.mojo_effect).param_count as isize {
-                let name = (*(*self.mojo_effect).params.offset(i)).value.name;
-                // FIXME: do not allocate a new string..
-                let compared = std::ffi::CString::new("MatrixTransform").unwrap();
-                if std::ffi::CStr::from_ptr(name) == compared.as_c_str() {
-                    // OrthographicOffCenter Matrix - value copied from XNA project
-                    // todo: Do I need to worry about row-major/column-major?
-                    let proj_mat: [f32; 16] = [
-                        0.0015625,
-                        0.0,
-                        0.0,
-                        -1.0,
-                        0.0,
-                        -0.00277777785,
-                        0.0,
-                        1.0,
-                        0.0,
-                        0.0,
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0,
-                    ];
+            self.update_impl();
+        }
+    }
 
-                    use std::io::Write;
-                    let len = std::mem::size_of::<f32>() * 16;
-                    let mut dest = std::slice::from_raw_parts_mut(
-                        (*(*self.mojo_effect).params.offset(i))
-                            .value
-                            .__bindgen_anon_1
-                            .values as *mut u8,
-                        len,
-                    );
-                    let src = std::slice::from_raw_parts_mut(proj_mat.as_ptr() as *mut u8, len);
-                    dest.write(src)
-                        .expect("failed to write universal effect data");
+    #[inline]
+    unsafe fn update_impl(&mut self) {
+        // FIXME: do not allocate a new string..
+        let compared = std::ffi::CString::new("MatrixTransform").unwrap();
+        for i in 0..(*self.mojo_effect).param_count as isize {
+            let name = (*(*self.mojo_effect).params.offset(i)).value.name;
+            if std::ffi::CStr::from_ptr(name) == compared.as_c_str() {
+                // OrthographicOffCenter Matrix - value copied from XNA project
+                // todo: Do I need to worry about row-major/column-major?
+                let proj_mat: [f32; 16] = [
+                    0.0015625,
+                    0.0,
+                    0.0,
+                    -1.0,
+                    0.0,
+                    -0.00277777785,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0,
+                ];
 
-                    break; // TODO: why break. look at FNA
-                }
+                use std::io::Write;
+                let len = std::mem::size_of::<f32>() * 16;
+                let mut dest = std::slice::from_raw_parts_mut(
+                    (*(*self.mojo_effect).params.offset(i))
+                        .value
+                        .__bindgen_anon_1
+                        .values as *mut u8,
+                    len,
+                );
+                let src = std::slice::from_raw_parts_mut(proj_mat.as_ptr() as *mut u8, len);
+                dest.write(src)
+                    .expect("failed to write universal effect data");
+
+                break; // TODO: why break. look at FNA
             }
         }
     }

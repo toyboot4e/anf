@@ -1,6 +1,6 @@
 = ANF
 
-ANF is an FNA-like framework for 2D games in Rust. It's powered by https://github.com/FNA-XNA/FNA3D[FNA3D] and https://www.libsdl.org/[SDL2].
+ANF is a 2D framework in Rust. It's powered by https://github.com/FNA-XNA/FNA3D[FNA3D] and https://www.libsdl.org/[SDL2].
 
 == About
 
@@ -27,27 +27,19 @@ API documentation can be generated and opened with `cargo doc --no-deps --open`.
 
 == Acknowledgements
 
-=== Dependent libraries
+=== Dependent libraries / crates
 
-* https://www.libsdl.org/[SDL2]
+* https://www.libsdl.org/[SDL2] / https://github.com/Rust-SDL2/rust-sdl2[Rust-SDL2]
 +
 Simple DirectMedia Layer is a cross-platform development library.
 
-* https://github.com/FNA-XNA/FNA3D[FNA3D]
+* https://github.com/FNA-XNA/FNA3D[FNA3D] / https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D]
 +
 FNA3D is a graphics library for http://fna-xna.github.io/[FNA] written in C99.
 
-=== Bindings
-
-* https://github.com/Rust-SDL2/rust-sdl2[Rust-SDL2]
-+
-Bindings for SDL2 in Rust
-
-* https://github.com/rust-lang/rust-bindgen[bindgen]
-+
-`bindgen` automatically generates Rust FFI bindings to C (and some C++) libraries.
-
 === Special thanks
+
+// is this appropreate way to say thank you to FNA?
 
 * http://fna-xna.github.io/[FNA]
 +

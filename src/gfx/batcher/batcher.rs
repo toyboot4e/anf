@@ -8,7 +8,11 @@ use crate::gfx::{
     Pipeline,
 };
 
-/// Batches draw calls to graphics card as much as possible
+/// Accumulates vertex data and batches draw calls when flushing
+///
+/// Draw call is about calling a drawing function of a low-level graphics API. Then we'd like to
+/// send as much data as possible at once. This is called _sprite batching_ and `Batcher` is about
+/// it.
 #[derive(Debug)]
 pub struct Batcher {
     pub batch: batch_data::BatchData,
@@ -32,14 +36,13 @@ impl Batcher {
 /// Batch cycle
 /// ---
 impl Batcher {
-    /// Begins a pass
     pub fn begin(&mut self, device: &mut fna3d::Device) {
         self.is_begin_called = true;
     }
 
     // TODO: begin_with_target
 
-    /// Ends the pass and flushes batch data to actually draw to a render target
+    /// Flushes batch data to actually draw to a render target
     pub fn end(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
         if !self.is_begin_called {
             log::warn!("`Batcher::end` is called before `begin`");
@@ -48,25 +51,8 @@ impl Batcher {
         self.flush(device, p);
     }
 
-    /// Draws all the pushed sprites.
-    ///
-    /// This is public only for documentation purpose; this function should only be called from
-    /// `end`, `anf::gfx::end_frame` or when pushing vertices and they saturate (out of capaicty of
-    /// `BatchData`).
-    ///
-    /// Contains the following rendering pipeline calls:
-    ///
-    /// * `FNA3D_ApplyEffect` (`Pipeline::apply_effect`):
-    ///   Yes a shader is required even if we do nothing with it.
-    /// * `FNA3D_SetVertexData` (`IndexBuffer::set_data`):
-    ///   Sets our `VertexData` to `VertexBuffer`
-    /// * `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState` (`Pipeline::set_texture`):
-    ///   Sets `SamplerState` (`Texture` etc.) to `Device`
-    /// * `FNA3D_ApplyVertexBufferBindings` (`Pipeline::apply_vertex_buffer_bindings`):
-    ///   Sets our `VertexBuffer` to `fna3d::Device` and prepares shader program ("the last thing to do" before drawing).
-    /// * `FNA3D_DrawIndexedPrimitives`:
-    ///   Finally draw rectangle sprites (quads) as primitives (triangles)
-    pub fn flush(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
+    /// Draws all the pushed vertices.
+    fn flush(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
         // FIXME: `flush` can be called if it's not begun (in end_frame)
         if !self.is_begin_called {
             log::warn!("`Batcher::flush` has to be called after `begin`");
@@ -78,15 +64,15 @@ impl Batcher {
             return;
         }
 
+        // reset shader uniform
         self.flush_prep_render_state(device, pipe);
-
-        // FNA3D_ApplyEffect (this is required)
+        // `FNA3D_ApplyEffect`
         pipe.apply_effect(device, 0);
-        // FNA3D_SetVertexData (copies vertex data from `BatchData` to `VertexBuffer`)
+        // `FNA3D_SetVertexData` (copies vertex data from `BatchData` to `VertexBuffer`)
         self.flush_set_vertex(device);
-        // FNA3D_VerifySamplerState, FNA3D_VerifyVertexSamplerState,
-        // FNA3D_ApplyVertexBufferBindings (slices `VertexBuffer` to `VertexBufferBinding`)
-        // FNA3D_DrawIndexedPrimitives
+        // `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
+        // `FNA3D_ApplyVertexBufferBindings` (slices `VertexBuffer` to `VertexBufferBinding`)
+        // ad finally `FNA3D_DrawIndexedPrimitives`
         self.flush_draw(device, pipe);
 
         self.batch.n_quads = 0;
@@ -152,13 +138,6 @@ impl Batcher {
         slot: usize,
         span: batch_data::BatchSpan,
     ) {
-        log::trace!(
-            "draw call with {:?} with {:?} with vertices\n{:#?}",
-            span,
-            &self.batch.texture_slots[slot],
-            &self.batch.vertex_data[span.lo..span.hi]
-        );
-
         // ----------------------------------------
         // GraphicsDevice.ApplyState
 

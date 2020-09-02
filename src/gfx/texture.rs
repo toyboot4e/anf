@@ -131,6 +131,7 @@ impl Texture2D {
         Self::new_impl(device, w, h, do_mip_map, fmt, true)
     }
 
+    /// TODO: document error
     pub fn from_path(
         device: &mut fna3d::Device,
         path: impl AsRef<std::path::Path>,
