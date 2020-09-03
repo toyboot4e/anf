@@ -3,23 +3,26 @@
 //! # Boilerplate
 //!
 //! ```
-//! use anf::app::{App, AppState, WindowConfig};
+//! use anf::app::{App, AppConfig, AppState};
 //!
 //! struct MyAppState {}
 //! impl AppState for MyAppState {}
 //!
 //! fn main() {
-//!     let (window, device) = WindowConfig::default().create();
-//!     let mut app = App::new(MyAppState {}, window, device);
+//!     let cfg = AppConfig::default();
+//!     let app = App::from_cfg(cfg);
 //!
-//!     match app.run() {
+//!     // create your state with `App`
+//!     let state = MyAppState {};
+//!
+//!     match app.run(state) {
 //!         Ok(()) => {}
 //!         Err(why) => println!("Error occured: {}", why),
 //!     };
 //! }
 //! ```
 
-use crate::gfx::{batcher::Batcher, DrawContext, Pipeline};
+use crate::gfx::{batcher::Batcher, pipeline::Pipeline, DrawContext};
 use fna3d::Device;
 use sdl2::{
     render::WindowCanvas,
@@ -27,33 +30,65 @@ use sdl2::{
 };
 use std::time::Duration;
 
-/// Initial window settings
-pub struct WindowConfig {
+/// User data driven by `AppImpl`
+pub trait AppState {
+    fn render(&mut self, dcx: &mut DrawContext) {}
+    fn update(&mut self) {}
+}
+
+/// Data to create `App`
+///
+/// It only contains initial window settings (for now).
+pub struct AppConfig {
     pub title: String,
     pub w: u32,
     pub h: u32,
 }
 
-/// Window handle created from `WindowConfig`
-pub struct WindowHandle {
+/// Bundles data to run application
+///
+/// Internally, it's using [Rust-SDL2] to make, hold and drop window.
+///
+/// [Rust-SDL2]: https://github.com/Rust-SDL2/rust-sdl2
+pub struct App {
+    win: SdlWindow,
+    pub device: Device,
+    pub params: fna3d::PresentationParameters,
+}
+
+/// Hides the use of SDL2 (Rust-SDL2)
+///
+/// The window is dropped when this handle goes out of scope.
+struct SdlWindow {
     pub sdl: sdl2::Sdl,
     pub raw_window: *mut sdl2::sys::SDL_Window,
-    pub params: fna3d::PresentationParameters,
     pub canvas: WindowCanvas,
 }
 
-/// The core
-pub struct App<T: AppState> {
-    dcx: DrawContext,
-    clear_color: fna3d::Color,
-    state: T,
-    win: WindowHandle,
-}
+impl App {
+    pub fn from_cfg(cfg: AppConfig) -> Self {
+        log::info!("FNA version {}", fna3d::linked_version());
 
-/// User data driven by `App`
-pub trait AppState {
-    fn render(&mut self, dcx: &mut DrawContext);
-    fn update(&mut self);
+        let flags = fna3d::prepare_window_attributes();
+        let sdl = sdl2::init().unwrap();
+        let canvas = cfg.canvas(&sdl, flags.0);
+        let raw_window = canvas.window().raw();
+        let (params, device) = cfg.device(raw_window as *mut _);
+
+        App {
+            win: SdlWindow {
+                sdl,
+                raw_window,
+                canvas,
+            },
+            params,
+            device,
+        }
+    }
+
+    pub fn run<T: AppState>(self, state: T) -> AppResult {
+        AppImpl::new(state, self).run()
+    }
 }
 
 enum UpdateResult {
@@ -64,7 +99,7 @@ enum UpdateResult {
 /// Return value of `App::run`
 pub type AppResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
-impl WindowConfig {
+impl AppConfig {
     pub fn default() -> Self {
         Self {
             title: "† ANF game †".to_string(),
@@ -72,25 +107,10 @@ impl WindowConfig {
             h: 720,
         }
     }
+}
 
-    pub fn create(&self) -> (WindowHandle, fna3d::Device) {
-        log::info!("FNA version {}", fna3d::linked_version());
-        let flags = fna3d::prepare_window_attributes();
-        let sdl = sdl2::init().unwrap();
-        let canvas = self.canvas(&sdl, flags.0);
-        let win = canvas.window().raw();
-        let (params, device) = self.device(win as *mut _);
-
-        let handle = WindowHandle {
-            sdl,
-            raw_window: win,
-            params,
-            canvas,
-        };
-
-        (handle, device)
-    }
-
+/// Dirty creation methods based on Rust-SDL2 and Rust-FNA3D
+impl AppConfig {
     fn canvas(&self, sdl: &sdl2::Sdl, flags: u32) -> WindowCanvas {
         let video = sdl.video().unwrap();
         let win = self.window(video, flags);
@@ -118,22 +138,31 @@ impl WindowConfig {
     }
 }
 
-impl<T: AppState> App<T> {
-    pub fn new(state: T, win: WindowHandle, mut device: Device) -> Self {
-        Self::init_gfx(&mut device, &win.params);
+/// Application state that drives user state
+struct AppImpl<T: AppState> {
+    dcx: DrawContext,
+    clear_color: fna3d::Color,
+    state: T,
+    win: SdlWindow,
+}
 
-        let pipe = Pipeline::from_device(&mut device);
-        let batcher = Batcher::from_device(&mut device);
+impl<T: AppState> AppImpl<T> {
+    pub fn new(state: T, mut src: App) -> Self {
+        fna3d::utils::hook_log_functions_default();
+        Self::init_gfx(&mut src.device, &src.params);
 
-        App {
+        let pipe = Pipeline::from_device(&mut src.device);
+        let batcher = Batcher::from_device(&mut src.device);
+
+        AppImpl {
             dcx: DrawContext {
-                device,
+                device: src.device,
                 batcher,
                 pipe,
             },
             clear_color: fna3d::Color::cornflower_blue(),
             state,
-            win,
+            win: src.win,
         }
     }
 
@@ -166,7 +195,7 @@ impl<T: AppState> App<T> {
         // device.set_depth_stencil_state(&dst);
     }
 
-    pub fn run(&mut self) -> AppResult {
+    pub fn run(mut self) -> AppResult {
         let mut events = self.win.sdl.event_pump().unwrap();
         log::trace!("Start ANF game loop");
 
@@ -191,7 +220,7 @@ impl<T: AppState> App<T> {
     }
 }
 
-impl<T: AppState> App<T> {
+impl<T: AppState> AppImpl<T> {
     /// Does nothing for now
     fn update(&mut self) {
         self.state.update();
