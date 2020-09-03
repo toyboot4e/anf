@@ -7,9 +7,11 @@ use crate::gfx::{
 
 /// Rendering pipeline states
 ///
+/// * TODO: maybe extract resource bindings slots? (see sg_bindings)
+///
 /// # Missing features
 ///
-/// * multiple texture/vertex slots
+/// * multiple vertex/index buffer slots
 /// * rasterizer state, depth stencil state
 /// * sampler count (MSAA), sampling masks
 #[derive(Debug)]

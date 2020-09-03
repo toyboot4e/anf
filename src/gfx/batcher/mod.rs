@@ -3,8 +3,8 @@
 //! * TODO: make a more fluent sprite pushing API
 //! * TODO: flush on push if it's out of capacity
 
-pub mod batch;
 pub mod bufspecs;
+pub mod data;
 pub mod primitives;
 
 mod batch_push;

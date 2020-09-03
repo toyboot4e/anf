@@ -39,6 +39,8 @@ pub trait AppState {
 /// Data to create `App`
 ///
 /// It only contains initial window settings (for now).
+///
+/// * TODO: high DPI
 pub struct AppConfig {
     pub title: String,
     pub w: u32,

@@ -2,8 +2,8 @@
 
 use crate::gfx::{
     batcher::{
-        batch::{BatchData, BatchSpan, BatchSpanIter},
         bufspecs::{self, ViBuffer},
+        data::{BatchData, BatchSpan, BatchSpanIter},
     },
     pipeline::Pipeline,
 };

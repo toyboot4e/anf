@@ -1,6 +1,8 @@
-//! 2D quad rendering API
+//! 2D quad rendering
 //!
-//! * TODO: consider using a matrix crate e.g. [mint](https://docs.rs/mint/)
+//! * TODO: consider using a matrix crate e.g. [mint](https://docs.rs/mint/) or glam
+//! * TODO: use callback to create user data: F: 'static + FnOnce(Context) -> UserData
+//! * TODO: event handling
 
 pub mod batcher;
 pub mod buffers;
