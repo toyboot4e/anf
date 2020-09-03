@@ -1,6 +1,6 @@
 //! Rendering pipeline
 //!
-//! The rendering cycle is descried in `fna3d::Device` documentation.
+//! The rendering cycle is descried in the `fna3d::Device` documentation.
 //!
 //! * TODO: `Material`?
 

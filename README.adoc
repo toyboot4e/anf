@@ -4,9 +4,11 @@ ANF is a 2D framework in Rust. It's powered by https://github.com/FNA-XNA/FNA3D[
 
 == About
 
-ANF and https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D] is still early in progress and it **only runs on macOS** out of the box (or you may have to manually link to FNA3D, which I don't know how. I've been learning).
+=== Getting started
 
-Installation:
+=== Installation
+
+ANF and https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D] is still early in progress and it **only runs on macOS** out of the box (or you may have to manually link to FNA3D, which I don't know how. I've been learning).
 
 ```sh
 $ # clone ANF and FNA3D
@@ -24,6 +26,8 @@ $ cmake .. && make
 ```
 
 API documentation can be generated and opened with `cargo doc --no-deps --open`.
+
+== Contributing / feedback
 
 == Acknowledgements
 

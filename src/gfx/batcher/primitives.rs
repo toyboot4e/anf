@@ -15,7 +15,7 @@ pub struct Vec3f {
     pub z: f32,
 }
 
-/// Top-left and size
+/// Top-left point and size
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Rect2f {
     pub x: f32,

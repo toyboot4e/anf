@@ -5,11 +5,11 @@ use std::{
     io::{self, Read},
 };
 
-/// Shader data loaded
+/// Shader data loaded on memory
 ///
-/// Shaders are also known as `Effect` in XNA. Even if you do not do with your own shaders, you're
-/// using a default shader to run the rendering pipeline.
+/// In XNA, shaders are known as `Effect`s.
 ///
+/// * TODO: how to write a custom shader
 /// * TODO: enable loading custom shaders, maybe using `mint`?
 /// * TODO: is this vertex shader or fragment shader?
 /// * TODO: drop

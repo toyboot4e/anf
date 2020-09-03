@@ -5,7 +5,7 @@ use crate::gfx::{
     texture::Texture2D,
 };
 
-/// Rendering states or the required rendering pipeline by FNA3D
+/// Rendering pipeline states
 ///
 /// # Missing features
 ///

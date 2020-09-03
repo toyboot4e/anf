@@ -3,22 +3,23 @@
 use crate::gfx::{
     batcher::{
         batch::{BatchData, BatchSpan, BatchSpanIter},
-        buffers::ViBuffers,
-        bufspecs,
+        bufspecs::{self, ViBuffer},
     },
     pipeline::Pipeline,
 };
 
-/// Accumulates vertex data and batches draw calls when flushing
+/// Wrapper of `BatchData`
 ///
-/// Draw call is about calling a drawing function of a low-level graphics API. Then we'd like to
-/// send as much data as possible at once. This is called _sprite batching_ and `Batcher` is about
-/// it.
+/// `Batcher` accumulates vertex data and batches draw calls when flushing.
+///
+/// Draw call is about calling a drawing function of a low-level graphics API. In our case it is
+/// `FNA3D_DrawIndexedPrimitives`. We'd like to send as much data as possible at once; this is
+/// called _sprite batching_ and `Batcher` is about it.
 #[derive(Debug)]
 pub struct Batcher {
     pub batch: BatchData,
     is_begin_called: bool,
-    bufs: ViBuffers,
+    bufs: ViBuffer,
 }
 
 // TODO: draw sprites.. why does it not work? I'm in hell
@@ -29,7 +30,7 @@ impl Batcher {
         Self {
             batch: BatchData::new(),
             is_begin_called: false,
-            bufs: ViBuffers::from_device(device),
+            bufs: ViBuffer::from_device(device),
         }
     }
 }

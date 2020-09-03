@@ -1,10 +1,9 @@
-//! Quad rendering internals
+//! Internals of quad rendering
 //!
-//! * TODO: make a more fluent sprite push API
+//! * TODO: make a more fluent sprite pushing API
 //! * TODO: flush on push if it's out of capacity
 
 pub mod batch;
-pub mod buffers;
 pub mod bufspecs;
 pub mod primitives;
 

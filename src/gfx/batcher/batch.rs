@@ -1,24 +1,28 @@
-//! `BatchData` and iterator
+//! `BatchData` and iterator of it
+//!
+//! Presudo example:
+//!
+//! ```
+//! use anf::gfx::batcher::batch::BatchSpanIter;
+//!
+//! fn flush_batch(cx: &mut Context, batch: &mut BatchData) {
+//!      let mut iter = BatchSpanIter::new();
+//!      while let Some((slot, span)) = iter.next(&batch) {
+//!          make_draw_call(cx, batch, slot, span);
+//!      }
+//! }
+//! ```
+//!
+//! Not so elegant but enough for internals
+//!
+//! [`BatchSpanIter`]: ./struct.BatchSpanIter.html
 
 use crate::gfx::{
     batcher::bufspecs::{QuadData, MAX_SPRITES},
     texture::Texture2D,
 };
 
-/// Accumulates vertex data tracking what `Texture2D` are used
-///
-/// Each batch can be iterated via [`BatchSpanIter`]:
-///
-/// ```
-/// use anf::gfx::batcher::batch_data::BatchSpanIter;
-///
-/// let mut iter = BatchSpanIter::new();
-/// while let Some((slot, span)) = iter.next(&self.batch) {
-///     self.make_draw_call(device, pipe, slot, span);
-/// }
-/// ```
-///
-/// [`BatchSpanIter`]: ./struct.BatchSpanIter.html
+/// Accumulates vertex data tracking what `Texture2D` are used for each
 #[derive(Debug)]
 pub struct BatchData {
     /// The actual vertex data to be set to `VertexBuffer`
@@ -44,7 +48,7 @@ impl BatchData {
     }
 }
 
-/// Slices `BatchData` into `BatchSpan`s each of which corresponds to a draw call
+/// Slices `BatchData` to `BatchSpan`s, each of which corresponds to a draw call
 ///
 /// Make sure to clear `BatchData::n_quads` maually after making draw calls.
 ///
@@ -62,12 +66,14 @@ pub struct BatchSpanIter {
     nth: usize,
 }
 
-/// Span of `BatchData` for a draw call generated with `BatchSpanIter`
+/// [`lo`, `hi`) span of quadliterals in `BatchData` for making a draw call
 ///
-/// `lo` multipled by 2 is the base vertex index
+/// Note that `lo` multipled by 2 is the base vertex index because we're counting quadliterals.
 #[derive(Debug)]
 pub struct BatchSpan {
+    /// low (inclusive)
     pub lo: usize,
+    /// high (exclusive)
     pub hi: usize,
 }
 

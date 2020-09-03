@@ -1,10 +1,11 @@
-//! Wrappers of `*mut fna3d::Buffer`
+//! Vertex/index buffer
 //!
-//! Each buffer is dynamically "typed" with attributes.
+//! Internally, they are wrappers of `*mut fna3d::Buffer`; they are dynamically "typed" with
+//! attributes.
 //!
-//! * TODO: explain what "dynamic" means and what options are available
+//! * TODO: explain what "dynamic" buffer means and what options are available
 
-/// Represents data that can be sent to GPU verte buffer
+/// Marker to represent vertex data that can be sent to GPU memory
 pub trait VertexData {}
 
 // --------------------------------------------------------------------------------
