@@ -1,23 +1,26 @@
-//! 2D graphics API
+//! 2D quad rendering API
+//!
+//! * TODO: consider using a matrix crate e.g. [mint](https://docs.rs/mint/)
 
 pub mod batcher;
+pub mod buffers;
 pub mod pipeline;
-pub mod vertices;
 
 mod texture;
 pub use texture::Texture2D;
 
-pub use batcher::Batcher;
-pub use pipeline::Pipeline;
-
-/// The main interface to render 2D sprites
+/// Render sprites! Often referred to as `dcx`
+///
+/// The name `dcx` follows the rustc [naming convension] (though I often see `ctx` even in rustc).
+///
+/// [naming convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 ///
 /// * TODO: drop `Device`
 /// * TODO: better push API
 pub struct DrawContext {
     pub(crate) device: fna3d::Device,
-    pub batcher: Batcher,
-    pub pipe: Pipeline,
+    pub batcher: batcher::Batcher,
+    pub pipe: pipeline::Pipeline,
 }
 
 impl DrawContext {

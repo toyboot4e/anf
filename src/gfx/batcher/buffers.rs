@@ -1,8 +1,11 @@
 //! Internal buffers of `Batcher`
 
 use crate::gfx::{
-    batcher::batch_data::batch_internals::*,
-    vertices::{DynamicVertexBuffer, IndexBuffer, VertexBuffer},
+    batcher::{
+        bufspecs::{self, ColoredVertexData},
+        primitives::*,
+    },
+    buffers::{DynamicVertexBuffer, IndexBuffer, VertexBufferData},
 };
 
 // TODO: user proper name
@@ -20,10 +23,10 @@ pub struct ViBuffers {
     // effect: *mut fna3d::Effect;
 }
 
-fn gen_index_array() -> [i16; MAX_INDICES] {
-    let mut data = [0; MAX_INDICES];
+fn gen_index_array() -> [i16; bufspecs::MAX_INDICES] {
+    let mut data = [0; bufspecs::MAX_INDICES];
     // for each texture, we need two triangles (six indices)
-    for n in 0..MAX_SPRITES as i16 {
+    for n in 0..bufspecs::MAX_SPRITES as i16 {
         let (i, v) = (n * 6, n * 4);
         data[i as usize] = v as i16;
         data[(i + 1) as usize] = v + 1 as i16;
@@ -43,14 +46,14 @@ impl ViBuffers {
         let vbuf = DynamicVertexBuffer::new(
             device,
             ColoredVertexData::decl(),
-            MAX_VERTICES as u32,
+            bufspecs::MAX_VERTICES as u32,
             fna3d::BufferUsage::WriteOnly,
         );
 
         let mut ibuf = IndexBuffer::new(
             device,
-            INDEX_ELEM_SIZE,
-            MAX_INDICES as u32,
+            bufspecs::INDEX_ELEM_SIZE,
+            bufspecs::MAX_INDICES as u32,
             fna3d::BufferUsage::WriteOnly, // what is this
             false,
         );

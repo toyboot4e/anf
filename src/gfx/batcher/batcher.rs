@@ -1,11 +1,12 @@
-//! `Batcher`. Re-exported to the super module
+//! Re-exported to super module
 
 use crate::gfx::{
     batcher::{
-        batch_data::{self, batch_internals},
+        batch::{BatchData, BatchSpan, BatchSpanIter},
         buffers::ViBuffers,
+        bufspecs,
     },
-    Pipeline,
+    pipeline::Pipeline,
 };
 
 /// Accumulates vertex data and batches draw calls when flushing
@@ -15,7 +16,7 @@ use crate::gfx::{
 /// it.
 #[derive(Debug)]
 pub struct Batcher {
-    pub batch: batch_data::BatchData,
+    pub batch: BatchData,
     is_begin_called: bool,
     bufs: ViBuffers,
 }
@@ -24,9 +25,9 @@ pub struct Batcher {
 
 impl Batcher {
     pub fn from_device(device: &mut fna3d::Device) -> Self {
-        let decl = batch_internals::ColoredVertexData::decl();
+        let decl = bufspecs::ColoredVertexData::decl();
         Self {
-            batch: batch_data::BatchData::new(),
+            batch: BatchData::new(),
             is_begin_called: false,
             bufs: ViBuffers::from_device(device),
         }
@@ -114,8 +115,8 @@ impl Batcher {
     /// Vertex data is already set before is functions
     #[inline]
     fn flush_draw(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
-        let mut iter = batch_data::BatchSpanIter::new();
-        while let Some((slot, span)) = iter.next(&mut self.batch) {
+        let mut iter = BatchSpanIter::new();
+        while let Some((slot, span)) = iter.next(&self.batch) {
             self.make_draw_call(device, pipe, slot, span);
         }
     }
@@ -136,7 +137,7 @@ impl Batcher {
         device: &mut fna3d::Device,
         pipe: &mut Pipeline,
         slot: usize,
-        span: batch_data::BatchSpan,
+        span: BatchSpan,
     ) {
         // ----------------------------------------
         // GraphicsDevice.ApplyState
@@ -144,7 +145,7 @@ impl Batcher {
         // update sampler state
         // TODO: call it only when it's necessary (like when making a texture)
         // TODO: Material (BlendState, depth stencil state and rasterizer state)
-        pipe.set_texture(device, &self.batch.texture_slots[slot]);
+        pipe.set_texture(device, &self.batch.texture_track[slot]);
 
         // ----------------------------------------
         // GraphicsDevice.PrepareVertexBindingArray

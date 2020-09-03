@@ -1,15 +1,10 @@
-//! `VertexBuffer` and `IndexBuffer`
+//! Wrappers of `*mut fna3d::Buffer`
 //!
-//! Each buffer is dynamically "typed" by users with specific objects. In our case it is `Batcher`
-//! and declarations are defined in `anf::gfx::batcher::batch_data::batch_internals`.
+//! Each buffer is dynamically "typed" with attributes.
 //!
-//! * TODO: what are differences between VertexBuffer and DynamicVertexBuffer
-//! * TODO: what is `BufferUsage`
+//! * TODO: explain what "dynamic" means and what options are available
 
-/// Marker of "vertex data"
-///
-/// A vertex data is typed with `fna3d::VertexDeclarations` which is composed of
-/// `fna3d::VertexElement`s . This trait is used to mark such types.
+/// Represents data that can be sent to GPU verte buffer
 pub trait VertexData {}
 
 // --------------------------------------------------------------------------------
@@ -74,7 +69,7 @@ impl IndexBuffer {
 ///
 /// "Typed" with `fna3d::VertexDeclaration`
 #[derive(Debug)]
-pub struct VertexBuffer {
+pub struct VertexBufferData {
     raw: *mut fna3d::Buffer,
     pub n_vertices: u32,
     pub usage: fna3d::BufferUsage,
@@ -86,10 +81,10 @@ pub struct VertexBuffer {
 /// Dynamically "typed" with `fna3d::VertexDeclaration`.
 #[derive(Debug)]
 pub struct DynamicVertexBuffer {
-    pub inner: VertexBuffer,
+    pub(crate) inner: VertexBufferData,
 }
 
-impl VertexBuffer {
+impl VertexBufferData {
     pub fn raw(&self) -> *mut fna3d::Buffer {
         self.raw
     }
@@ -105,7 +100,7 @@ impl VertexBuffer {
         assert!(size_in_bytes < 2u32.pow(31));
         let raw = device.gen_vertex_buffer(is_dynamic, usage, size_in_bytes);
 
-        Self {
+        VertexBufferData {
             n_vertices,
             usage,
             decl,
@@ -113,7 +108,7 @@ impl VertexBuffer {
         }
     }
 
-    /// Sets vertex data to thsi buffer
+    /// Sets vertex data to the GPU buffer
     pub fn set_data<T: VertexData>(
         &mut self,
         device: &mut fna3d::Device,
@@ -141,11 +136,11 @@ impl DynamicVertexBuffer {
         usage: fna3d::BufferUsage,
     ) -> Self {
         Self {
-            inner: VertexBuffer::new(device, decl, n_vertices, usage, true),
+            inner: VertexBufferData::new(device, decl, n_vertices, usage, true),
         }
     }
 
-    /// Sets vertex data to this buffer
+    /// Sets vertex data to the GPU buffer
     pub fn set_data<T: VertexData>(
         &mut self,
         device: &mut fna3d::Device,

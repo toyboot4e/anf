@@ -2,22 +2,13 @@
 
 use std::{io::Read, os::raw::c_void};
 
-/// A 2D texture handle
-///
-/// # TODOs:
-///
-/// ## Documentation
-///
-/// * TODO: Explain what are sampler and surface
-///
-/// ## Design
+/// A 2D texture handle with some metadata
 ///
 /// * TODO: `Rc`? lifetime?
-/// * TODO: `Material`
 ///
-/// ## no need?
+/// # Lacking features
 ///
-/// * TODO: mipmap
+/// * mipmap
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture2D {
     raw: *mut fna3d::Texture,

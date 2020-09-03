@@ -1,4 +1,9 @@
-//! Internal data types and constants in the `batch` module
+//! `BatchData` specification
+
+use crate::gfx::batcher::primitives::*;
+
+// --------------------------------------------------------------------------------
+// Constants
 
 /// We use 16 bits for vertex index
 pub const INDEX_ELEM_SIZE: fna3d::IndexElementSize = fna3d::IndexElementSize::Bits16;
@@ -11,24 +16,27 @@ pub const MAX_VERTICES: usize = MAX_SPRITES * 4;
 pub const MAX_INDICES: usize = MAX_SPRITES * 6;
 
 // --------------------------------------------------------------------------------
-// VertexData
+// Vertex types
 
-/// The actual vertex data
-///
-/// The data layout is dynamically specified as `fna3d::VertexDeclaration`
-///
-/// * `dest`: position in pixels in target
-/// * `color`: color
-/// * `uvs`: normalized position in texture (a.k.ak. texture coordinates)
+/// The actual vertex data type
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct ColoredVertexData {
+    /// Destination position in pixels
+    ///
+    /// * TODO: isn't it normalized?
     pub dest: Vec3f, // TODO: use 2D dest vec
     pub color: fna3d::Color,
+    /// Normalized source position in texture (a.k.a. texture coordinates or texels)
     pub uvs: Vec2f,
 }
 
-impl crate::gfx::vertices::VertexData for ColoredVertexData {}
+/// The actual quadliteral data type
+pub type QuadData = [ColoredVertexData; 4];
+
+// mark them as data that can be set to vertex buffer in GPU memory
+impl crate::gfx::buffers::VertexData for QuadData {}
+impl crate::gfx::buffers::VertexData for ColoredVertexData {}
 
 impl Default for ColoredVertexData {
     fn default() -> Self {
@@ -75,61 +83,13 @@ impl ColoredVertexData {
     }
 }
 
-// --------------------------------------------------------------------------------
-// Primitives
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Vec2f {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Vec3f {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-/// Top-left and size
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct Rect2f {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
-}
-
-impl Vec2f {
-    pub fn round(&mut self) {
-        self.x = self.x.round();
-        self.y = self.y.round();
-    }
-}
-
-impl Rect2f {
-    pub fn normalized() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            w: 1.0,
-            h: 1.0,
-        }
-    }
-
-    pub fn left_up(&self) -> Vec2f {
-        Vec2f {
-            x: self.x,
-            y: self.y,
-        }
-    }
-
-    pub fn size(&self) -> Vec2f {
-        Vec2f {
-            x: self.w,
-            y: self.h,
-        }
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::mem::size_of;
+    #[test]
+    fn test_size() {
+        assert_eq!(size_of::<ColoredVertexData>(), 24);
+        assert_eq!(size_of::<FourVertexInfo>(), 96);
     }
 }

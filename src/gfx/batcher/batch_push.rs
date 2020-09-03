@@ -3,7 +3,7 @@
 //! The internal implementation is based on `Batcher` in Nez
 
 use crate::gfx::{
-    batcher::batch_data::{batch_internals::*, BatchData, FourVertexInfo},
+    batcher::{batch::BatchData, bufspecs::QuadData, primitives::*},
     texture::Texture2D,
 };
 
@@ -262,14 +262,14 @@ fn push_quad(
         vertex, skew, origin, uv_rect, dest, color, rot, depth, effects,
     );
     // TODO: use Rc?
-    batch.texture_slots[batch.n_quads] = texture.clone();
+    batch.texture_track[batch.n_quads] = texture.clone();
     batch.n_quads += 1;
 }
 
 /// Sets up four vertices that correspond to a quad (rect)
 #[inline]
 fn set_quad(
-    vertex: &mut FourVertexInfo,
+    vertex: &mut QuadData,
     skew: &mut Skew2f,
     origin: Vec2f,    // ??
     uv_rect: &Rect2f, // normalized (uvs, texture coordinates)

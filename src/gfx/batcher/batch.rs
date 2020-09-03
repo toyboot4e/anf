@@ -1,47 +1,44 @@
-//! Re-exported to the super module
+//! `BatchData` and iterator
 
 use crate::gfx::{
-    batcher::batch_data::batch_internals::{ColoredVertexData, MAX_SPRITES},
+    batcher::bufspecs::{QuadData, MAX_SPRITES},
     texture::Texture2D,
 };
 
-/// The actual vertex data per rectangle (quad)
-pub type FourVertexInfo = [ColoredVertexData; 4];
-
-impl crate::gfx::vertices::VertexData for FourVertexInfo {}
-
-/// Accumulates vertex data with related `Texture2D` (s)
+/// Accumulates vertex data tracking what `Texture2D` are used
 ///
-/// Each info is indexed with sprite push (first, second, third, ..). Each batch can be iterated
-/// via [`BatchSpanIter`].
+/// Each batch can be iterated via [`BatchSpanIter`]:
 ///
-/// * `vertex_data`:
-///   the actual vertex data to be set to `VertexBuffer`
-/// * `texture_slots`:
-///   each texture corresponds to each quad (NOT each batch)
-/// * `n_quads`:
-///   the number of sprites accumulated in this data
+/// ```
+/// use anf::gfx::batcher::batch_data::BatchSpanIter;
 ///
-/// * TODO: refactor to use buffer-length encoding
+/// let mut iter = BatchSpanIter::new();
+/// while let Some((slot, span)) = iter.next(&self.batch) {
+///     self.make_draw_call(device, pipe, slot, span);
+/// }
+/// ```
 ///
 /// [`BatchSpanIter`]: ./struct.BatchSpanIter.html
 #[derive(Debug)]
 pub struct BatchData {
-    pub vertex_data: Vec<self::FourVertexInfo>,
-    // TODO: use Rc
-    pub texture_slots: Vec<Texture2D>,
+    /// The actual vertex data to be set to `VertexBuffer`
+    pub vertex_data: Vec<QuadData>,
+    /// Each texture corresponds to each quad (NOT each batch)
+    ///
+    /// TODO: use Rc?
+    pub texture_track: Vec<Texture2D>,
     pub n_quads: usize,
 }
 
 impl BatchData {
     pub fn new() -> Self {
-        let v = vec![self::FourVertexInfo::default(); MAX_SPRITES];
+        let v = vec![QuadData::default(); MAX_SPRITES];
         // FIXME: use max texture slot?
         let t = vec![Texture2D::empty(); MAX_SPRITES];
 
         Self {
             vertex_data: v,
-            texture_slots: t,
+            texture_track: t,
             n_quads: 0,
         }
     }
@@ -97,7 +94,7 @@ impl BatchSpanIter {
         self.nth += 1;
         let lo = self.current;
         for hi in 1..batch.n_quads {
-            if &batch.texture_slots[hi] != &batch.texture_slots[lo] {
+            if &batch.texture_track[hi] != &batch.texture_track[lo] {
                 self.current = hi;
                 Some((lo, BatchSpan { lo, hi }));
             }
@@ -105,16 +102,5 @@ impl BatchSpanIter {
         let hi = batch.n_quads;
         self.current = hi;
         Some((lo, BatchSpan { lo, hi }))
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::mem::size_of;
-    #[test]
-    fn test_size() {
-        assert_eq!(size_of::<ColoredVertexData>(), 24);
-        assert_eq!(size_of::<FourVertexInfo>(), 96);
     }
 }
