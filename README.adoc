@@ -1,53 +1,32 @@
 = ANF
 
-ANF is an FNA-like framework for 2D games in Rust. It's powered by https://github.com/FNA-XNA/FNA3D[FNA3D] and https://www.libsdl.org/[SDL2].
+ANF is a 2D framework in Rust. It's powered by https://github.com/FNA-XNA/FNA3D[FNA3D] and https://www.libsdl.org/[SDL2]. It runs on desktops.
 
 == About
 
-ANF and https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D] is still early in progress and it **only runs on macOS** out of the box (or you may have to manually link to FNA3D, which I don't know how. I've been learning).
+See the https://docs.rs/anf[API documentation] to get started.
 
-Installation:
+ANF is just for https://github.com/toyboot4e/rlbox[my roguelike game development] and it's not a feature-complete framework. You would only need 5 minutes to get the whole picture.
 
-```sh
-$ # clone ANF and FNA3D
-$ git clone 'https://github.com/toyboot4e/anf/' --recursive
-$ cd anf
-$ cd rust-fna3d/fna3d-sys
-$ git clone 'https://github.com/FNA-XNA/FNA3D' --recursive
-$ # build MojoShader
-$ cd FNA3D/MojoShader
-$ cmake .
-$ cd ../
-$ # build FNA3D
-$ mkdir build && cd build
-$ cmake .. && make
-```
+== Feedback
 
-Document can be generated and opened with `cargo doc --no-deps --open`.
+Feel free to contact with me! Via issues, email or maybe https://bit.ly/rust-community[Rust Community Discord].
 
-== Acknowledgements
+== Credits / Acknowledgements
 
-=== Dependent libraries
+=== Dependent libraries / crates
 
-* https://www.libsdl.org/[SDL2]
+* https://www.libsdl.org/[SDL2] | https://github.com/Rust-SDL2/rust-sdl2[Rust-SDL2]
 +
 Simple DirectMedia Layer is a cross-platform development library.
 
-* https://github.com/FNA-XNA/FNA3D[FNA3D]
+* https://github.com/FNA-XNA/FNA3D[FNA3D] | https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D]
 +
 FNA3D is a graphics library for http://fna-xna.github.io/[FNA] written in C99.
 
-=== Bindings
-
-* https://github.com/Rust-SDL2/rust-sdl2[Rust-SDL2]
-+
-Bindings for SDL2 in Rust
-
-* https://github.com/rust-lang/rust-bindgen[bindgen]
-+
-`bindgen` automatically generates Rust FFI bindings to C (and some C++) libraries.
-
 === Special thanks
+
+// is this appropreate way to say thank you to FNA?
 
 * http://fna-xna.github.io/[FNA]
 +

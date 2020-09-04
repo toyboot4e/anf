@@ -1,8 +1,8 @@
-//! The required rendering pipeline
+//! Rendering pipeline
 //!
-//! Also the internals of `GraphicsDevice` in FNA
+//! The rendering cycle is descried in the `fna3d::Device` documentation.
 //!
-//! * TODO: add Material
+//! * TODO: `Material`?
 
 mod shader;
 pub use shader::Shader;

@@ -1,24 +1,19 @@
-//! The main interface to render 2D sprites
+//! Internals of quad rendering
 //!
-//! # Internals
-//!
-//! A sprite is a rectangle that is represented as two triangles. And they are four vertices and
-//! six indices.
-//!
-//! * TODO: make a more fluent sprite push API
+//! * TODO: make a more fluent sprite pushing API
 //! * TODO: flush on push if it's out of capacity
 
-pub mod batch_data;
+pub mod bufspecs;
+pub mod data;
+pub mod primitives;
 
 mod batch_push;
-pub use batch_push::{DrawPolicy, SpritePushCommand};
-
-pub mod buffers;
+pub use batch_push::{DrawPolicy, SpritePush};
 
 mod batcher;
 pub use batcher::Batcher;
 
 /// Begins a builder to push a sprite to `Batcher`
-pub fn push() -> SpritePushCommand {
-    SpritePushCommand::default()
+pub fn push() -> SpritePush {
+    SpritePush::default()
 }

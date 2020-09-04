@@ -1,71 +1,160 @@
-//! 2D graphics
+//! 2D quad rendering
 //!
-//! Call `init` to begin with (or you can't do other than clear screen even if you don't see
-//! erroors).
+//! # Example
 //!
-//! # The rendering cycle
+//! [`DrawContext`] provides with XNA-like interface:
 //!
-//! `begin_frame` → [`Batcher::flush`] → `end_frame`
+//! ```no_run
+//! use anf::gfx::{DrawContext, Texture2D};
+//! use std::path::Path;
 //!
-//! [`Batcher::flush`]: ./batcher/struct.Batcher.html#method.flush
+//! fn load_texture_and_draw_it(dcx: &mut DrawContext, tx: &Texture2D) {
+//!     dcx.begin();
+//!     dcx.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx);
+//!     dcx.end();
+//! }
+//! ```
+//!
+//! # Names
+//!
+//! ANF recommends using shorter names:
+//!
+//! * `dcx` referring to [`DrawContext`] (following the rustc naming [convension])
+//! * `tx` referring to [`Texture2D`]
+//! * `px` referring to "pixels"
+//! * `cmd` referring to "command"
+//!
+//! # TODOs
+//!
+//! * TODO: asset management in example
+//!
+//! [`DrawContext`]: ./struct.DrawContext.html
+//! [`Texture2D`]: ./struct.Texture2D.html
+//! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
 pub mod batcher;
+pub mod buffers;
 pub mod pipeline;
-pub mod vertices;
 
 mod texture;
 pub use texture::Texture2D;
 
-use batcher::Batcher;
-pub use pipeline::Pipeline;
+use batcher::{primitives::*, Batcher, DrawPolicy, SpritePush};
+use fna3d::Device;
+use pipeline::Pipeline;
 
-/// The first thing to call after making `gfx::Device`
+/// Render sprites!
 ///
-/// FNA3D requires us to set viewport and rasterizer state first and **if this is skipped, we
-/// can't draw sprites** (without any error).
-pub fn init(
-    device: &mut fna3d::Device,
-    // batcher: &mut Batcher,
-    params: &fna3d::PresentationParameters,
-) {
-    let viewport = fna3d::Viewport {
-        x: 0,
-        y: 0,
-        w: params.backBufferWidth as i32,
-        h: params.backBufferHeight as i32,
-        minDepth: 0 as f32,
-        maxDepth: 1 as f32,
-    };
-    device.set_viewport(&viewport);
+/// * TODO: drop `Device`
+/// * TODO: better push API
+pub struct DrawContext {
+    pub(crate) device: Device,
+    batcher: Batcher,
+    pipe: Pipeline,
+    push: SpritePush,
+}
 
-    // set material
-    {
-        let bst = fna3d::BlendState::alpha_blend();
-        device.set_blend_state(&bst);
-        // let dsst = fna3d::DepthStencilState::default();
-        // device.set_depth_stencil_state(&dsst);
-        let rst = fna3d::RasterizerState::default();
-        device.apply_rasterizer_state(&rst);
+impl DrawContext {
+    pub fn new(device: Device, batcher: Batcher, pipe: Pipeline) -> Self {
+        Self {
+            device,
+            batcher,
+            pipe,
+            push: SpritePush::default(),
+        }
     }
 }
 
-/// `FNA3D_BeginFrame`
-pub fn begin_frame(device: &mut fna3d::Device) {
-    device.begin_frame();
+impl DrawContext {
+    /// Begins a apss
+    pub fn begin(&mut self) {
+        self.batcher.begin();
+    }
+
+    /// Ends the pass and flushes batch
+    ///
+    /// Then the data is actually drawn to a render target.
+    pub fn end(&mut self) {
+        self.batcher.end(&mut self.device, &mut self.pipe);
+    }
+
+    /// `SpritePushCommand`
+    pub fn cmd(&mut self) -> SpritePushCommand<'_> {
+        self.push.reset_to_defaults();
+
+        SpritePushCommand {
+            dcx: self,
+            policy: DrawPolicy { do_round: false },
+            effects: 0,
+        }
+    }
 }
 
-/// Swaps the front/back buffers
-pub fn end_frame(device: &mut fna3d::Device, p: &mut Pipeline, batcher: &mut Batcher) {
-    // batcher.flush(device, p);
-    device.swap_buffers(None, None, batcher.win);
+/// Interface to push sprites
+pub struct SpritePushCommand<'a> {
+    dcx: &'a mut DrawContext,
+    policy: DrawPolicy,
+    effects: u8,
 }
 
-/// Clears the active draw buffers with cornflower blue i.e. (r, g, b) = (100, 149, 237)
-pub fn clear(device: &mut fna3d::Device) {
-    device.clear(
-        fna3d::ClearOptions::TARGET,
-        fna3d::colors::CORNFLOWER_BLUE,
-        0.0,
-        0,
-    );
+impl<'a> SpritePushCommand<'a> {
+    pub fn push_tx(&mut self, texture: &Texture2D) {
+        self.dcx.push.push(
+            &mut self.dcx.batcher.batch,
+            texture,
+            self.policy,
+            self.effects,
+        );
+    }
+}
+
+/// Builder
+impl<'a> SpritePushCommand<'a> {
+    #[inline]
+    fn data(&mut self) -> &mut SpritePush {
+        &mut self.dcx.push
+    }
+
+    /// In pixels (automatically normalized)
+    pub fn src_rect(&mut self, x: f32, y: f32, w: f32, h: f32) -> &mut Self {
+        self.data().src_rect = Rect2f { x, y, w, h };
+        self
+    }
+
+    pub fn dest_pos_px(&mut self, x: f32, y: f32) -> &mut Self {
+        let data = self.data();
+        data.dest_rect.x = x;
+        data.dest_rect.y = y;
+
+        self
+    }
+
+    pub fn dest_size_px(&mut self, w: f32, h: f32) -> &mut Self {
+        let data = self.data();
+        data.is_dest_size_in_pixels = true;
+        data.dest_rect.w = w;
+        data.dest_rect.h = h;
+
+        self
+    }
+
+    pub fn dest_rect_px(&mut self, xs: impl Into<[f32; 4]>) -> &mut Self {
+        let xs = xs.into();
+
+        let data = self.data();
+        data.is_dest_size_in_pixels = true;
+        data.dest_rect = Rect2f {
+            x: xs[0],
+            y: xs[1],
+            w: xs[2],
+            h: xs[3],
+        };
+
+        self
+    }
+
+    pub fn color(&mut self, color: fna3d::Color) -> &mut Self {
+        self.data().color = color;
+        self
+    }
 }
