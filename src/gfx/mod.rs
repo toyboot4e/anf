@@ -1,25 +1,37 @@
 //! 2D quad rendering
 //!
-//! * `dcx` refers to `DrawContext` (following the rustc naming [convension])
-//! * `tx` refers to texture
-//!
 //! # Example
+//!
+//! [`DrawContext`] provides with XNA-like interface:
 //!
 //! ```
 //! use anf::{gfx::{DrawContext, Texture2D}, vfs};
 //!
 //! fn load_texture_and_draw_it(dcx: &mut DrawContext) {
 //!     let tx = Texture::from_path(vfs::path("my_texture.png")).unwrap();
+//!     dcx.begin();
 //!     dcx.cmd().dest_pos_px(100, 100).push_tx(&tx);
+//!     dcx.end();
 //! }
 //! ```
 //!
 //! Note that this is memory leak.
 //!
-//! * TODO: asset management
-//! * TODO: consider using a matrix crate e.g. [mint](https://docs.rs/mint/) or glam
-//! * TODO: event handling
+//! # Names
 //!
+//! ANF recommends using shorter names:
+//!
+//! * `dcx` referring to [`DrawContext`] (following the rustc naming [convension])
+//! * `tx` referring to [`Texture2D`]
+//! * `px` referring to "pixels"
+//! * `cmd` referring to "command"
+//!
+//! # TODOs
+//!
+//! * TODO: asset management in example
+//!
+//! [`DrawContext`]: ./struct.DrawContext.html
+//! [`Texture2D`]: ./struct.Texture2D.html
 //! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
 pub mod batcher;
@@ -33,11 +45,7 @@ use batcher::{primitives::*, Batcher, DrawPolicy, SpritePush};
 use fna3d::Device;
 use pipeline::Pipeline;
 
-/// Render sprites! Often referred to as `dcx`
-///
-/// The name `dcx` follows the rustc [naming convension] (though I often see `ctx` even in rustc).
-///
-/// [naming convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
+/// Render sprites!
 ///
 /// * TODO: drop `Device`
 /// * TODO: better push API
@@ -57,22 +65,22 @@ impl DrawContext {
             push: SpritePush::default(),
         }
     }
-
-    pub fn batcher(&mut self) -> &mut Batcher {
-        &mut self.batcher
-    }
 }
 
 impl DrawContext {
+    /// Begins a apss
     pub fn begin(&mut self) {
         self.batcher.begin(&mut self.device);
     }
 
-    /// Ends the pass and flushes batch data to actually draw to a render target
+    /// Ends the pass and flushes batch
+    ///
+    /// Then the data is actually drawn to a render target.
     pub fn end(&mut self) {
         self.batcher.end(&mut self.device, &mut self.pipe);
     }
 
+    /// `SpritePushCommand`
     pub fn cmd(&mut self) -> SpritePushCommand<'_> {
         self.batcher.begin(&mut self.device);
         self.push.reset_to_defaults();
@@ -85,6 +93,7 @@ impl DrawContext {
     }
 }
 
+/// Interface to push sprites
 pub struct SpritePushCommand<'a> {
     dcx: &'a mut DrawContext,
     policy: DrawPolicy,

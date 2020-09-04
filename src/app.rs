@@ -25,6 +25,7 @@
 //! For more information, see the [examples].
 //!
 //! * TODO: use callback to create user data: F: 'static + FnOnce(Context) -> UserData
+//! * TODO: event handling
 //!
 //! [examples]: https://github.com/toyboot4e/anf/examples
 

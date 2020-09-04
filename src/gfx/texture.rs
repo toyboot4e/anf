@@ -1,6 +1,9 @@
 //! 2D texture
 
-use std::{io::Read, os::raw::c_void};
+use std::{
+    io::{Read, Seek},
+    os::raw::c_void,
+};
 
 /// A 2D texture handle with some metadata
 ///
@@ -91,57 +94,23 @@ impl Texture2D {
 /// Texture loading methods
 /// ---
 impl Texture2D {
-    /// TODO: document error
     pub fn from_path(
         device: &mut fna3d::Device,
         path: impl AsRef<std::path::Path>,
     ) -> Option<Self> {
-        let path = path.as_ref();
-        let reader = std::fs::File::open(path)
-            .ok()
-            .unwrap_or_else(|| panic!("failed to open file {}", path.display()));
+        let (pixels_ptr, len, [w, h]) = fna3d::img::from_path(path, None);
+        if pixels_ptr == std::ptr::null_mut() {
+            return None;
+        }
 
-        // from_reader
-        let mut reader = std::io::BufReader::new(reader);
-        let mut buf = vec![];
-        reader
-            .read_to_end(&mut buf)
-            .unwrap_or_else(|_e| panic!("Error while reading file {}", path.display()));
-        Self::from_bytes(device, &buf)
-    }
-
-    // pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, mut reader: R) -> Option<Self> {
-
-    /// TODO: use FNA3D_Image or SDL2 RWops
-    pub fn from_bytes(device: &mut fna3d::Device, bytes: &[u8]) -> Option<Self> {
-        use stb_image::image::LoadResult;
-        let (pixels, len, [w, h]) = match stb_image::image::load_from_memory(bytes) {
-            LoadResult::Error(x) => panic!("{}", x),
-            LoadResult::ImageU8(img) => (
-                img.data.as_ptr() as *mut u8,
-                img.data.len(),
-                [img.width as u32, img.height as u32],
-            ),
-            LoadResult::ImageF32(_img) => {
-                panic!("32");
-            }
+        let texture = {
+            let mut t = Self::with_size(device, w, h);
+            let pixels_slice = unsafe { std::slice::from_raw_parts(pixels_ptr, len as usize) };
+            t.set_data(device, 0, None, pixels_slice);
+            t
         };
 
-        log::trace!(
-            "load texture: {{ len: {}, w: {}, h: {} }}, pixels at {:?}",
-            len,
-            w,
-            h,
-            pixels
-        );
-
-        let mut texture = Self::with_size(device, w, h);
-        let pixels = unsafe { std::slice::from_raw_parts(pixels, len) };
-        texture.set_data(device, 0, None, pixels);
-
-        // unsafe {
-        //     fna3d::sys::FNA3D_Image_Free(pixels);
-        // }
+        fna3d::img::free(pixels_ptr as *mut _);
 
         return Some(texture);
     }
