@@ -12,11 +12,13 @@ use crate::gfx::{
 pub const INDEX_ELEM_SIZE: fna3d::IndexElementSize = fna3d::IndexElementSize::Bits16;
 
 /// 2048
-pub const MAX_SPRITES: usize = 2048;
+pub const MAX_QUADS: usize = 2048;
+
 /// 2048 * 4
-pub const MAX_VERTICES: usize = MAX_SPRITES * 4;
+pub const MAX_VERTICES: usize = MAX_QUADS * 4;
+
 /// 2048 * 4 * 6 = 49152 < 65536 = 2^16
-pub const MAX_INDICES: usize = MAX_SPRITES * 6;
+pub const MAX_INDICES: usize = MAX_QUADS * 6;
 
 // --------------------------------------------------------------------------------
 // Vertex types
@@ -48,7 +50,6 @@ impl Default for ColoredVertexData {
             dest: Vec3f::default(),
             color,
             uvs: Vec2f::default(),
-            // ..Default::default() // TODO: why does it result in recursive call
         }
     }
 }
@@ -86,17 +87,6 @@ impl ColoredVertexData {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::mem::size_of;
-    #[test]
-    fn test_size() {
-        assert_eq!(size_of::<ColoredVertexData>(), 24);
-        assert_eq!(size_of::<FourVertexInfo>(), 96);
-    }
-}
-
 /// Vertex/index buffer based on the `bufspecs` types and constants
 ///
 /// # Immutability of `IndexBuffer`
@@ -105,9 +95,11 @@ mod test {
 /// initialization:
 ///
 /// ```
+/// use anf::gfx::batcher::bufspecs::{MAX_INDICES, MAX_QUADS};
+///
 /// let mut indices = [0; MAX_INDICES];
 /// // for each quadliteral, we need two triangles (i.e. four verices and six indices)
-/// for n in 0..self::MAX_SPRITES as i16 {
+/// for n in 0..MAX_QUADS as i16 {
 ///     let (i, v) = (n * 6, n * 4);
 ///     indices[i as usize] = v as i16;
 ///     indices[(i + 1) as usize] = v + 1 as i16;
@@ -151,7 +143,7 @@ impl ViBuffer {
     fn gen_index_array() -> [i16; self::MAX_INDICES] {
         let mut indices = [0; self::MAX_INDICES];
         // for each quadliteral, we need two triangles (i.e. four verices and six indices)
-        for n in 0..self::MAX_SPRITES as i16 {
+        for n in 0..self::MAX_QUADS as i16 {
             let (i, v) = (n * 6, n * 4);
             indices[i as usize] = v as i16;
             indices[(i + 1) as usize] = v + 1 as i16;
@@ -161,5 +153,16 @@ impl ViBuffer {
             indices[(i + 5) as usize] = v + 1 as i16;
         }
         indices
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::mem::size_of;
+    #[test]
+    fn test_size() {
+        assert_eq!(size_of::<ColoredVertexData>(), 24);
+        assert_eq!(size_of::<QuadData>(), 96);
     }
 }

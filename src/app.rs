@@ -2,7 +2,7 @@
 //!
 //! # Boilerplate
 //!
-//! ```
+//! ```no_run
 //! use anf::app::{App, AppConfig, AppState};
 //!
 //! struct MyAppState {}

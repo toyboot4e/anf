@@ -4,18 +4,16 @@
 //!
 //! [`DrawContext`] provides with XNA-like interface:
 //!
-//! ```
-//! use anf::{gfx::{DrawContext, Texture2D}, vfs};
+//! ```no_run
+//! use anf::gfx::{DrawContext, Texture2D};
+//! use std::path::Path;
 //!
-//! fn load_texture_and_draw_it(dcx: &mut DrawContext) {
-//!     let tx = Texture::from_path(vfs::path("my_texture.png")).unwrap();
+//! fn load_texture_and_draw_it(dcx: &mut DrawContext, tx: &Texture2D) {
 //!     dcx.begin();
-//!     dcx.cmd().dest_pos_px(100, 100).push_tx(&tx);
+//!     dcx.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx);
 //!     dcx.end();
 //! }
 //! ```
-//!
-//! Note that this is memory leak.
 //!
 //! # Names
 //!
@@ -124,7 +122,7 @@ impl<'a> SpritePushCommand<'a> {
         self
     }
 
-    pub fn dest_pos(&mut self, x: f32, y: f32) -> &mut Self {
+    pub fn dest_pos_px(&mut self, x: f32, y: f32) -> &mut Self {
         let data = self.data();
         data.dest_rect.x = x;
         data.dest_rect.y = y;
@@ -132,7 +130,6 @@ impl<'a> SpritePushCommand<'a> {
         self
     }
 
-    // TODO: dest_size_normalized
     pub fn dest_size_px(&mut self, w: f32, h: f32) -> &mut Self {
         let data = self.data();
         data.is_dest_size_in_pixels = true;
@@ -142,9 +139,12 @@ impl<'a> SpritePushCommand<'a> {
         self
     }
 
-    pub fn dest_rect(&mut self, xs: impl Into<[f32; 4]>) -> &mut Self {
+    pub fn dest_rect_px(&mut self, xs: impl Into<[f32; 4]>) -> &mut Self {
         let xs = xs.into();
-        self.data().dest_rect = Rect2f {
+
+        let data = self.data();
+        data.is_dest_size_in_pixels = true;
+        data.dest_rect = Rect2f {
             x: xs[0],
             y: xs[1],
             w: xs[2],

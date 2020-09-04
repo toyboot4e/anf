@@ -3,9 +3,14 @@
 //! Presudo example:
 //!
 //! ```
-//! use anf::gfx::batcher::batch::BatchSpanIter;
+//! use anf::gfx::batcher::data::{BatchData, BatchSpan, BatchSpanIter};
 //!
-//! fn flush_batch(cx: &mut Context, batch: &mut BatchData) {
+//! pub struct YourContext { /* your data */ }
+//! fn make_draw_call(cx: &mut YourContext, batch: &BatchData, slot: usize, span: BatchSpan) {
+//!     /* .. */
+//! }
+//!
+//! fn flush_batch(cx: &mut YourContext, batch: &mut BatchData) {
 //!      let mut iter = BatchSpanIter::new();
 //!      while let Some((slot, span)) = iter.next(&batch) {
 //!          make_draw_call(cx, batch, slot, span);
@@ -18,7 +23,7 @@
 //! [`BatchSpanIter`]: ./struct.BatchSpanIter.html
 
 use crate::gfx::{
-    batcher::bufspecs::{QuadData, MAX_SPRITES},
+    batcher::bufspecs::{QuadData, MAX_QUADS},
     texture::Texture2D,
 };
 
@@ -36,9 +41,9 @@ pub struct BatchData {
 
 impl BatchData {
     pub fn new() -> Self {
-        let v = vec![QuadData::default(); MAX_SPRITES];
+        let v = vec![QuadData::default(); MAX_QUADS];
         // FIXME: use max texture slot?
-        let t = vec![Texture2D::empty(); MAX_SPRITES];
+        let t = vec![Texture2D::empty(); MAX_QUADS];
 
         Self {
             vertex_data: v,
@@ -52,13 +57,16 @@ impl BatchData {
 ///
 /// Make sure to clear `BatchData::n_quads` maually after making draw calls.
 ///
-/// ```no_run
-/// // batcher: &mut Batcher in scope
-/// let iter = BatchSpanIter::new();
-/// while let Some((slot, span)) = iter.next(&batcher.batch_data) {
-///     // make a draw call
+/// ```
+/// use anf::gfx::batcher::{Batcher, data::BatchSpanIter};
+///
+/// fn flush_batcher(batcher: &mut Batcher) {
+///      let mut iter = BatchSpanIter::new();
+///      while let Some((slot, span)) = iter.next(&batcher.batch) {
+///          // make a draw call
+///      }
+///      batcher.batch.n_quads = 0;
 /// }
-/// batcher.batch_data.n_quads = 0;
 /// ```
 #[derive(Debug)]
 pub struct BatchSpanIter {
