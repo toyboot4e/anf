@@ -5,10 +5,6 @@ use std::os::raw::c_void;
 /// A 2D texture handle with some metadata
 ///
 /// * TODO: `Rc`? lifetime?
-///
-/// # Lacking features
-///
-/// * mipmap
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture2D {
     raw: *mut fna3d::Texture,

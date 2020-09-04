@@ -2,16 +2,16 @@
 //!
 //! # Example
 //!
-//! [`DrawContext`] provides with XNA-like interface:
+//! [`DrawContext`] is the API:
 //!
 //! ```no_run
 //! use anf::gfx::{DrawContext, Texture2D};
 //! use std::path::Path;
 //!
 //! fn load_texture_and_draw_it(dcx: &mut DrawContext, tx: &Texture2D) {
-//!     dcx.begin();
-//!     dcx.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx);
-//!     dcx.end();
+//!     let mut pass = dcx.pass();
+//!     pass.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx);
+//!     pass.cmd().dest_pos_px(100.0, 400.0).push_tx(&tx);
 //! }
 //! ```
 //!
@@ -46,7 +46,6 @@ use pipeline::Pipeline;
 /// Render sprites!
 ///
 /// * TODO: drop `Device`
-/// * TODO: better push API
 pub struct DrawContext {
     pub(crate) device: Device,
     batcher: Batcher,
@@ -66,27 +65,42 @@ impl DrawContext {
 }
 
 impl DrawContext {
-    /// Begins a apss
-    pub fn begin(&mut self) {
-        self.batcher.begin();
+    /// Begins a render pass, rendering with particular set of state
+    pub fn pass(&mut self) -> RenderPass<'_> {
+        RenderPass::new(self)
     }
+}
 
-    /// Ends the pass and flushes batch
-    ///
-    /// Then the data is actually drawn to a render target.
-    pub fn end(&mut self) {
-        self.batcher.end(&mut self.device, &mut self.pipe);
+/// Rendering with particular set of state
+///
+/// Currently it doesn't handle those state such as render taret.
+pub struct RenderPass<'a> {
+    dcx: &'a mut DrawContext,
+}
+
+impl<'a> RenderPass<'a> {
+    pub fn new(dcx: &'a mut DrawContext) -> Self {
+        dcx.batcher.begin();
+        Self { dcx }
     }
 
     /// `SpritePushCommand`
     pub fn cmd(&mut self) -> SpritePushCommand<'_> {
-        self.push.reset_to_defaults();
+        self.dcx.push.reset_to_defaults();
 
         SpritePushCommand {
-            dcx: self,
+            dcx: self.dcx,
             policy: DrawPolicy { do_round: false },
             effects: 0,
         }
+    }
+}
+
+impl<'a> Drop for RenderPass<'a> {
+    fn drop(&mut self) {
+        self.dcx
+            .batcher
+            .end(&mut self.dcx.device, &mut self.dcx.pipe);
     }
 }
 
