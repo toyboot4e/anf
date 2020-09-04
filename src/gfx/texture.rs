@@ -1,9 +1,6 @@
 //! 2D texture
 
-use std::{
-    io::{Read, Seek},
-    os::raw::c_void,
-};
+use std::os::raw::c_void;
 
 /// A 2D texture handle with some metadata
 ///

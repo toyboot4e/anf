@@ -68,7 +68,7 @@ impl DrawContext {
 impl DrawContext {
     /// Begins a apss
     pub fn begin(&mut self) {
-        self.batcher.begin(&mut self.device);
+        self.batcher.begin();
     }
 
     /// Ends the pass and flushes batch
@@ -80,7 +80,6 @@ impl DrawContext {
 
     /// `SpritePushCommand`
     pub fn cmd(&mut self) -> SpritePushCommand<'_> {
-        self.batcher.begin(&mut self.device);
         self.push.reset_to_defaults();
 
         SpritePushCommand {

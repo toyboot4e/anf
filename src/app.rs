@@ -39,6 +39,7 @@ use std::time::Duration;
 
 /// User data driven by `AppImpl`
 pub trait AppState {
+    #[allow(unused_variables)]
     fn render(&mut self, dcx: &mut DrawContext) {}
     fn update(&mut self) {}
 }

@@ -2,7 +2,7 @@
 
 use crate::gfx::{
     batcher::{
-        bufspecs::{self, ViBuffer},
+        bufspecs::ViBuffer,
         data::{BatchData, BatchSpan, BatchSpanIter},
     },
     pipeline::Pipeline,
@@ -26,7 +26,6 @@ pub struct Batcher {
 
 impl Batcher {
     pub fn from_device(device: &mut fna3d::Device) -> Self {
-        let decl = bufspecs::ColoredVertexData::decl();
         Self {
             batch: BatchData::new(),
             is_begin_called: false,
@@ -38,7 +37,7 @@ impl Batcher {
 /// Batch cycle
 /// ---
 impl Batcher {
-    pub fn begin(&mut self, device: &mut fna3d::Device) {
+    pub fn begin(&mut self) {
         self.is_begin_called = true;
     }
 
@@ -84,7 +83,7 @@ impl Batcher {
 /// Sub procedures of `flush`
 impl Batcher {
     #[inline]
-    fn flush_prep_render_state(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
+    fn flush_prep_render_state(&mut self, _device: &mut fna3d::Device, pipe: &mut Pipeline) {
         // GraphicsDevice.BlendState = _blendState;
         // GraphicsDevice.SamplerStates[0] = _samplerState;
         // GraphicsDevice.DepthStencilState = _depthStencilState;

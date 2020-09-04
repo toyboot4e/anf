@@ -71,7 +71,7 @@ impl BatchData {
 #[derive(Debug)]
 pub struct BatchSpanIter {
     current: usize,
-    nth: usize,
+    quad_count: usize,
 }
 
 /// [`lo`, `hi`) span of quadliterals in `BatchData` for making a draw call
@@ -96,7 +96,10 @@ impl BatchSpan {
 
 impl BatchSpanIter {
     pub fn new() -> Self {
-        Self { current: 0, nth: 0 }
+        Self {
+            current: 0,
+            quad_count: 0,
+        }
     }
 
     /// Returns the texture slot and a range of vertices
@@ -104,8 +107,9 @@ impl BatchSpanIter {
         if self.current >= batch.n_quads {
             return None;
         }
-        let nth = self.nth; // this it NOT actually texture slots. TODO: run-length encoding
-        self.nth += 1;
+
+        self.quad_count += 1; // current quad count is `self.quad_count - 1`
+
         let lo = self.current;
         for hi in 1..batch.n_quads {
             if &batch.texture_track[hi] != &batch.texture_track[lo] {
@@ -113,6 +117,7 @@ impl BatchSpanIter {
                 Some((lo, BatchSpan { lo, hi }));
             }
         }
+
         let hi = batch.n_quads;
         self.current = hi;
         Some((lo, BatchSpan { lo, hi }))
