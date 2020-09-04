@@ -16,6 +16,7 @@ use crate::gfx::{
 //         const FlipH = 1;
 //         /// Render the sprite reversed along the Y axis
 //         const FlipV = 2;
+//         const FlipHV = 3;
 //     }
 // }
 
@@ -60,7 +61,7 @@ pub struct Rot2f {
 
 // TODO: what is depth. is it considered by Device?
 
-/// Command to push a sprite into `BatchData`
+/// Data to push a sprite into `BatchData`
 ///
 /// * `origin`: in pixels
 /// * `src_rect`: in pixels
@@ -68,7 +69,7 @@ pub struct Rot2f {
 /// * `is_dest_size_in_pixels`:
 ///   If false, `src_rect` is assumed to have been normaliezd
 #[derive(Debug)]
-pub struct SpritePushCommand {
+pub struct SpritePush {
     pub src_rect: Rect2f,
     pub dest_rect: Rect2f,
     pub color: fna3d::Color,
@@ -80,15 +81,15 @@ pub struct SpritePushCommand {
     pub skew: Skew2f,
 }
 
-impl Default for SpritePushCommand {
+impl Default for SpritePush {
     fn default() -> Self {
         Self {
             src_rect: Rect2f::normalized(), // set it in pixel
             dest_rect: Rect2f::default(),
             color: fna3d::Color::white(),
             origin: Vec2f::default(),
-            rot: 0f32,
-            depth: 0f32,
+            rot: 0.0,
+            depth: 0.0,
             effects: 0, // TODO: isn't it `SpriteEffects`?
             is_dest_size_in_pixels: true,
             skew: Skew2f::default(),
@@ -96,42 +97,24 @@ impl Default for SpritePushCommand {
     }
 }
 
-// TODO: extract builder
-
-/// Builder methods
-/// ---
-impl SpritePushCommand {
-    /// In pixels (automatically normalized)
-    pub fn src_rect(&mut self, x: f32, y: f32, w: f32, h: f32) {
-        self.src_rect = Rect2f { x, y, w, h };
-    }
-
-    pub fn dest_pos(&mut self, x: f32, y: f32) {
-        self.dest_rect.x = x;
-        self.dest_rect.y = y;
-    }
-
-    // TODO: dest_size_normalized
-    pub fn dest_size(&mut self, w: f32, h: f32) {
-        self.dest_rect.w = w;
-        self.dest_rect.h = h;
-    }
-
-    pub fn dest_rect(&mut self, xs: impl Into<[f32; 4]>) {
-        let xs = xs.into();
-        self.dest_rect = Rect2f {
-            x: xs[0],
-            y: xs[1],
-            w: xs[2],
-            h: xs[3],
-        };
+impl SpritePush {
+    pub fn reset_to_defaults(&mut self) {
+        self.src_rect = Rect2f::normalized();
+        self.dest_rect = Rect2f::default();
+        self.color = fna3d::Color::white();
+        self.origin = Vec2f::default();
+        self.rot = 0.0;
+        self.depth = 0.0;
+        self.effects = 0;
+        self.is_dest_size_in_pixels = true;
+        self.skew = Skew2f::default();
     }
 }
 
-impl SpritePushCommand {
-    // TODO: maybe flush batch if nexessary
-    pub fn run(
-        mut self,
+impl SpritePush {
+    // TODO: flush batch if nexessary
+    pub fn push(
+        &mut self,
         batch: &mut BatchData,
         texture: &Texture2D,
         policy: DrawPolicy,
@@ -191,54 +174,6 @@ impl SpritePushCommand {
             effects,
         );
     }
-}
-
-// --------------------------------------------------------------------------------
-// Sprite
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Sprite<'a> {
-    uvs: Rect2f, // texture coordinates (normalized source rectangle)
-    uvs_in_pixels: Rect2u,
-    tex: &'a Texture2D,
-}
-
-/// Pushes a sprite i.e. a subtexture
-///
-/// * `dest`: scale values
-pub fn push_sprite(
-    batch: &mut BatchData,
-    sprite: &Sprite,
-    mut dest: Rect2f,
-    color: fna3d::Color,
-    origin: Vec2f,
-    rot: f32,
-    depth: f32,
-    effects: u8,
-    mut skew: Skew2f,
-) {
-    // batch.flush();
-
-    let origin = Vec2f {
-        x: (origin.x / sprite.uvs.x) / sprite.tex.w as f32,
-        y: (origin.y / sprite.uvs.y) / sprite.tex.h as f32,
-    };
-
-    dest.w *= sprite.uvs_in_pixels.w as f32;
-    dest.h *= sprite.uvs_in_pixels.h as f32;
-
-    self::push_quad(
-        batch,
-        &sprite.tex,
-        origin,
-        &sprite.uvs,
-        &dest,
-        &mut skew,
-        color,
-        rot,
-        depth,
-        effects,
-    );
 }
 
 // --------------------------------------------------------------------------------

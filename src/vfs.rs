@@ -9,12 +9,12 @@ fn root() -> PathBuf {
     PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap() + "/assets")
 }
 
-/// Returns an absolute path to a file from a **relative path** from `assets` directory.
-pub fn get(p: impl AsRef<Path>) -> PathBuf {
+/// Creates an absolute path to an asset file from a **relative path** to your `assets` directory.
+pub fn path(p: impl AsRef<Path>) -> PathBuf {
     root().join(p.as_ref())
 }
 
-/// Returns the path to the default shader file
+/// Path to the default shader file
 pub fn default_shader() -> PathBuf {
-    self::get("FNAEffects/SpriteEffect.fxb")
+    self::path("FNAEffects/SpriteEffect.fxb")
 }

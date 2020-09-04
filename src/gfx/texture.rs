@@ -167,7 +167,6 @@ impl Texture2D {
 
         device.set_texture_data_2d(
             self.raw,
-            self.fmt,
             x,
             y,
             w,

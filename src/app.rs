@@ -21,6 +21,12 @@
 //!     };
 //! }
 //! ```
+//!
+//! For more information, see the [examples].
+//!
+//! * TODO: use callback to create user data: F: 'static + FnOnce(Context) -> UserData
+//!
+//! [examples]: https://github.com/toyboot4e/anf/examples
 
 use crate::gfx::{batcher::Batcher, pipeline::Pipeline, DrawContext};
 use fna3d::Device;
@@ -47,7 +53,7 @@ pub struct AppConfig {
     pub h: u32,
 }
 
-/// Bundles data to run application
+/// Data to run application
 ///
 /// Internally, it's using [Rust-SDL2] to make, hold and drop window.
 ///
@@ -157,11 +163,7 @@ impl<T: AppState> AppImpl<T> {
         let batcher = Batcher::from_device(&mut src.device);
 
         AppImpl {
-            dcx: DrawContext {
-                device: src.device,
-                batcher,
-                pipe,
-            },
+            dcx: DrawContext::new(src.device, batcher, pipe),
             clear_color: fna3d::Color::cornflower_blue(),
             state,
             win: src.win,
