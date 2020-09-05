@@ -7,7 +7,7 @@ fn main() {
 /// Absolute path string to the directory where `libFNA3D.dylib` is
 fn fna3d_abs_path() -> String {
     let root = env::var("CARGO_MANIFEST_DIR").unwrap();
-    format!("{}/rust-fna3d/fna3d-sys/FNA3D/build", root)
+    format!("{}/crates/rust-fna3d/fna3d-sys/FNA3D/build", root)
 }
 
 /// Somehow this is required on macOS

@@ -5,10 +5,10 @@ authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
 [workspace]
-members = ["anf_deps", "anf_gfx"]
-exclude = ["rust-fna3d"]
+members = ["crates/anf_deps", "crates/anf_gfx"]
+exclude = ["crates/rust-fna3d"]
 
 [dependencies]
-anf_deps = { path = "anf_deps" }
-anf_gfx = { path = "anf_gfx" }
+anf_deps = { path = "crates/anf_deps" }
+anf_gfx = { path = "crates/anf_gfx" }
 log = "0.4.11"
