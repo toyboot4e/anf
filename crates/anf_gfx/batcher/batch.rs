@@ -1,36 +1,35 @@
-//! `BatchData` and iterator of it
+//! [`SpriteBatch`] and iterator of it
 //!
 //! Presudo example:
 //!
 //! ```
-//! use anf_gfx::batcher::data::{BatchData, BatchSpan, BatchSpanIter};
+//! use anf_gfx::batcher::batch::{SpriteBatch, BatchSpan, BatchSpanIter};
 //!
 //! pub struct YourContext { /* your data */ }
-//! fn make_draw_call(cx: &mut YourContext, batch: &BatchData, slot: usize, span: BatchSpan) {
-//!     /* .. */
-//! }
 //!
-//! fn flush_batch(cx: &mut YourContext, batch: &mut BatchData) {
+//! fn flush_batch(cx: &mut YourContext, batch: &mut SpriteBatch) {
 //!      let mut iter = BatchSpanIter::new();
-//!      while let Some((slot, span)) = iter.next(&batch) {
-//!          make_draw_call(cx, batch, slot, span);
+//!      while let Some(span) = iter.next(&batch) {
+//!          let texture = &batch.texture_track[span.lo];
+//!          /* make a draw call with your context */
 //!      }
 //! }
 //! ```
 //!
 //! Not so elegant but enough for internals
-//!
-//! [`BatchSpanIter`]: ./struct.BatchSpanIter.html
 
 use crate::{
     batcher::bufspecs::{QuadData, MAX_QUADS},
     texture::Texture2D,
 };
 
-/// Accumulates vertex data tracking what `Texture2D` are used for each
+/// Sprite batch data
+///
+/// Sprites are technically textured quadliterals. `SpriteBatch` accumulates vertex data tracking
+/// what [`Texture2D`] are used for each. So this is the data for sprite batching.
 #[derive(Debug)]
-pub struct BatchData {
-    /// The actual vertex data to be set to `VertexBuffer`
+pub struct SpriteBatch {
+    /// The actual vertex data to be set to [`VertexBuffer`]
     pub vertex_data: Vec<QuadData>,
     /// Each texture corresponds to each quad (NOT each batch)
     ///
@@ -39,13 +38,13 @@ pub struct BatchData {
     pub n_quads: usize,
 }
 
-impl BatchData {
+impl SpriteBatch {
     pub fn new() -> Self {
         let v = vec![QuadData::default(); MAX_QUADS];
         // FIXME: use max texture slot?
         let t = vec![Texture2D::empty(); MAX_QUADS];
 
-        Self {
+        SpriteBatch {
             vertex_data: v,
             texture_track: t,
             n_quads: 0,
@@ -53,16 +52,16 @@ impl BatchData {
     }
 }
 
-/// Slices `BatchData` to `BatchSpan`s, each of which corresponds to a draw call
+/// Slices [`SpriteBatch`] to [`BatchSpan`]s, each of which corresponds to a draw call
 ///
-/// Make sure to clear `BatchData::n_quads` maually after making draw calls.
+/// Make sure to clear [`SpriteBatch::n_quads`] maually after making draw calls.
 ///
 /// ```
-/// use anf_gfx::batcher::{Batcher, data::BatchSpanIter};
+/// use anf_gfx::batcher::{Batcher, batch::BatchSpanIter};
 ///
 /// fn flush_batcher(batcher: &mut Batcher) {
 ///      let mut iter = BatchSpanIter::new();
-///      while let Some((slot, span)) = iter.next(&batcher.batch) {
+///      while let Some(span) = iter.next(&batcher.batch) {
 ///          // make a draw call
 ///      }
 ///      batcher.batch.n_quads = 0;
@@ -74,7 +73,7 @@ pub struct BatchSpanIter {
     quad_count: usize,
 }
 
-/// [`lo`, `hi`) span of quadliterals in `BatchData` for making a draw call
+/// [`lo`, `hi`) span of quadliterals in [`SpriteBatch`] for making a draw call
 ///
 /// Note that `lo` multipled by 2 is the base vertex index because we're counting quadliterals.
 #[derive(Debug)]
@@ -103,7 +102,7 @@ impl BatchSpanIter {
     }
 
     /// Returns the texture slot and a range of vertices
-    pub fn next(&mut self, batch: &BatchData) -> Option<(usize, BatchSpan)> {
+    pub fn next(&mut self, batch: &SpriteBatch) -> Option<BatchSpan> {
         if self.current >= batch.n_quads {
             return None;
         }
@@ -114,12 +113,12 @@ impl BatchSpanIter {
         for hi in 1..batch.n_quads {
             if &batch.texture_track[hi] != &batch.texture_track[lo] {
                 self.current = hi;
-                Some((lo, BatchSpan { lo, hi }));
+                return Some(BatchSpan { lo, hi });
             }
         }
 
         let hi = batch.n_quads;
         self.current = hi;
-        Some((lo, BatchSpan { lo, hi }))
+        Some(BatchSpan { lo, hi })
     }
 }

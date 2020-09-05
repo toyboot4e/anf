@@ -14,7 +14,6 @@
 //! Note that SDL2 and FNA3D have much more potencial.
 //!
 //! [my roguelike game development]: https://github/toyboot4e/rlbox
-//! [`app`]: ./app/index.html
 //! [examples]: https://github/toyboot4e/anf/examples
 
 pub use anf_deps::{fna3d, sdl2};

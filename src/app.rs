@@ -49,15 +49,17 @@ use sdl2::{
 
 use std::time::Duration;
 
-/// User data driven by `AppImpl`
+// --------------------------------------------------------------------------------
+// types
+
+/// User data driven by [`App`]
 pub trait AppState {
     fn update(&mut self) {}
-    /// Clear and render next frame
     #[allow(unused_variables)]
     fn render(&mut self, dcx: &mut DrawContext) {}
 }
 
-/// Data to create `App`
+/// Data to create [`App`]
 ///
 /// It only contains initial window settings (for now).
 ///
@@ -74,53 +76,22 @@ pub struct AppConfig {
 ///
 /// [Rust-SDL2]: https://github.com/Rust-SDL2/rust-sdl2
 pub struct App {
-    win: SdlWindow,
+    win: SdlWindowHandle,
     pub device: Device,
     pub params: fna3d::PresentationParameters,
 }
 
+/// Return value of [`App::run`]
+pub type AppResult = std::result::Result<(), Box<dyn std::error::Error>>;
+
 /// Hides the use of SDL2 (Rust-SDL2)
 ///
 /// The window is dropped when this handle goes out of scope.
-struct SdlWindow {
+struct SdlWindowHandle {
     pub sdl: sdl2::Sdl,
     pub raw_window: *mut sdl2::sys::SDL_Window,
     pub canvas: WindowCanvas,
 }
-
-impl App {
-    pub fn from_cfg(cfg: AppConfig) -> Self {
-        log::info!("FNA version {}", fna3d::linked_version());
-
-        let flags = fna3d::prepare_window_attributes();
-        let sdl = sdl2::init().unwrap();
-        let canvas = cfg.canvas(&sdl, flags.0);
-        let raw_window = canvas.window().raw();
-        let (params, device) = cfg.device(raw_window as *mut _);
-
-        App {
-            win: SdlWindow {
-                sdl,
-                raw_window,
-                canvas,
-            },
-            params,
-            device,
-        }
-    }
-
-    pub fn run<T: AppState>(self, state: T) -> AppResult {
-        AppImpl::new(state, self).run()
-    }
-}
-
-enum UpdateResult {
-    Continue,
-    Quit,
-}
-
-/// Return value of `App::run`
-pub type AppResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
 impl AppConfig {
     pub fn default() -> Self {
@@ -131,6 +102,9 @@ impl AppConfig {
         }
     }
 }
+
+// --------------------------------------------------------------------------------
+// impls
 
 /// Dirty creation methods based on Rust-SDL2 and Rust-FNA3D
 impl AppConfig {
@@ -161,17 +135,58 @@ impl AppConfig {
     }
 }
 
-/// Application state that drives user state
+/// Window & device creation
+/// ---
+impl App {
+    pub fn from_cfg(cfg: AppConfig) -> Self {
+        // setup FNA3D
+        log::info!("FNA version {}", fna3d::linked_version());
+        fna3d::utils::hook_log_functions_default();
+
+        // create window and device
+        let flags = fna3d::prepare_window_attributes();
+        let (win, raw_window) = {
+            let sdl = sdl2::init().unwrap();
+            let canvas = cfg.canvas(&sdl, flags.0);
+            let raw_window = canvas.window().raw();
+            (
+                SdlWindowHandle {
+                    sdl,
+                    raw_window,
+                    canvas,
+                },
+                raw_window,
+            )
+        };
+        let (params, device) = cfg.device(raw_window as *mut _);
+
+        App {
+            win,
+            params,
+            device,
+        }
+    }
+
+    pub fn run<T: AppState>(self, state: T) -> AppResult {
+        AppImpl::new(state, self).run()
+    }
+}
+
+// --------------------------------------------------------------------------------
+// AppImpl
+
+/// Does everything after window creation
 struct AppImpl<T: AppState> {
     dcx: DrawContext,
     state: T,
-    win: SdlWindow,
+    win: SdlWindowHandle,
 }
 
+/// Device initialization
+/// ---
 impl<T: AppState> AppImpl<T> {
     pub fn new(state: T, mut src: App) -> Self {
-        fna3d::utils::hook_log_functions_default();
-        Self::init_gfx(&mut src.device, &src.params);
+        Self::init_device(&mut src.device, &src.params);
 
         let pipe = Pipeline::from_device(&mut src.device, vfs::default_shader());
         let batcher = Batcher::from_device(&mut src.device);
@@ -187,7 +202,7 @@ impl<T: AppState> AppImpl<T> {
     ///
     /// FNA3D requires us to set viewport/rasterizer/blend state. **If this is skipped, we can't
     /// draw anything** (we only can clear the screen)
-    fn init_gfx(
+    fn init_device(
         device: &mut fna3d::Device,
         // batcher: &mut Batcher,
         params: &fna3d::PresentationParameters,
@@ -211,7 +226,17 @@ impl<T: AppState> AppImpl<T> {
         // let dst = fna3d::DepthStencilState::default();
         // device.set_depth_stencil_state(&dst);
     }
+}
 
+/// Internal type for the game loop
+enum UpdateResult {
+    Continue,
+    Quit,
+}
+
+/// Game loop
+/// ---
+impl<T: AppState> AppImpl<T> {
     pub fn run(mut self) -> AppResult {
         let mut events = self.win.sdl.event_pump().unwrap();
         log::trace!("Start ANF game loop");
@@ -235,15 +260,11 @@ impl<T: AppState> AppImpl<T> {
 
         Ok(())
     }
-}
 
-impl<T: AppState> AppImpl<T> {
-    /// Does nothing for now
     fn update(&mut self) {
         self.state.update();
     }
 
-    /// Runs the rendering pipeline
     fn render(&mut self) {
         self.state.render(&mut self.dcx);
         self.dcx
@@ -251,7 +272,7 @@ impl<T: AppState> AppImpl<T> {
             .swap_buffers(None, None, self.win.raw_window as *mut _);
     }
 
-    /// Just quits on `Escape` key down
+    /// Just quits on `Escape` key down for now
     fn handle_event(&mut self, ev: &sdl2::event::Event) -> UpdateResult {
         match ev {
             Event::Quit { .. }

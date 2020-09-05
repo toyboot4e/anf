@@ -1,9 +1,9 @@
-//! Push command to `BatchData`
+//! Push command to `SpriteBatch`
 //!
 //! The internal implementation is based on `Batcher` in Nez
 
 use crate::{
-    batcher::{bufspecs::QuadData, data::BatchData, primitives::*},
+    batcher::{batch::SpriteBatch, bufspecs::QuadData, primitives::*},
     texture::Texture2D,
 };
 use anf_deps::fna3d;
@@ -62,7 +62,7 @@ pub struct Rot2f {
 
 // TODO: what is depth. is it considered by Device?
 
-/// Data to push a sprite into `BatchData`
+/// Data to push a sprite into `SpriteBatch`
 ///
 /// * `origin`: in pixels
 /// * `src_rect`: in pixels
@@ -116,7 +116,7 @@ impl SpritePush {
     // TODO: flush batch if nexessary
     pub fn push(
         &mut self,
-        batch: &mut BatchData,
+        batch: &mut SpriteBatch,
         texture: &Texture2D,
         policy: DrawPolicy,
         effects: u8,
@@ -182,7 +182,7 @@ impl SpritePush {
 
 #[inline]
 fn push_quad(
-    batch: &mut BatchData,
+    batch: &mut SpriteBatch,
     texture: &Texture2D,
     origin: Vec2f,    // ??
     uv_rect: &Rect2f, // normalized (uvs, texture coordinates)

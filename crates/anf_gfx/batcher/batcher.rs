@@ -2,33 +2,34 @@
 
 use crate::{
     batcher::{
+        batch::{BatchSpan, BatchSpanIter, SpriteBatch},
         bufspecs::ViBuffer,
-        data::{BatchData, BatchSpan, BatchSpanIter},
     },
     pipeline::Pipeline,
+    texture::Texture2D,
 };
 use anf_deps::fna3d;
 
-/// Wrapper of `BatchData`
+// for documentation (types in scope are automatically linked with [`TypeName`])
+#[allow(unused_imports)]
+use anf_deps::{fna3d::sys::*, fna3d::Device};
+
+/// Wrapper of [`SpriteBatch`]
 ///
-/// `Batcher` accumulates vertex data and batches draw calls when flushing.
-///
-/// Draw call is about calling a drawing function of a low-level graphics API. In our case it is
-/// `FNA3D_DrawIndexedPrimitives`. We'd like to send as much data as possible at once; this is
-/// called _sprite batching_ and `Batcher` is about it.
+/// [`Batcher`] accumulates vertex data and batches draw calls when flushing. Draw call is about
+/// calling a drawing function of a low-level graphics API. In our case it is
+/// [`FNA3D_DrawIndexedPrimitives`].
 #[derive(Debug)]
 pub struct Batcher {
-    pub batch: BatchData,
+    pub batch: SpriteBatch,
     is_begin_called: bool,
     bufs: ViBuffer,
 }
 
-// TODO: draw sprites.. why does it not work? I'm in hell
-
 impl Batcher {
     pub fn from_device(device: &mut fna3d::Device) -> Self {
         Self {
-            batch: BatchData::new(),
+            batch: SpriteBatch::new(),
             is_begin_called: false,
             bufs: ViBuffer::from_device(device),
         }
@@ -41,8 +42,6 @@ impl Batcher {
     pub fn begin(&mut self) {
         self.is_begin_called = true;
     }
-
-    // TODO: begin_with_target
 
     /// Flushes batch data to actually draw to a render target
     pub fn end(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
@@ -70,7 +69,7 @@ impl Batcher {
         self.flush_prep_render_state(device, pipe);
         // `FNA3D_ApplyEffect`
         pipe.apply_effect(device, 0);
-        // `FNA3D_SetVertexData` (copies vertex data from `BatchData` to `VertexBuffer`)
+        // `FNA3D_SetVertexData` (copies vertex data from `SpriteBatch` to `VertexBuffer`)
         self.flush_set_vertex(device);
         // `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
         // `FNA3D_ApplyVertexBufferBindings` (slices `VertexBuffer` to `VertexBufferBinding`)
@@ -81,7 +80,7 @@ impl Batcher {
     }
 }
 
-/// Sub procedures of `flush`
+/// Sub procedures of [`Batcher::flush`]
 impl Batcher {
     #[inline]
     fn flush_prep_render_state(&mut self, _device: &mut fna3d::Device, pipe: &mut Pipeline) {
@@ -100,7 +99,7 @@ impl Batcher {
         // TODO: set transform
     }
 
-    /// Copies vertex data from CPU to GPU (`BatchData` to `VertexBuffer`)
+    /// Copies vertex data from CPU to GPU ([`SpriteBatch`] to [`VertexBuffer`])
     #[inline]
     fn flush_set_vertex(&mut self, device: &mut fna3d::Device) {
         let data = &mut self.batch.vertex_data[0..self.batch.n_quads];
@@ -113,56 +112,41 @@ impl Batcher {
 
     /// Makes draw calls
     ///
-    /// Vertex data is already set before is functions
+    /// Vertex data is already set before this function call.
     #[inline]
     fn flush_draw(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
         let mut iter = BatchSpanIter::new();
-        while let Some((slot, span)) = iter.next(&self.batch) {
-            self.make_draw_call(device, pipe, slot, span);
+        while let Some(span) = iter.next(&self.batch) {
+            let texture = &self.batch.texture_track[span.lo];
+            Self::make_draw_call(device, pipe, &mut self.bufs, &texture, span);
         }
     }
 
     /// Makes a draw call over a sprite batch
     ///
-    /// Corresponds to `GraphicsDevice.DrawIndexedPrimitives`
-    ///
     /// Calls these methods:
     ///
-    /// * `FNA3D_VerifySamplerState`
-    /// * `FNA3D_VerifyVertexSamplerState`
-    /// * `FNA3D_ApplyVertexBufferBindings`
-    /// * `FNA3D_DrawIndexedPrimitives`
+    /// * [`FNA3D_VerifySamplerState`]
+    /// * [`FNA3D_VerifyVertexSamplerState`]
+    /// * [`FNA3D_ApplyVertexBufferBindings`]
+    /// * [`FNA3D_DrawIndexedPrimitives`]
     #[inline]
     fn make_draw_call(
-        &mut self,
         device: &mut fna3d::Device,
         pipe: &mut Pipeline,
-        slot: usize,
+        bufs: &mut ViBuffer,
+        texture: &Texture2D,
         span: BatchSpan,
     ) {
-        // ----------------------------------------
-        // GraphicsDevice.ApplyState
-
         // update sampler state
-        // TODO: call it only when it's necessary (like when making a texture)
-        // TODO: Material (BlendState, depth stencil state and rasterizer state)
-        pipe.set_texture(device, &self.batch.texture_track[slot]);
-
-        // ----------------------------------------
-        // GraphicsDevice.PrepareVertexBindingArray
+        pipe.set_texture(device, texture);
 
         // update vertex bindings
-        pipe.rebind_vertex_buffer(&mut self.bufs.vbuf.inner, 0);
+        pipe.rebind_vertex_buffer(&mut bufs.vbuf.inner, 0);
 
         // "the very last thing to call before making a draw call"
-        // (`GraphicsDevice.PrepareVertexBindingArray` > `FNA3D_SetVertexBufferBindings`)
         let base_vertex = span.lo * 4;
         pipe.apply_vertex_buffer_bindings(device, base_vertex as i32);
-
-        // ----------------------------------------
-        // Make a draw call
-        //
-        // TODO: using draw_primitives?
 
         let n_primitives = span.len() as u32 * 2;
         device.draw_indexed_primitives(
@@ -171,8 +155,8 @@ impl Batcher {
             base_vertex as u32, // the number of vertices to skip
             span.lo as u32 * 6, // our index buffer is cyclic and we don't need to actually calculate it
             n_primitives,
-            self.bufs.ibuf.raw(),
-            self.bufs.ibuf.elem_size(),
+            bufs.ibuf.raw(),
+            bufs.ibuf.elem_size(),
         );
     }
 }

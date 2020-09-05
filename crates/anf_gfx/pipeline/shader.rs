@@ -9,7 +9,7 @@ use std::{
 
 /// Shader data loaded on memory
 ///
-/// In XNA, shaders are known as `Effect`s.
+/// In XNA, shaders are known as [`Effect`s.
 ///
 /// * TODO: how to write a custom shader
 /// * TODO: enable loading custom shaders, maybe using `mint`?

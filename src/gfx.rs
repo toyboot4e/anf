@@ -5,7 +5,7 @@
 //!
 //! # Example
 //!
-//! Get [`RenderPass`] via [`DrawContext`] and draw sprites:
+//! [`DrawContext`] -> [`RenderPass`] -> [`SpritePushCommand`]:
 //!
 //! ```no_run
 //! use anf::gfx::{DrawContext, Texture2D};
@@ -19,14 +19,11 @@
 //!
 //! Other functionalities are performed via `gfx` module functions such as `clear_frame`.
 //!
-//! [`DrawContext`]: ./struct.DrawContext.html
-//! [`RenderPass`]: ./struct.RenderPass.html
-//! [`Texture2D`]: ./struct.Texture2D.html
 //! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
-use anf_deps::fna3d::{self, Device};
-
 pub use anf_gfx::texture::Texture2D;
+
+use anf_deps::fna3d::{self, Device};
 use anf_gfx::{
     batcher::{primitives::*, Batcher, DrawPolicy, SpritePush},
     pipeline::Pipeline,
@@ -108,6 +105,9 @@ pub struct SpritePushCommand<'a> {
 }
 
 impl<'a> SpritePushCommand<'a> {
+    /// Push texture!
+    ///
+    /// Or sprite. Technically, a sprite is textured quadliterals.
     pub fn push_tx(&mut self, texture: &Texture2D) {
         self.dcx.push.push(
             &mut self.dcx.batcher.batch,

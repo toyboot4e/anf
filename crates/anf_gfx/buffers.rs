@@ -1,7 +1,7 @@
 //! Vertex/index buffer
 //!
-//! Internally, they are wrappers of `*mut fna3d::Buffer`; they are dynamically "typed" with
-//! attributes.
+//! Internally, they are wrappers of [`*mut fna3d::Buffer`](fna3d::Buffer); they are dynamically
+//! "typed" with attributes.
 //!
 //! * TODO: explain what "dynamic" buffer means and what options are available
 
@@ -13,9 +13,7 @@ pub trait VertexData {}
 // --------------------------------------------------------------------------------
 // Index buffer (ibuf)
 
-/// Index buffer that indexes `VertexBuffer`
-///
-/// "Typed" with `fna3d::IndexElementSize`
+/// "Typed" with [`fna3d::IndexElementSize`]
 #[derive(Debug)]
 pub struct IndexBuffer {
     raw: *mut fna3d::Buffer,
@@ -68,9 +66,7 @@ impl IndexBuffer {
 // --------------------------------------------------------------------------------
 // Vertex buffer (vbuf)
 
-/// Vertex buffer that is indexed by `IndexBuffer`
-///
-/// "Typed" with `fna3d::VertexDeclaration`
+/// "Typed" with [`fna3d::VertexDeclaration`]
 #[derive(Debug)]
 pub struct VertexBufferData {
     raw: *mut fna3d::Buffer,
@@ -81,7 +77,7 @@ pub struct VertexBufferData {
 
 /// Dynamic vertex buffer
 ///
-/// Dynamically "typed" with `fna3d::VertexDeclaration`.
+/// "typed" with [`fna3d::VertexDeclaration`]
 #[derive(Debug)]
 pub struct DynamicVertexBuffer {
     pub(crate) inner: VertexBufferData,

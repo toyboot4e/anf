@@ -1,4 +1,6 @@
-//! `BatchData` specification on vertex/index buffer
+//! [`SpriteBatch`] specification on its vertex/index buffer
+//!
+//! [`SpriteBatch`]: crate::batcher::batch::SpriteBatch
 
 use crate::{
     batcher::primitives::*,
@@ -88,11 +90,11 @@ impl ColoredVertexData {
     }
 }
 
-/// Vertex/index buffer based on the `bufspecs` types and constants
+/// Vertex/index buffer based on the `bufspecs`
 ///
-/// # Immutability of `IndexBuffer`
+/// # Immutability of [`IndexBuffer`]
 ///
-/// Our `IndexBuffer` is only for drawing quadliterals and it won't be modified after this
+/// Our [`IndexBuffer`] is only for drawing quadliterals and it won't be modified after this
 /// initialization:
 ///
 /// ```

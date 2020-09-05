@@ -57,6 +57,8 @@ impl Pipeline {
     }
 
     /// * `FNA3D_ApplyVertexBufferBindings`
+    ///
+    /// "The very last thing to call when making a draw call".
     pub fn apply_vertex_buffer_bindings(&mut self, device: &mut fna3d::Device, base_vertex: i32) {
         self.v_binds.apply(device, base_vertex);
     }
