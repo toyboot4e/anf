@@ -4,7 +4,6 @@ use crate::{
     batcher::bufspecs::ColoredVertexData, buffers::VertexBufferData, pipeline::shader::Shader,
     texture::Texture2D,
 };
-use anf_deps::fna3d;
 use std::path::Path;
 
 /// Rendering pipeline states

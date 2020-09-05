@@ -8,11 +8,10 @@ use crate::{
     pipeline::Pipeline,
     texture::Texture2D,
 };
-use anf_deps::fna3d;
 
 // for documentation (types in scope are automatically linked with [`TypeName`])
 #[allow(unused_imports)]
-use anf_deps::{fna3d::sys::*, fna3d::Device};
+use fna3d::{sys::*, Device};
 
 /// Wrapper of [`SpriteBatch`]
 ///
@@ -67,10 +66,13 @@ impl Batcher {
 
         // reset shader uniform
         self.flush_prep_render_state(device, pipe);
+
         // `FNA3D_ApplyEffect`
         pipe.apply_effect(device, 0);
+
         // `FNA3D_SetVertexData` (copies vertex data from `SpriteBatch` to `VertexBuffer`)
         self.flush_set_vertex(device);
+
         // `FNA3D_VerifySamplerState`, `FNA3D_VerifyVertexSamplerState`
         // `FNA3D_ApplyVertexBufferBindings` (slices `VertexBuffer` to `VertexBufferBinding`)
         // ad finally `FNA3D_DrawIndexedPrimitives`

@@ -16,7 +16,8 @@
 //! [my roguelike game development]: https://github/toyboot4e/rlbox
 //! [examples]: https://github/toyboot4e/anf/examples
 
-pub use anf_deps::{fna3d, sdl2};
+pub use fna3d;
+pub use sdl2;
 
 pub mod app;
 pub mod gfx;

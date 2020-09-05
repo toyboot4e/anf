@@ -1,6 +1,5 @@
 //! 2D texture
 
-use anf_deps::fna3d;
 use std::{
     fs::File,
     io::{BufReader, Read, Seek},

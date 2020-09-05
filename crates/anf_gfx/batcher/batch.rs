@@ -29,7 +29,7 @@ use crate::{
 /// what [`Texture2D`] are used for each. So this is the data for sprite batching.
 #[derive(Debug)]
 pub struct SpriteBatch {
-    /// The actual vertex data to be set to [`VertexBuffer`]
+    /// The actual vertex data to be uploaded via [`VertexBufferData`]
     pub vertex_data: Vec<QuadData>,
     /// Each texture corresponds to each quad (NOT each batch)
     ///

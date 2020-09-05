@@ -6,7 +6,6 @@ use crate::{
     batcher::primitives::*,
     buffers::{DynamicVertexBuffer, IndexBuffer},
 };
-use anf_deps::fna3d;
 
 // --------------------------------------------------------------------------------
 // Constants

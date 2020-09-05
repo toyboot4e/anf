@@ -38,9 +38,7 @@
 //! [examples]: https://github.com/toyboot4e/anf/examples
 
 use crate::{gfx::DrawContext, vfs};
-use anf_gfx::{batcher::Batcher, pipeline::Pipeline};
 
-use anf_deps::{fna3d, sdl2};
 use fna3d::Device;
 use sdl2::{
     render::WindowCanvas,
@@ -187,12 +185,8 @@ struct AppImpl<T: AppState> {
 impl<T: AppState> AppImpl<T> {
     pub fn new(state: T, mut src: App) -> Self {
         Self::init_device(&mut src.device, &src.params);
-
-        let pipe = Pipeline::from_device(&mut src.device, vfs::default_shader());
-        let batcher = Batcher::from_device(&mut src.device);
-
         AppImpl {
-            dcx: DrawContext::new(src.device, batcher, pipe),
+            dcx: DrawContext::new(src.device, vfs::default_shader()),
             state,
             win: src.win,
         }

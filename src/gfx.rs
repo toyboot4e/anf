@@ -5,7 +5,7 @@
 //!
 //! # Example
 //!
-//! [`DrawContext`] -> [`RenderPass`] -> [`SpritePushCommand`]:
+//! We pull [`SpritePushCommand`] from [`RenderPass`], [`RenderPass`] from [`DrawContext`]:
 //!
 //! ```no_run
 //! use anf::gfx::{DrawContext, Texture2D};
@@ -23,11 +23,12 @@
 
 pub use anf_gfx::texture::Texture2D;
 
-use anf_deps::fna3d::{self, Device};
+use fna3d::{self, Device};
 use anf_gfx::{
     batcher::{primitives::*, Batcher, DrawPolicy, SpritePush},
     pipeline::Pipeline,
 };
+use std::path::Path;
 
 /// Clears the frame buffer, that is, the screen
 pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
@@ -47,7 +48,9 @@ pub struct DrawContext {
 }
 
 impl DrawContext {
-    pub fn new(device: Device, batcher: Batcher, pipe: Pipeline) -> Self {
+    pub fn new(mut device: Device, default_shader: impl AsRef<Path>) -> Self {
+        let pipe = Pipeline::from_device(&mut device, default_shader);
+        let batcher = Batcher::from_device(&mut device);
         Self {
             device,
             batcher,

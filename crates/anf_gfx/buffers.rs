@@ -5,14 +5,14 @@
 //!
 //! * TODO: explain what "dynamic" buffer means and what options are available
 
-use anf_deps::fna3d;
-
 /// Marker to represent vertex data that can be sent to GPU memory
 pub trait VertexData {}
 
 // --------------------------------------------------------------------------------
 // Index buffer (ibuf)
 
+/// Way to upload index data to GPU
+///
 /// "Typed" with [`fna3d::IndexElementSize`]
 #[derive(Debug)]
 pub struct IndexBuffer {
@@ -66,6 +66,8 @@ impl IndexBuffer {
 // --------------------------------------------------------------------------------
 // Vertex buffer (vbuf)
 
+/// Way to upload vertex data to GPU
+///
 /// "Typed" with [`fna3d::VertexDeclaration`]
 #[derive(Debug)]
 pub struct VertexBufferData {
@@ -75,7 +77,7 @@ pub struct VertexBufferData {
     pub decl: fna3d::VertexDeclaration,
 }
 
-/// Dynamic vertex buffer
+/// Way to upload vertex data to GPU
 ///
 /// "typed" with [`fna3d::VertexDeclaration`]
 #[derive(Debug)]

@@ -6,7 +6,6 @@ use crate::{
     batcher::{batch::SpriteBatch, bufspecs::QuadData, primitives::*},
     texture::Texture2D,
 };
-use anf_deps::fna3d;
 
 // bitflags::bitflags! {
 //     /// `SpriteEffects` in FNA

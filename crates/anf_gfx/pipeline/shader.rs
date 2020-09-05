@@ -1,6 +1,5 @@
 //! Re-exported to super module
 
-use anf_deps::fna3d;
 use std::{
     fs,
     io::{self, Read},

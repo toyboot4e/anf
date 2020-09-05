@@ -5,7 +5,7 @@ authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anf_deps = { path = "../anf_deps" }
+fna3d = { path = "../rust-fna3d/fna3d" }
 stb_image = "0.2.2"
 log = "0.4.11"
 
