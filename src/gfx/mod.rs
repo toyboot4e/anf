@@ -1,40 +1,33 @@
-//! 2D quad rendering
+//! Graphics, 2D sprite rendering
+//!
+//! Sprites are technically textured quadliterals. In ANF, draw calls are automatically batched.
+//! Or you don't have access to the internals.
 //!
 //! # Example
 //!
-//! [`DrawContext`] is the API:
+//! Get [`RenderPass`] via [`DrawContext`] and draw sprites:
 //!
 //! ```no_run
 //! use anf::gfx::{DrawContext, Texture2D};
-//! use std::path::Path;
 //!
-//! fn load_texture_and_draw_it(dcx: &mut DrawContext, tx: &Texture2D) {
+//! fn example_rendering(dcx: &mut DrawContext, tx: &Texture2D) {
 //!     let mut pass = dcx.pass();
-//!     pass.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx);
+//!     pass.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx); // push texture
 //!     pass.cmd().dest_pos_px(100.0, 400.0).push_tx(&tx);
 //! }
 //! ```
 //!
-//! # Names
-//!
-//! ANF recommends using shorter names:
-//!
-//! * `dcx` referring to [`DrawContext`] (following the rustc naming [convension])
-//! * `tx` referring to [`Texture2D`]
-//! * `px` referring to "pixels"
-//! * `cmd` referring to "command"
-//!
-//! # TODOs
-//!
-//! * TODO: asset management in example
+//! Other functionalities are performed via `gfx` module functions such as `clear_frame`.
 //!
 //! [`DrawContext`]: ./struct.DrawContext.html
+//! [`RenderPass`]: ./struct.RenderPass.html
 //! [`Texture2D`]: ./struct.Texture2D.html
 //! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
-pub mod batcher;
-pub mod buffers;
-pub mod pipeline;
+// these are fixed internals and not exposed as API
+pub(crate) mod batcher;
+pub(crate) mod buffers;
+pub(crate) mod pipeline;
 
 mod texture;
 pub use texture::Texture2D;
@@ -43,13 +36,20 @@ use batcher::{primitives::*, Batcher, DrawPolicy, SpritePush};
 use fna3d::Device;
 use pipeline::Pipeline;
 
-/// Render sprites!
+/// Clears the frame buffer, that is, the screen
+pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
+    dcx.device
+        .clear(fna3d::ClearOptions::TARGET, clear_color, 0.0, 0);
+}
+
+/// The ANF graphics API
 ///
 /// * TODO: drop `Device`
 pub struct DrawContext {
-    pub(crate) device: Device,
+    pub(crate) device: Device, // open for `App`
     batcher: Batcher,
     pipe: Pipeline,
+    /// Buffer that reduces allocation
     push: SpritePush,
 }
 
@@ -71,7 +71,7 @@ impl DrawContext {
     }
 }
 
-/// Rendering with particular set of state
+/// Binding of particular set of state for rendering
 ///
 /// Currently it doesn't handle those state such as render taret.
 pub struct RenderPass<'a> {
@@ -104,7 +104,7 @@ impl<'a> Drop for RenderPass<'a> {
     }
 }
 
-/// Interface to push sprites
+/// Quads with color, rotation and skews
 pub struct SpritePushCommand<'a> {
     dcx: &'a mut DrawContext,
     policy: DrawPolicy,

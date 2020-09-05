@@ -2,9 +2,10 @@
 
 use std::os::raw::c_void;
 
-/// A 2D texture handle with some metadata
+/// 2D texture handle with some metadata
 ///
-/// * TODO: `Rc`? lifetime?
+/// Internally, it holds a raw pointer as an access to the texture and it's not guaranteed if it's
+/// still available. So you have to take care of the lifetimes yourself.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture2D {
     raw: *mut fna3d::Texture,

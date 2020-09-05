@@ -1,32 +1,40 @@
-//! Bare-bone game loop
+//! Application, the game loop
 //!
-//! # Boilerplate
+//! # Getting started
+//!
+//! This is a hello-world program:
 //!
 //! ```no_run
-//! use anf::app::{App, AppConfig, AppState};
+//! // main.rs or bin.rs side
+//! use anf::app::{App, AppConfig, AppResult};
 //!
-//! struct MyAppState {}
-//! impl AppState for MyAppState {}
-//!
-//! fn main() {
+//! fn main() -> AppResult {
 //!     let cfg = AppConfig::default();
 //!     let app = App::from_cfg(cfg);
-//!
-//!     // create your state with `App`
 //!     let state = MyAppState {};
+//!     app.run(state)
+//! }
 //!
-//!     match app.run(state) {
-//!         Ok(()) => {}
-//!         Err(why) => println!("Error occured: {}", why),
-//!     };
+//! // lib.rs side
+//! use anf::{app::AppState, gfx::DrawContext};
+//! use anf::fna3d::Color;
+//!
+//! struct MyAppState {}
+//!
+//! impl AppState for MyAppState {
+//!     fn update(&mut self) {}
+//!     fn render(&mut self, dcx: &mut DrawContext) {
+//!         anf::gfx::clear_frame(dcx, Color::cornflower_blue());
+//!     }
 //! }
 //! ```
 //!
-//! For more information, see the [examples].
+//! Your screen will be filled with [cornflower blue] pixels. Feel like you're home -- you're
+//! welcome :)
 //!
-//! * TODO: use callback to create user data: F: 'static + FnOnce(Context) -> UserData
-//! * TODO: event handling
+//! See the [examples] for more information.
 //!
+//! [cornflower blue]: https://www.google.com/search?q=cornflower%20blue
 //! [examples]: https://github.com/toyboot4e/anf/examples
 
 use crate::gfx::{batcher::Batcher, pipeline::Pipeline, DrawContext};
@@ -39,9 +47,10 @@ use std::time::Duration;
 
 /// User data driven by `AppImpl`
 pub trait AppState {
+    fn update(&mut self) {}
+    /// Clear and render next frame
     #[allow(unused_variables)]
     fn render(&mut self, dcx: &mut DrawContext) {}
-    fn update(&mut self) {}
 }
 
 /// Data to create `App`
@@ -151,7 +160,6 @@ impl AppConfig {
 /// Application state that drives user state
 struct AppImpl<T: AppState> {
     dcx: DrawContext,
-    clear_color: fna3d::Color,
     state: T,
     win: SdlWindow,
 }
@@ -166,7 +174,6 @@ impl<T: AppState> AppImpl<T> {
 
         AppImpl {
             dcx: DrawContext::new(src.device, batcher, pipe),
-            clear_color: fna3d::Color::cornflower_blue(),
             state,
             win: src.win,
         }
@@ -234,17 +241,10 @@ impl<T: AppState> AppImpl<T> {
 
     /// Runs the rendering pipeline
     fn render(&mut self) {
-        self.clear();
         self.state.render(&mut self.dcx);
         self.dcx
             .device
             .swap_buffers(None, None, self.win.raw_window as *mut _);
-    }
-
-    fn clear(&mut self) {
-        self.dcx
-            .device
-            .clear(fna3d::ClearOptions::TARGET, self.clear_color, 0.0, 0);
     }
 
     /// Just quits on `Escape` key down
