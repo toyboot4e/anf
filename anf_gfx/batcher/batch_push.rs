@@ -2,10 +2,11 @@
 //!
 //! The internal implementation is based on `Batcher` in Nez
 
-use crate::gfx::{
+use crate::{
     batcher::{bufspecs::QuadData, data::BatchData, primitives::*},
     texture::Texture2D,
 };
+use anf_deps::fna3d;
 
 // bitflags::bitflags! {
 //     /// `SpriteEffects` in FNA

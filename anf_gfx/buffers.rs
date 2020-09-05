@@ -5,6 +5,8 @@
 //!
 //! * TODO: explain what "dynamic" buffer means and what options are available
 
+use anf_deps::fna3d;
+
 /// Marker to represent vertex data that can be sent to GPU memory
 pub trait VertexData {}
 

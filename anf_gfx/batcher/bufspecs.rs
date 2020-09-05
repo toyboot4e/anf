@@ -1,9 +1,10 @@
 //! `BatchData` specification on vertex/index buffer
 
-use crate::gfx::{
+use crate::{
     batcher::primitives::*,
     buffers::{DynamicVertexBuffer, IndexBuffer},
 };
+use anf_deps::fna3d;
 
 // --------------------------------------------------------------------------------
 // Constants
@@ -40,8 +41,8 @@ pub struct ColoredVertexData {
 pub type QuadData = [ColoredVertexData; 4];
 
 // mark them as data that can be set to vertex buffer in GPU memory
-impl crate::gfx::buffers::VertexData for QuadData {}
-impl crate::gfx::buffers::VertexData for ColoredVertexData {}
+impl crate::buffers::VertexData for QuadData {}
+impl crate::buffers::VertexData for ColoredVertexData {}
 
 impl Default for ColoredVertexData {
     fn default() -> Self {
@@ -95,7 +96,7 @@ impl ColoredVertexData {
 /// initialization:
 ///
 /// ```
-/// use anf::gfx::batcher::bufspecs::{MAX_INDICES, MAX_QUADS};
+/// use anf_gfx::batcher::bufspecs::{MAX_INDICES, MAX_QUADS};
 ///
 /// let mut indices = [0; MAX_INDICES];
 /// // for each quadliteral, we need two triangles (i.e. four verices and six indices)

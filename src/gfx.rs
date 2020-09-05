@@ -1,7 +1,7 @@
-//! Graphics, 2D sprite rendering
+//! Graphics, the 2D sprite rendering API
 //!
-//! Sprites are technically textured quadliterals. In ANF, draw calls are automatically batched.
-//! Or you don't have access to the internals.
+//! Draw calls are automatically batched. In other words, you don't have access to the internals;
+//! ANF is fixed rather than being extensible.
 //!
 //! # Example
 //!
@@ -24,17 +24,13 @@
 //! [`Texture2D`]: ./struct.Texture2D.html
 //! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
-// these are fixed internals and not exposed as API
-pub(crate) mod batcher;
-pub(crate) mod buffers;
-pub(crate) mod pipeline;
+use anf_deps::fna3d::{self, Device};
 
-mod texture;
-pub use texture::Texture2D;
-
-use batcher::{primitives::*, Batcher, DrawPolicy, SpritePush};
-use fna3d::Device;
-use pipeline::Pipeline;
+pub use anf_gfx::texture::Texture2D;
+use anf_gfx::{
+    batcher::{primitives::*, Batcher, DrawPolicy, SpritePush},
+    pipeline::Pipeline,
+};
 
 /// Clears the frame buffer, that is, the screen
 pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {

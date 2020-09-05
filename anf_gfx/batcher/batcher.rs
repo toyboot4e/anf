@@ -1,12 +1,13 @@
 //! Re-exported to super module
 
-use crate::gfx::{
+use crate::{
     batcher::{
         bufspecs::ViBuffer,
         data::{BatchData, BatchSpan, BatchSpanIter},
     },
     pipeline::Pipeline,
 };
+use anf_deps::fna3d;
 
 /// Wrapper of `BatchData`
 ///

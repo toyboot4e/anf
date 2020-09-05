@@ -1,8 +1,10 @@
 //! Re-exported to super module
 
+use anf_deps::fna3d;
 use std::{
     fs,
     io::{self, Read},
+    path::Path,
 };
 
 /// Shader data loaded on memory
@@ -20,11 +22,11 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn from_device(device: &mut fna3d::Device) -> io::Result<Self> {
-        let path = crate::vfs::default_shader();
-        log::trace!("default shader located at {}", path.display());
-
-        let mut f = fs::File::open(&path)?;
+    pub fn from_device(
+        device: &mut fna3d::Device,
+        shader_path: impl AsRef<Path>,
+    ) -> io::Result<Self> {
+        let mut f = fs::File::open(shader_path)?;
         let mut buf = Vec::new();
         let len = f.read_to_end(&mut buf)?; // TODO: use anyhow or like that
 

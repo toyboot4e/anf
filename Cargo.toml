@@ -4,8 +4,11 @@ version = "0.1.0"
 authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
+[workspace]
+members = ["anf_deps", "anf_gfx"]
+exclude = ["rust-fna3d"]
+
 [dependencies]
-fna3d = { path = "./rust-fna3d/fna3d" }
-sdl2 = "0.34.2"
-log = "0.4.8"
-stb_image = "0.2.2"
+anf_deps = { path = "anf_deps" }
+anf_gfx = { path = "anf_gfx" }
+log = "0.4.11"

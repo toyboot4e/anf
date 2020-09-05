@@ -3,7 +3,7 @@
 //! Presudo example:
 //!
 //! ```
-//! use anf::gfx::batcher::data::{BatchData, BatchSpan, BatchSpanIter};
+//! use anf_gfx::batcher::data::{BatchData, BatchSpan, BatchSpanIter};
 //!
 //! pub struct YourContext { /* your data */ }
 //! fn make_draw_call(cx: &mut YourContext, batch: &BatchData, slot: usize, span: BatchSpan) {
@@ -22,7 +22,7 @@
 //!
 //! [`BatchSpanIter`]: ./struct.BatchSpanIter.html
 
-use crate::gfx::{
+use crate::{
     batcher::bufspecs::{QuadData, MAX_QUADS},
     texture::Texture2D,
 };
@@ -58,7 +58,7 @@ impl BatchData {
 /// Make sure to clear `BatchData::n_quads` maually after making draw calls.
 ///
 /// ```
-/// use anf::gfx::batcher::{Batcher, data::BatchSpanIter};
+/// use anf_gfx::batcher::{Batcher, data::BatchSpanIter};
 ///
 /// fn flush_batcher(batcher: &mut Batcher) {
 ///      let mut iter = BatchSpanIter::new();

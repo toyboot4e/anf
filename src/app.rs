@@ -37,12 +37,16 @@
 //! [cornflower blue]: https://www.google.com/search?q=cornflower%20blue
 //! [examples]: https://github.com/toyboot4e/anf/examples
 
-use crate::gfx::{batcher::Batcher, pipeline::Pipeline, DrawContext};
+use crate::{gfx::DrawContext, vfs};
+use anf_gfx::{batcher::Batcher, pipeline::Pipeline};
+
+use anf_deps::{fna3d, sdl2};
 use fna3d::Device;
 use sdl2::{
     render::WindowCanvas,
     {event::Event, keyboard::Keycode},
 };
+
 use std::time::Duration;
 
 /// User data driven by `AppImpl`
@@ -169,7 +173,7 @@ impl<T: AppState> AppImpl<T> {
         fna3d::utils::hook_log_functions_default();
         Self::init_gfx(&mut src.device, &src.params);
 
-        let pipe = Pipeline::from_device(&mut src.device);
+        let pipe = Pipeline::from_device(&mut src.device, vfs::default_shader());
         let batcher = Batcher::from_device(&mut src.device);
 
         AppImpl {

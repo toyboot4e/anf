@@ -1,9 +1,11 @@
 //! Re-exported to the root of the module
 
-use crate::gfx::{
+use crate::{
     batcher::bufspecs::ColoredVertexData, buffers::VertexBufferData, pipeline::shader::Shader,
     texture::Texture2D,
 };
+use anf_deps::fna3d;
+use std::path::Path;
 
 /// Rendering pipeline states
 ///
@@ -22,11 +24,11 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-    pub fn from_device(device: &mut fna3d::Device) -> Self {
+    pub fn from_device(device: &mut fna3d::Device, shader_path: impl AsRef<Path>) -> Self {
         Self {
             v_binds: VBind::new(ColoredVertexData::decl()),
             state: SamplerSlots::from_device(device),
-            shader: Shader::from_device(device).expect("faild to create a shader"),
+            shader: Shader::from_device(device, shader_path).expect("faild to create a shader"),
         }
     }
 }

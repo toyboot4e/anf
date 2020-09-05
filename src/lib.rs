@@ -1,6 +1,7 @@
 //! ANF is a 2D framework powered by FNA3D
 //!
-//! See the [`app`] module or [examples] to get started.
+//! See the [`app`] module or [examples] to get started. Note that ANF is very much a work in
+//! progress.
 //!
 //! # Restrictions
 //!
@@ -16,8 +17,7 @@
 //! [`app`]: ./app/index.html
 //! [examples]: https://github/toyboot4e/anf/examples
 
-pub use fna3d;
-pub use sdl2;
+pub use anf_deps::{fna3d, sdl2};
 
 pub mod app;
 pub mod gfx;

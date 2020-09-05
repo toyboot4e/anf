@@ -1,5 +1,6 @@
 //! 2D texture
 
+use anf_deps::fna3d;
 use std::os::raw::c_void;
 
 /// 2D texture handle with some metadata

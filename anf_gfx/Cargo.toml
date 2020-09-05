@@ -1,0 +1,13 @@
+[package]
+name = "anf_gfx"
+version = "0.1.0"
+authors = ["toyboot4e <toyboot4e@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anf_deps = { path = "../anf_deps" }
+stb_image = "0.2.2"
+log = "0.4.11"
+
+[lib]
+path = "./lib.rs"
