@@ -88,7 +88,7 @@ pub struct GpuVertexBuffer {
 /// "typed" with [`fna3d::VertexDeclaration`]
 #[derive(Debug)]
 pub struct GpuDynamicVertexBuffer {
-    pub(crate) inner: GpuVertexBuffer,
+    pub inner: GpuVertexBuffer,
 }
 
 impl GpuVertexBuffer {

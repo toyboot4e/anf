@@ -22,11 +22,12 @@
 
 pub use anf_gfx::texture::Texture2D;
 
-use anf_gfx::{
-    batcher::{primitives::*, Batcher, DrawPolicy, SpritePush},
-    fna3d_hie::Pipeline,
+use anf_gfx::batcher::{
+    bufspecs::ColoredVertexData, primitives::*, Batcher, DrawPolicy, SpritePush,
 };
 use fna3d::{self, Device};
+use fna3d_hie::Pipeline;
+
 use std::path::Path;
 
 /// Clears the frame buffer, that is, the screen
@@ -48,7 +49,7 @@ pub struct DrawContext {
 
 impl DrawContext {
     pub fn new(mut device: Device, default_shader: impl AsRef<Path>) -> Self {
-        let pipe = Pipeline::from_device(&mut device, default_shader);
+        let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader);
         let batcher = Batcher::from_device(&mut device);
         Self {
             device,

@@ -1,11 +1,8 @@
 //! Re-exported to the root of the module
 
 use crate::{
-    batcher::bufspecs::ColoredVertexData,
-    fna3d_hie::{
-        buffers::{GpuVertexAttributes, GpuVertexBuffer},
-        shader::Shader,
-    },
+    buffers::{GpuVertexAttributes, GpuVertexBuffer},
+    shader::Shader,
 };
 use std::path::Path;
 
@@ -24,9 +21,13 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-    pub fn from_device(device: &mut fna3d::Device, shader_path: impl AsRef<Path>) -> Self {
+    pub fn new(
+        device: &mut fna3d::Device,
+        decl: fna3d::VertexDeclaration,
+        shader_path: impl AsRef<Path>,
+    ) -> Self {
         let mut s = Self {
-            v_binds: GpuVertexAttributes::new(ColoredVertexData::decl()),
+            v_binds: GpuVertexAttributes::new(decl),
             state: SamplerSlots::from_device(device),
             shader: Shader::from_file(device, shader_path).expect("faild to create a shader"),
         };

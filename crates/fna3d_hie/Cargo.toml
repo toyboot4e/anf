@@ -1,12 +1,11 @@
 [package]
-name = "anf_gfx"
+name = "fna3d_hie"
 version = "0.1.0"
 authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 fna3d = { path = "../rust-fna3d/fna3d" }
-fna3d_hie = { path = "../fna3d_hie" }
 log = "0.4.11"
 
 [lib]

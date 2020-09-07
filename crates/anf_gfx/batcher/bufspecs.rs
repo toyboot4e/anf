@@ -2,10 +2,8 @@
 //!
 //! [`SpriteBatch`]: crate::batcher::batch::SpriteBatch
 
-use crate::{
-    batcher::primitives::*,
-    fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer},
-};
+use crate::batcher::primitives::*;
+use fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer};
 
 // --------------------------------------------------------------------------------
 // Constants
@@ -39,11 +37,28 @@ pub struct ColoredVertexData {
 }
 
 /// The actual quadliteral data type in `anf_gfx::batcher`
-pub type QuadData = [ColoredVertexData; 4];
+///
+/// This is actually an array of [`ColoredVertexData`], however, we need to wrap it with a newtype
+/// struct so that we can implement `QuadData` (because we can't implemenet traits for arrays).
+#[derive(Clone, Debug, Default)]
+pub struct QuadData([ColoredVertexData; 4]);
+
+impl std::ops::Deref for QuadData {
+    type Target = [ColoredVertexData; 4];
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for QuadData {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 // mark them as data that can be set to vertex buffer in GPU memory
-impl crate::fna3d_hie::buffers::VertexData for QuadData {}
-impl crate::fna3d_hie::buffers::VertexData for ColoredVertexData {}
+impl fna3d_hie::buffers::VertexData for ColoredVertexData {}
+impl fna3d_hie::buffers::VertexData for QuadData {}
 
 impl Default for ColoredVertexData {
     fn default() -> Self {

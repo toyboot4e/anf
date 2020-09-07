@@ -1,12 +1,10 @@
 //! Re-exported to super module
 
-use crate::{
-    batcher::{
-        batch::{SpriteBatch, SpriteDrawCall},
-        bufspecs::GpuViBuffer,
-    },
-    fna3d_hie::{buffers::GpuIndexBuffer, Pipeline},
+use crate::batcher::{
+    batch::{SpriteBatch, SpriteDrawCall},
+    bufspecs::GpuViBuffer,
 };
+use fna3d_hie::{buffers::GpuIndexBuffer, Pipeline};
 
 /// [`SpriteBatch`] with GPU vertex/index buffer handle
 #[derive(Debug)]
