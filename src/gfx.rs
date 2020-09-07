@@ -1,17 +1,16 @@
 //! Graphics, the 2D sprite rendering API
 //!
-//! Draw calls are automatically batched. In other words, you don't have access to the internals;
-//! ANF is fixed rather than being extensible.
+//! Draw calls are automatically batched.
 //!
 //! # Example
 //!
-//! We pull [`SpritePushCommand`] from [`RenderPass`], [`RenderPass`] from [`DrawContext`]:
+//! We pull [`SpritePushCommand`] from [`BatchPass`], [`BatchPass`] from [`DrawContext`]:
 //!
 //! ```no_run
 //! use anf::gfx::{DrawContext, Texture2D};
 //!
 //! fn example_rendering(dcx: &mut DrawContext, tx: &Texture2D) {
-//!     let mut pass = dcx.pass();
+//!     let mut pass = dcx.pass(); // batch pass
 //!     pass.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx); // push texture
 //!     pass.cmd().dest_pos_px(100.0, 400.0).push_tx(&tx);
 //! }
@@ -23,11 +22,11 @@
 
 pub use anf_gfx::texture::Texture2D;
 
-use fna3d::{self, Device};
 use anf_gfx::{
     batcher::{primitives::*, Batcher, DrawPolicy, SpritePush},
-    pipeline::Pipeline,
+    fna3d_hie::Pipeline,
 };
+use fna3d::{self, Device};
 use std::path::Path;
 
 /// Clears the frame buffer, that is, the screen
@@ -61,20 +60,25 @@ impl DrawContext {
 }
 
 impl DrawContext {
-    /// Begins a render pass, rendering with particular set of state
-    pub fn pass(&mut self) -> RenderPass<'_> {
-        RenderPass::new(self)
+    /// Begins a batch pass, rendering with particular set of state
+    pub fn pass(&mut self) -> BatchPass<'_> {
+        BatchPass::new(self)
     }
 }
 
-/// Binding of particular set of state for rendering
+/// Handle to push sprites
+///
+/// Binds a set of state for rendering and flushes the [`SpriteBatch`] when it goes out of scope.
+/// "Batch pass" is not a common word but I think it makes sence.
 ///
 /// Currently it doesn't handle those state such as render taret.
-pub struct RenderPass<'a> {
+///
+/// [`SpriteBatch`]: anf_gfx::batcher::batch::SpritePush
+pub struct BatchPass<'a> {
     dcx: &'a mut DrawContext,
 }
 
-impl<'a> RenderPass<'a> {
+impl<'a> BatchPass<'a> {
     pub fn new(dcx: &'a mut DrawContext) -> Self {
         dcx.batcher.begin();
         Self { dcx }
@@ -92,7 +96,7 @@ impl<'a> RenderPass<'a> {
     }
 }
 
-impl<'a> Drop for RenderPass<'a> {
+impl<'a> Drop for BatchPass<'a> {
     fn drop(&mut self) {
         self.dcx
             .batcher

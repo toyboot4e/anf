@@ -1,7 +1,7 @@
 //! ANF is a 2D framework powered by FNA3D
 //!
-//! See the [`app`] module or [examples] to get started. Note that ANF is very much a work in
-//! progress.
+//! See the [`app`] module or [examples] to get started. Note that ANF is **very much a work in
+//! progress**.
 //!
 //! # Restrictions
 //!

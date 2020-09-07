@@ -1,14 +1,10 @@
 //! Re-exported to super module
 
-use std::{
-    fs,
-    io::{self, Read},
-    path::Path,
-};
+use std::path::Path;
 
 /// Shader data loaded on memory
 ///
-/// In XNA, shaders are known as [`Effect`s.
+/// In XNA, shaders are known as [`Effect`]s.
 ///
 /// * TODO: how to write a custom shader
 /// * TODO: enable loading custom shaders, maybe using `mint`?
@@ -17,37 +13,20 @@ use std::{
 #[derive(Debug)]
 pub struct Shader {
     effect: *mut fna3d::Effect,
-    mojo_effect: *mut fna3d::mojo::Effect,
+    data: *mut fna3d::mojo::Effect,
 }
 
 impl Shader {
-    pub fn from_device(
+    pub fn from_file(
         device: &mut fna3d::Device,
         shader_path: impl AsRef<Path>,
-    ) -> io::Result<Self> {
-        let mut f = fs::File::open(shader_path)?;
-        let mut buf = Vec::new();
-        let len = f.read_to_end(&mut buf)?; // TODO: use anyhow or like that
+    ) -> fna3d::mojo::Result<Self> {
+        let (effect, data) = fna3d::mojo::load_shader_from_file(device, shader_path)?;
+        Ok(Self { effect, data })
+    }
 
-        let (effect, mojo_effect) = device.create_effect(buf.as_mut_ptr(), len as u32);
-
-        unsafe {
-            let mojo_effect: &mut fna3d::mojo::Effect = &mut *mojo_effect;
-
-            if mojo_effect.error_count > 0 {
-                let errs = std::slice::from_raw_parts(
-                    mojo_effect.techniques,
-                    mojo_effect.technique_count as usize,
-                );
-                eprintln!("{:?}", errs);
-                // TODO: error?
-            }
-        }
-
-        Ok(Self {
-            effect,
-            mojo_effect,
-        })
+    pub fn destroy(self, device: &mut fna3d::Device) {
+        device.add_dispose_effect(self.effect);
     }
 }
 
@@ -72,6 +51,6 @@ impl Shader {
 
     /// * TODO: enable custom projection matrix
     pub fn apply_uniforms(&mut self) {
-        fna3d::mojo::set_projection_uniform(self.mojo_effect, &fna3d::mojo::ORTHOGRAPIHCS_MATRIX);
+        fna3d::mojo::set_projection_matrix(self.data, &fna3d::mojo::ORTHOGRAPHICAL_MATRIX);
     }
 }

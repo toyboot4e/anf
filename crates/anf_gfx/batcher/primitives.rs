@@ -1,4 +1,6 @@
-//! Primitive data types used internally
+//! Primitive data types used by [`SpritePushCommand`]
+//!
+//! [`SpritePushCommand`]: crate::batcher::SpritePushCommand
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]

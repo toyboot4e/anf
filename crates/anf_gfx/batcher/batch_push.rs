@@ -1,6 +1,10 @@
 //! Push command to `SpriteBatch`
 //!
 //! The internal implementation is based on `Batcher` in Nez
+//!
+//! * TODO: look into `effect` value
+//! * TODO: try rotations
+//! * TODO: try using transoform matrix
 
 use crate::{
     batcher::{batch::SpriteBatch, bufspecs::QuadData, primitives::*},
@@ -59,7 +63,8 @@ pub struct Rot2f {
     pub y2: f32,
 }
 
-// TODO: what is depth. is it considered by Device?
+// --------------------------------------------------------------------------------
+// Interface
 
 /// Data to push a sprite into `SpriteBatch`
 ///
@@ -161,7 +166,7 @@ impl SpritePush {
             }
         };
 
-        self::push_quad(
+        self::push_quad_impl(
             batch,
             &texture,
             self.origin,
@@ -180,7 +185,7 @@ impl SpritePush {
 // Core
 
 #[inline]
-fn push_quad(
+pub fn push_quad_impl(
     batch: &mut SpriteBatch,
     texture: &Texture2D,
     origin: Vec2f,    // ??
@@ -192,18 +197,18 @@ fn push_quad(
     depth: f32,
     effects: u8, // TODO: use enum
 ) {
-    let vertex = &mut batch.vertex_data[batch.n_quads];
-    self::set_quad(
+    let vertex = &mut batch.quads[batch.n_quads];
+    self::set_quad_impl(
         vertex, skew, origin, uv_rect, dest, color, rot, depth, effects,
     );
     // TODO: use Rc?
-    batch.texture_track[batch.n_quads] = texture.clone();
+    batch.raw_texture_track[batch.n_quads] = texture.raw();
     batch.n_quads += 1;
 }
 
 /// Sets up four vertices that correspond to a quad (rect)
 #[inline]
-fn set_quad(
+pub fn set_quad_impl(
     vertex: &mut QuadData,
     skew: &mut Skew2f,
     origin: Vec2f,    // ??

@@ -1,4 +1,4 @@
-//! Vertex/index buffer
+//! Handles of vertex/index buffer in GPU memory
 //!
 //! Internally, they are wrappers of [`*mut fna3d::Buffer`](fna3d::Buffer); they are dynamically
 //! "typed" with attributes.
@@ -11,18 +11,18 @@ pub trait VertexData {}
 // --------------------------------------------------------------------------------
 // Index buffer (ibuf)
 
-/// Way to upload index data to GPU
+/// Handle of index buffer in GPU memory
 ///
 /// "Typed" with [`fna3d::IndexElementSize`]
 #[derive(Debug)]
-pub struct IndexBuffer {
+pub struct GpuIndexBuffer {
     raw: *mut fna3d::Buffer,
     n_indices: u32,
     usage: fna3d::BufferUsage,
     elem_size: fna3d::IndexElementSize,
 }
 
-impl IndexBuffer {
+impl GpuIndexBuffer {
     pub fn raw(&self) -> *mut fna3d::Buffer {
         self.raw
     }
@@ -53,7 +53,13 @@ impl IndexBuffer {
         }
     }
 
-    pub fn set_data<T>(&mut self, device: &mut fna3d::Device, offset_in_bytes: u32, data: &[T]) {
+    /// Sends index buffer to GPU memory
+    pub fn upload_indices<T>(
+        &mut self,
+        device: &mut fna3d::Device,
+        offset_in_bytes: u32,
+        data: &[T],
+    ) {
         device.set_index_buffer_data(
             self.raw(),
             offset_in_bytes,
@@ -66,26 +72,26 @@ impl IndexBuffer {
 // --------------------------------------------------------------------------------
 // Vertex buffer (vbuf)
 
-/// Way to upload vertex data to GPU
+/// Handle to upload vertex data to GPU
 ///
 /// "Typed" with [`fna3d::VertexDeclaration`]
 #[derive(Debug)]
-pub struct VertexBufferData {
+pub struct GpuVertexBuffer {
     raw: *mut fna3d::Buffer,
     pub n_vertices: u32,
     pub usage: fna3d::BufferUsage,
     pub decl: fna3d::VertexDeclaration,
 }
 
-/// Way to upload vertex data to GPU
+/// Handle to upload vertex data to GPU
 ///
 /// "typed" with [`fna3d::VertexDeclaration`]
 #[derive(Debug)]
-pub struct DynamicVertexBuffer {
-    pub(crate) inner: VertexBufferData,
+pub struct GpuDynamicVertexBuffer {
+    pub(crate) inner: GpuVertexBuffer,
 }
 
-impl VertexBufferData {
+impl GpuVertexBuffer {
     pub fn raw(&self) -> *mut fna3d::Buffer {
         self.raw
     }
@@ -101,7 +107,7 @@ impl VertexBufferData {
         assert!(size_in_bytes < 2u32.pow(31));
         let raw = device.gen_vertex_buffer(is_dynamic, usage, size_in_bytes);
 
-        VertexBufferData {
+        GpuVertexBuffer {
             n_vertices,
             usage,
             decl,
@@ -110,7 +116,7 @@ impl VertexBufferData {
     }
 
     /// Sets vertex data to the GPU buffer
-    pub fn set_data<T: VertexData>(
+    pub fn upload_vertices<T: VertexData>(
         &mut self,
         device: &mut fna3d::Device,
         offset_in_bytes: u32,
@@ -125,7 +131,7 @@ impl VertexBufferData {
     }
 }
 
-impl DynamicVertexBuffer {
+impl GpuDynamicVertexBuffer {
     pub fn raw(&self) -> *mut fna3d::Buffer {
         self.inner.raw()
     }
@@ -137,12 +143,12 @@ impl DynamicVertexBuffer {
         usage: fna3d::BufferUsage,
     ) -> Self {
         Self {
-            inner: VertexBufferData::new(device, decl, n_vertices, usage, true),
+            inner: GpuVertexBuffer::new(device, decl, n_vertices, usage, true),
         }
     }
 
-    /// Sets vertex data to the GPU buffer
-    pub fn set_data<T: VertexData>(
+    /// Sends vertex data to GPU memory
+    pub fn upload_vertices<T: VertexData>(
         &mut self,
         device: &mut fna3d::Device,
         buf_offset_in_bytes: u32,
@@ -150,5 +156,39 @@ impl DynamicVertexBuffer {
         opts: fna3d::SetDataOptions,
     ) {
         device.set_vertex_buffer_data(self.inner.raw(), buf_offset_in_bytes, vdata, opts);
+    }
+}
+
+/// Handle to upload vertex attributes to GPU
+///
+/// * TODO: what is instance drawing/frequency
+/// * TODO: multiples slots
+#[derive(Debug)]
+pub struct GpuVertexAttributes {
+    bind: fna3d::VertexBufferBinding,
+    // is_updated: bool,
+}
+
+impl GpuVertexAttributes {
+    pub fn new(decl: fna3d::VertexDeclaration) -> Self {
+        GpuVertexAttributes {
+            bind: fna3d::VertexBufferBinding {
+                vertexBuffer: std::ptr::null_mut(),
+                vertexDeclaration: decl,
+                vertexOffset: 0,
+                instanceFrequency: 0,
+            },
+            // is_updated: false,
+        }
+    }
+
+    pub fn reset_vertex_attributes(&mut self, vbuf: &mut GpuVertexBuffer, base_vertex: u32) {
+        self.bind.vertexBuffer = vbuf.raw();
+        self.bind.vertexDeclaration = vbuf.decl.clone();
+        self.bind.vertexOffset = base_vertex as i32;
+    }
+
+    pub fn upload_vertex_attributes(&mut self, device: &mut fna3d::Device, base_vertex: u32) {
+        device.apply_vertex_buffer_bindings(&[self.bind], true, base_vertex);
     }
 }
