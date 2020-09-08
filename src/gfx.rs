@@ -4,10 +4,10 @@
 //!
 //! # Example
 //!
-//! We pull [`QuadPushCommand`] from [`BatchPass`], [`BatchPass`] from [`DrawContext`]:
+//! We pull [`SpritePushCommand`] from [`BatchPass`], [`BatchPass`] from [`DrawContext`]:
 //!
 //! ```no_run
-//! use anf::gfx::{DrawContext, prelude::*, Texture2D};
+//! use anf::gfx::{prelude::*, Texture2D};
 //!
 //! fn example_rendering(dcx: &mut DrawContext, tx: &Texture2D) {
 //!     let mut pass = dcx.pass(); // batch pass
@@ -33,7 +33,9 @@ use fna3d_hie::Pipeline;
 use std::path::Path;
 
 pub mod prelude {
-    //! Exports traits to put in scope
+    //! `DrawContext` and traits to push sprites
+
+    pub use crate::gfx::DrawContext;
     pub use anf_gfx::cmd::prelude::*;
 }
 
@@ -100,7 +102,7 @@ impl<'a> BatchPass<'a> {
             push: &mut self.dcx.push,
             batch: &mut self.dcx.batcher.batch,
             policy: DrawPolicy { do_round: false },
-            flips: Flips::None,
+            flips: Flips::NONE,
         }
     }
 }

@@ -82,7 +82,7 @@ impl Default for QuadPush {
             color: fna3d::Color::white(),
             rot: 0.0,
             depth: 0.0,
-            flips: Flips::None,
+            flips: Flips::NONE,
             skew: Skew2f::default(),
         }
     }
@@ -96,7 +96,7 @@ impl QuadPush {
         self.color = fna3d::Color::white();
         self.rot = 0.0;
         self.depth = 0.0;
-        self.flips = Flips::None;
+        self.flips = Flips::NONE;
         self.skew = Skew2f::default();
     }
 }
@@ -237,7 +237,7 @@ fn set_quad(
 
     // flip our skew values if we have a flipped sprite
     // FIXME is this OK??
-    if flips != Flips::None {
+    if flips != Flips::NONE {
         skew.y1 *= -1.0;
         skew.y2 *= -1.0;
         skew.x1 *= -1.0;

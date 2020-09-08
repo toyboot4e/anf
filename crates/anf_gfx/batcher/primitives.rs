@@ -99,7 +99,7 @@ impl From<[f32; 4]> for Rect2f {
 fna3d::bitflags::bitflags! {
     pub struct Flips: u8 {
         /// Render the sprite as it is
-        const None = 0;
+        const NONE = 0;
         /// Render the sprite reversed along the X axis
         const H = 1;
         /// Render the sprite reversed along the Y axis

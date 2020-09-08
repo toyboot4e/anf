@@ -8,9 +8,7 @@
 //!
 //! ```no_run
 //! // main.rs or bin.rs side
-//! use anf::{
-//!     anf_lib::app::{App, AppConfig},
-//!     game::{GameLoop, GameResult},
+//! use anf::game::{app::{App, AppConfig}, GameLoop, GameResult},
 //! };
 //!
 //! fn main() -> GameResult {
@@ -41,11 +39,11 @@
 //! [cornflower blue]: https://www.google.com/search?q=cornflower%20blue
 //! [examples]: https://github.com/toyboot4e/anf/examples
 
+pub mod app;
+
 use crate::{gfx::DrawContext, vfs};
-use anf_lib::{
-    app::{App, SdlWindowHandle},
-    sdl2::{event::Event, keyboard::Keycode},
-};
+use app::{App, SdlWindowHandle};
+use sdl2::{event::Event, keyboard::Keycode};
 use std::time::Duration;
 
 /// User data driven by [`GameLoop`]

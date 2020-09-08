@@ -15,11 +15,12 @@
 //!
 //! [examples]: https://github/toyboot4e/anf/examples
 
-pub use anf_lib;
-pub use anf_lib::sdl2;
 pub use fna3d;
 pub use fna3d_hie;
-// anf_gfx is hidden
+pub use sdl2;
+
+// pub use anf_lib;
+// pub use anf_gfx;
 
 pub mod game;
 pub mod gfx;

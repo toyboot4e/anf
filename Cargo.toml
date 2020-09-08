@@ -5,14 +5,14 @@ authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
 [workspace]
-members = ["crates/anf_gfx", "crates/anf_lib", "crates/fna3d_hie"]
+members = ["crates/anf_gfx", "crates/fna3d_hie"]
 exclude = ["crates/rust-fna3d"]
 
 [dependencies]
 anf_gfx = { path = "crates/anf_gfx" }
-anf_lib = { path = "crates/anf_lib" }
 fna3d = { path = "crates/rust-fna3d/fna3d" }
 fna3d_hie = { path = "crates/fna3d_hie" }
+sdl2 = "0.34.3"
 
 log = "0.4.11"
 env_logger = "0.7.1"
