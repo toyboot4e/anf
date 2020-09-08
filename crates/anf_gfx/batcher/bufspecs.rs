@@ -2,7 +2,7 @@
 //!
 //! [`SpriteBatch`]: crate::batcher::batch::SpriteBatch
 
-use crate::batcher::primitives::*;
+use crate::geom::*;
 use fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer};
 
 // --------------------------------------------------------------------------------

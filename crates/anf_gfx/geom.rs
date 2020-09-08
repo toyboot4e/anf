@@ -1,6 +1,4 @@
-//! Primitive data types used by [`SpritePushCommand`]
-//!
-//! [`SpritePushCommand`]: crate::batcher::SpritePushCommand
+//! Geometry primitives
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -25,6 +23,18 @@ impl From<[f32; 2]> for Vec2f {
 impl From<&[f32; 2]> for Vec2f {
     fn from(xs: &[f32; 2]) -> Self {
         Self { x: xs[0], y: xs[1] }
+    }
+}
+
+impl Into<[f32; 2]> for Vec2f {
+    fn into(self) -> [f32; 2] {
+        [self.x, self.y]
+    }
+}
+
+impl Into<[f32; 2]> for &Vec2f {
+    fn into(self) -> [f32; 2] {
+        [self.x, self.y]
     }
 }
 
@@ -93,6 +103,18 @@ impl From<[f32; 4]> for Rect2f {
             w: xs[2],
             h: xs[3],
         }
+    }
+}
+
+impl Into<[f32; 4]> for Rect2f {
+    fn into(self) -> [f32; 4] {
+        [self.x, self.y, self.w, self.h]
+    }
+}
+
+impl Into<[f32; 4]> for &Rect2f {
+    fn into(self) -> [f32; 4] {
+        [self.x, self.y, self.w, self.h]
     }
 }
 

@@ -6,7 +6,10 @@
 //! * TODO: try rotations
 //! * TODO: try using transoform matrix
 
-use crate::batcher::{batch::SpriteBatch, bufspecs::QuadData, primitives::*};
+use crate::{
+    batcher::{batch::SpriteBatch, bufspecs::QuadData},
+    geom::*,
+};
 
 /// Round or not
 #[derive(Debug, Clone, Copy, PartialEq)]

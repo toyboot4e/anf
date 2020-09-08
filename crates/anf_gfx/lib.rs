@@ -2,4 +2,5 @@
 
 pub mod batcher;
 pub mod cmd;
+pub mod geom;
 pub mod texture;

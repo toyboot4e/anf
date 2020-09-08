@@ -1,6 +1,7 @@
 use crate::{
-    batcher::{batch::SpriteBatch, primitives::*},
+    batcher::batch::SpriteBatch,
     cmd::push::*,
+    geom::*,
     texture::{SubTexture2D, Texture2D},
 };
 

@@ -16,9 +16,9 @@
 //! [examples]: https://github/toyboot4e/anf/examples
 
 pub use fna3d;
-pub use fna3d_hie;
 pub use sdl2;
 
+// pub use fna3d_hie;
 // pub use anf_lib;
 // pub use anf_gfx;
 

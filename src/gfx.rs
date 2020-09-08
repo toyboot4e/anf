@@ -22,8 +22,18 @@
 
 pub use anf_gfx::texture::{SubTexture2D, Texture2D};
 
+pub mod prelude {
+    //! [`DrawContext`] and traits to push sprites
+
+    pub use crate::gfx::DrawContext;
+    pub use anf_gfx::cmd::prelude::*;
+}
+
+pub use anf_gfx::geom;
+use geom::*;
+
 use anf_gfx::{
-    batcher::{bufspecs::ColoredVertexData, primitives::*, Batcher},
+    batcher::{bufspecs::ColoredVertexData, Batcher},
     cmd::{prelude::*, QuadPush, SpritePushCommand},
 };
 
@@ -31,13 +41,6 @@ use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
 use std::path::Path;
-
-pub mod prelude {
-    //! `DrawContext` and traits to push sprites
-
-    pub use crate::gfx::DrawContext;
-    pub use anf_gfx::cmd::prelude::*;
-}
 
 /// Clears the frame buffer, that is, the screen
 pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
