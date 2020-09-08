@@ -1,9 +1,9 @@
-//! `BatchData` specification on vertex/index buffer
+//! Specification of vertex/index buffer used by [`SpriteBatch`]
+//!
+//! [`SpriteBatch`]: crate::batcher::batch::SpriteBatch
 
-use crate::gfx::{
-    batcher::primitives::*,
-    buffers::{DynamicVertexBuffer, IndexBuffer},
-};
+use crate::geom::*;
+use fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer};
 
 // --------------------------------------------------------------------------------
 // Constants
@@ -23,25 +23,40 @@ pub const MAX_INDICES: usize = MAX_QUADS * 6;
 // --------------------------------------------------------------------------------
 // Vertex types
 
-/// The actual vertex data type
+/// The actual vertex data type in `anf_gfx::batcher`
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct ColoredVertexData {
     /// Destination position in pixels
-    ///
-    /// * TODO: isn't it normalized?
-    pub dest: Vec3f, // TODO: use 2D dest vec
+    pub dest: Vec3f,
     pub color: fna3d::Color,
-    /// Normalized source position in texture (a.k.a. texture coordinates or texels)
+    /// Normalized source position in texture (also known as texture coordinates or texels)
     pub uvs: Vec2f,
 }
 
-/// The actual quadliteral data type
-pub type QuadData = [ColoredVertexData; 4];
+/// The actual quadliteral data type in `anf_gfx::batcher`
+///
+/// This is actually an array of [`ColoredVertexData`], however, we need to wrap it with a newtype
+/// struct so that we can implement `QuadData` (because we can't implemenet traits for arrays).
+#[derive(Clone, Debug, Default)]
+pub struct QuadData([ColoredVertexData; 4]);
+
+impl std::ops::Deref for QuadData {
+    type Target = [ColoredVertexData; 4];
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for QuadData {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 // mark them as data that can be set to vertex buffer in GPU memory
-impl crate::gfx::buffers::VertexData for QuadData {}
-impl crate::gfx::buffers::VertexData for ColoredVertexData {}
+impl fna3d_hie::buffers::VertexData for ColoredVertexData {}
+impl fna3d_hie::buffers::VertexData for QuadData {}
 
 impl Default for ColoredVertexData {
     fn default() -> Self {
@@ -87,47 +102,23 @@ impl ColoredVertexData {
     }
 }
 
-/// Vertex/index buffer based on the `bufspecs` types and constants
-///
-/// # Immutability of `IndexBuffer`
-///
-/// Our `IndexBuffer` is only for drawing quadliterals and it won't be modified after this
-/// initialization:
-///
-/// ```
-/// use anf::gfx::batcher::bufspecs::{MAX_INDICES, MAX_QUADS};
-///
-/// let mut indices = [0; MAX_INDICES];
-/// // for each quadliteral, we need two triangles (i.e. four verices and six indices)
-/// for n in 0..MAX_QUADS as i16 {
-///     let (i, v) = (n * 6, n * 4);
-///     indices[i as usize] = v as i16;
-///     indices[(i + 1) as usize] = v + 1 as i16;
-///     indices[(i + 2) as usize] = v + 2 as i16;
-///     indices[(i + 3) as usize] = v + 3 as i16;
-///     indices[(i + 4) as usize] = v + 2 as i16;
-///     indices[(i + 5) as usize] = v + 1 as i16;
-/// }
-/// ```
+/// GPU vertex/index buffer handle specific for `anf_gfx::batcher`
 #[derive(Debug)]
-pub struct ViBuffer {
-    pub vbuf: DynamicVertexBuffer,
-    pub ibuf: IndexBuffer,
+pub struct GpuViBuffer {
+    pub vbuf: GpuDynamicVertexBuffer,
+    pub ibuf: GpuIndexBuffer,
 }
 
-impl ViBuffer {
+impl GpuViBuffer {
     pub fn from_device(device: &mut fna3d::Device) -> Self {
-        // let mut device = fna3d::Device::from_params(&mut params, true);
-        // device.reset_backbuffer(&mut params);
-
-        let vbuf = DynamicVertexBuffer::new(
+        let vbuf = GpuDynamicVertexBuffer::new(
             device,
             ColoredVertexData::decl(),
             self::MAX_VERTICES as u32,
             fna3d::BufferUsage::WriteOnly,
         );
 
-        let mut ibuf = IndexBuffer::new(
+        let mut ibuf = GpuIndexBuffer::new(
             device,
             self::INDEX_ELEM_SIZE,
             self::MAX_INDICES as u32,
@@ -135,9 +126,9 @@ impl ViBuffer {
             false,
         );
 
-        ibuf.set_data(device, 0, &Self::gen_index_array());
+        ibuf.upload_indices(device, 0, &Self::gen_index_array());
 
-        ViBuffer { vbuf, ibuf }
+        GpuViBuffer { vbuf, ibuf }
     }
 
     fn gen_index_array() -> [i16; self::MAX_INDICES] {

@@ -4,8 +4,15 @@ version = "0.1.0"
 authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
+[workspace]
+members = ["crates/anf_gfx", "crates/fna3d_hie"]
+exclude = ["crates/rust-fna3d"]
+
 [dependencies]
-fna3d = { path = "./rust-fna3d/fna3d" }
-sdl2 = "0.34.2"
-log = "0.4.8"
-stb_image = "0.2.2"
+anf_gfx = { path = "crates/anf_gfx" }
+fna3d = { path = "crates/rust-fna3d/fna3d" }
+fna3d_hie = { path = "crates/fna3d_hie" }
+sdl2 = "0.34.3"
+
+log = "0.4.11"
+env_logger = "0.7.1"

@@ -1,14 +1,30 @@
-//! ANF is a 2D framework powered by FNA3D
+//! ANF is a 2D framework powered by SDL & FNA3D
 //!
-//! See the [`app`] module or [examples] to get started.
+//! See the [`game`] or [examples] to get started. Note that ANF is **very much a work in
+//! progress**.
 //!
-//! [my roguelike game development]: https://github/toyboot4e/rlbox
-//! [`app`]: ./app.index.html
+//! # Restrictions
+//!
+//! I could do more buuuut since I'm a goblin, ANF is:
+//!
+//! * feature-poor
+//! * desktop only
+//! * one window, single-threaded rendering
+//!
+//! Note that SDL2 and FNA3D have much more potencial.
+//!
 //! [examples]: https://github/toyboot4e/anf/examples
 
 pub use fna3d;
-// pub use sdl2;
+pub use sdl2;
 
-pub mod app;
+// pub use fna3d_hie;
+// pub use anf_lib;
+// pub use anf_gfx;
+
+pub mod game;
 pub mod gfx;
 pub mod vfs;
+
+/// for `examples/`. FIXME: delete this
+pub use env_logger;

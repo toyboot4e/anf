@@ -1,14 +1,16 @@
 //! 2D texture
 
-use std::os::raw::c_void;
+use std::{
+    fs::File,
+    io::{BufReader, Read, Seek},
+    os::raw::c_void,
+};
 
-/// A 2D texture handle with some metadata
+/// 2D texture handle with some metadata
 ///
-/// * TODO: `Rc`? lifetime?
+/// # Safety
 ///
-/// # Lacking features
-///
-/// * mipmap
+/// `Texture2D` does NOT guarantee if it's still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture2D {
     raw: *mut fna3d::Texture,
@@ -95,21 +97,34 @@ impl Texture2D {
         device: &mut fna3d::Device,
         path: impl AsRef<std::path::Path>,
     ) -> Option<Self> {
-        let (pixels_ptr, len, [w, h]) = fna3d::img::from_path(path, None);
+        let path = path.as_ref();
+        let reader = File::open(path)
+            .ok()
+            .unwrap_or_else(|| panic!("failed to open file {}", path.display()));
+        let reader = BufReader::new(reader); // FIXME: is this good?
+        Self::from_reader(device, reader)
+    }
+
+    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, reader: R) -> Option<Self> {
+        let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
+
         if pixels_ptr == std::ptr::null_mut() {
             return None;
         }
 
         let texture = {
-            let mut t = Self::with_size(device, w, h);
             let pixels_slice = unsafe { std::slice::from_raw_parts(pixels_ptr, len as usize) };
-            t.set_data(device, 0, None, pixels_slice);
-            t
+            Self::from_pixels(device, pixels_slice, w, h)
         };
 
         fna3d::img::free(pixels_ptr as *mut _);
-
         return Some(texture);
+    }
+
+    pub fn from_pixels(device: &mut fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+        let mut t = Self::with_size(device, w, h);
+        t.set_data(device, 0, None, pixels);
+        t
     }
 
     /// Sets texture data on GPU memory
@@ -141,5 +156,20 @@ impl Texture2D {
             data as *const [u8] as *mut c_void,
             data.len() as u32,
         );
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct SubTexture2D {
+    pub texture: Texture2D,
+    pub uv_rect: [f32; 4],
+}
+
+impl SubTexture2D {
+    pub fn new(texture: Texture2D, uv_rect: impl Into<[f32; 4]>) -> Self {
+        Self {
+            texture,
+            uv_rect: uv_rect.into(),
+        }
     }
 }

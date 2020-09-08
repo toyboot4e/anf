@@ -1,0 +1,120 @@
+//! [`SpriteBatch`] and iterator of it
+
+use crate::batcher::bufspecs::{QuadData, MAX_QUADS};
+
+/// Sprite batch data
+///
+/// Sprites are technically textured quadliterals.
+#[derive(Debug)]
+pub struct SpriteBatch {
+    pub quads: Vec<QuadData>,
+    pub raw_texture_track: Vec<*mut fna3d::Texture>,
+    pub n_quads: usize,
+}
+
+impl SpriteBatch {
+    pub fn new() -> Self {
+        let v = vec![QuadData::default(); MAX_QUADS];
+        let t = vec![std::ptr::null_mut(); MAX_QUADS];
+
+        SpriteBatch {
+            quads: v,
+            raw_texture_track: t,
+            n_quads: 0,
+        }
+    }
+
+    pub fn iter(&self) -> SpriteDrawCallIter<'_> {
+        SpriteDrawCallIter {
+            batch: self,
+            current: 0,
+            quad_count: 0,
+        }
+    }
+}
+
+/// Slices [`SpriteBatch`] into [`SpriteDrawCall`]
+#[derive(Debug)]
+pub struct SpriteDrawCallIter<'a> {
+    batch: &'a SpriteBatch,
+    current: usize,
+    quad_count: usize,
+}
+
+impl<'a> Iterator for SpriteDrawCallIter<'a> {
+    type Item = SpriteDrawCall<'a>;
+
+    fn next(&mut self) -> Option<SpriteDrawCall<'a>> {
+        if self.current >= self.batch.n_quads {
+            return None;
+        }
+
+        self.quad_count += 1; // current quad count is `self.quad_count - 1`
+
+        let lo = self.current;
+        for hi in 1..self.batch.n_quads {
+            if &self.batch.raw_texture_track[hi] == &self.batch.raw_texture_track[lo] {
+                continue;
+            }
+
+            // we found different texture
+            self.current = hi;
+            return Some(SpriteDrawCall {
+                span: BatchSpan { lo, hi },
+                batch: self.batch,
+            });
+        }
+
+        let hi = self.batch.n_quads;
+        self.current = hi;
+        return Some(SpriteDrawCall {
+            span: BatchSpan { lo, hi },
+            batch: self.batch,
+        });
+    }
+}
+
+/// Smart span of [`SpriteBatch`]
+#[derive(Debug)]
+pub struct SpriteDrawCall<'a> {
+    span: BatchSpan,
+    batch: &'a SpriteBatch,
+}
+
+impl<'a> SpriteDrawCall<'a> {
+    pub fn texture(&self) -> *mut fna3d::Texture {
+        self.batch.raw_texture_track[self.span.lo]
+    }
+
+    pub fn base_vertex(&self) -> usize {
+        self.span.lo * 4 // each quad has four vertices
+    }
+
+    pub fn base_index(&self) -> usize {
+        self.span.lo * 6
+    }
+
+    pub fn n_primitives(&self) -> usize {
+        self.span.len() * 2
+    }
+}
+
+/// [`lo`, `hi`) span of quadliterals in [`SpriteBatch`] for making a draw call
+///
+/// Note that `lo` multipled by 2 is the base vertex index because we're counting quadliterals.
+#[derive(Debug)]
+struct BatchSpan {
+    /// low (inclusive)
+    pub lo: usize,
+    /// high (exclusive)
+    pub hi: usize,
+}
+
+impl BatchSpan {
+    /// Corresponds to the number of sprites to draw
+    ///
+    /// `len` multipled by 2 is the number of triangles
+    pub fn len(&self) -> usize {
+        self.hi - self.lo
+    }
+}

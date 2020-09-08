@@ -1,4 +1,4 @@
-//! Virtual file system
+//! Virtual file system, the asset manager
 //!
 //! It just locates the root; it's not so much a file system (for now).
 
