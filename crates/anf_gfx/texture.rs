@@ -158,3 +158,18 @@ impl Texture2D {
         );
     }
 }
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct SubTexture2D {
+    pub texture: Texture2D,
+    pub uv_rect: [f32; 4],
+}
+
+impl SubTexture2D {
+    pub fn new(texture: Texture2D, uv_rect: impl Into<[f32; 4]>) -> Self {
+        Self {
+            texture,
+            uv_rect: uv_rect.into(),
+        }
+    }
+}

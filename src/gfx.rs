@@ -4,15 +4,15 @@
 //!
 //! # Example
 //!
-//! We pull [`SpritePushCommand`] from [`BatchPass`], [`BatchPass`] from [`DrawContext`]:
+//! We pull [`QuadPushCommand`] from [`BatchPass`], [`BatchPass`] from [`DrawContext`]:
 //!
 //! ```no_run
-//! use anf::gfx::{DrawContext, Texture2D};
+//! use anf::gfx::{DrawContext, prelude::*, Texture2D};
 //!
 //! fn example_rendering(dcx: &mut DrawContext, tx: &Texture2D) {
 //!     let mut pass = dcx.pass(); // batch pass
-//!     pass.cmd().dest_pos_px(100.0, 100.0).push_tx(&tx); // push texture
-//!     pass.cmd().dest_pos_px(100.0, 400.0).push_tx(&tx);
+//!     pass.cmd().dest_pos_px([100.0, 100.0]).texture(tx).run(); // push texture
+//!     pass.cmd().dest_pos_px([100.0, 400.0]).texture(tx).run();
 //! }
 //! ```
 //!
@@ -20,15 +20,22 @@
 //!
 //! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
-pub use anf_gfx::texture::Texture2D;
+pub use anf_gfx::texture::{SubTexture2D, Texture2D};
 
-use anf_gfx::batcher::{
-    bufspecs::ColoredVertexData, primitives::*, Batcher, DrawPolicy, SpritePush,
+use anf_gfx::{
+    batcher::{bufspecs::ColoredVertexData, primitives::*, Batcher},
+    cmd::{prelude::*, QuadPush, SpritePushCommand},
 };
+
 use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
 use std::path::Path;
+
+pub mod prelude {
+    //! Exports traits to put in scope
+    pub use anf_gfx::cmd::prelude::*;
+}
 
 /// Clears the frame buffer, that is, the screen
 pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
@@ -44,7 +51,7 @@ pub struct DrawContext {
     batcher: Batcher,
     pipe: Pipeline,
     /// Buffer that reduces allocation
-    push: SpritePush,
+    push: QuadPush,
 }
 
 impl DrawContext {
@@ -55,7 +62,7 @@ impl DrawContext {
             device,
             batcher,
             pipe,
-            push: SpritePush::default(),
+            push: QuadPush::default(),
         }
     }
 }
@@ -85,14 +92,15 @@ impl<'a> BatchPass<'a> {
         Self { dcx }
     }
 
-    /// `SpritePushCommand`
+    /// [`QuadPush`] command
     pub fn cmd(&mut self) -> SpritePushCommand<'_> {
         self.dcx.push.reset_to_defaults();
 
         SpritePushCommand {
-            dcx: self.dcx,
+            push: &mut self.dcx.push,
+            batch: &mut self.dcx.batcher.batch,
             policy: DrawPolicy { do_round: false },
-            effects: 0,
+            flips: Flips::None,
         }
     }
 }
@@ -102,77 +110,5 @@ impl<'a> Drop for BatchPass<'a> {
         self.dcx
             .batcher
             .end(&mut self.dcx.device, &mut self.dcx.pipe);
-    }
-}
-
-/// Quads with color, rotation and skews
-pub struct SpritePushCommand<'a> {
-    dcx: &'a mut DrawContext,
-    policy: DrawPolicy,
-    effects: u8,
-}
-
-impl<'a> SpritePushCommand<'a> {
-    /// Push texture!
-    ///
-    /// Or sprite. Technically, a sprite is textured quadliterals.
-    pub fn push_tx(&mut self, texture: &Texture2D) {
-        self.dcx.push.push(
-            &mut self.dcx.batcher.batch,
-            texture,
-            self.policy,
-            self.effects,
-        );
-    }
-}
-
-/// Builder
-impl<'a> SpritePushCommand<'a> {
-    #[inline]
-    fn data(&mut self) -> &mut SpritePush {
-        &mut self.dcx.push
-    }
-
-    /// In pixels (automatically normalized)
-    pub fn src_rect(&mut self, x: f32, y: f32, w: f32, h: f32) -> &mut Self {
-        self.data().src_rect = Rect2f { x, y, w, h };
-        self
-    }
-
-    pub fn dest_pos_px(&mut self, x: f32, y: f32) -> &mut Self {
-        let data = self.data();
-        data.dest_rect.x = x;
-        data.dest_rect.y = y;
-
-        self
-    }
-
-    pub fn dest_size_px(&mut self, w: f32, h: f32) -> &mut Self {
-        let data = self.data();
-        data.is_dest_size_in_pixels = true;
-        data.dest_rect.w = w;
-        data.dest_rect.h = h;
-
-        self
-    }
-
-    pub fn dest_rect_px(&mut self, xs: impl Into<[f32; 4]>) -> &mut Self {
-        let xs = xs.into();
-
-        let data = self.data();
-        data.is_dest_size_in_pixels = true;
-        data.dest_rect = Rect2f {
-            x: xs[0],
-            y: xs[1],
-            w: xs[2],
-            h: xs[3],
-        };
-
-        self
-    }
-
-    pub fn color(&mut self, color: fna3d::Color) -> &mut Self {
-        self.data().color = color;
-        self
     }
 }

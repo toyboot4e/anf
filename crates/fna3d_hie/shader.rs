@@ -26,6 +26,7 @@ impl Shader {
     }
 
     pub fn destroy(self, device: &mut fna3d::Device) {
+        // both (effect, data) are destroied:
         device.add_dispose_effect(self.effect);
     }
 }

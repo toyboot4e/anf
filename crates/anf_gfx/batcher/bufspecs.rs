@@ -28,11 +28,9 @@ pub const MAX_INDICES: usize = MAX_QUADS * 6;
 #[repr(C)]
 pub struct ColoredVertexData {
     /// Destination position in pixels
-    ///
-    /// * TODO: isn't it normalized?
-    pub dest: Vec3f, // TODO: use 2D dest vec
+    pub dest: Vec3f,
     pub color: fna3d::Color,
-    /// Normalized source position in texture (a.k.a. texture coordinates or texels)
+    /// Normalized source position in texture (also known as texture coordinates or texels)
     pub uvs: Vec2f,
 }
 
