@@ -1,4 +1,6 @@
 //! Geometry primitives
+//!
+//! Vectors and rectangles can be converted from/to arrays.
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]

@@ -88,6 +88,27 @@ impl Texture2D {
             TextureKind::Texture,
         )
     }
+
+    pub fn trim_px(self, rect: impl Into<[u32; 4]>) -> SubTexture2D {
+        let rect = rect.into();
+        let uv_rect = [
+            rect[0] as f32 / self.w as f32,
+            rect[1] as f32 / self.h as f32,
+            rect[2] as f32 / self.w as f32,
+            rect[3] as f32 / self.h as f32,
+        ];
+        SubTexture2D {
+            texture: self,
+            uv_rect,
+        }
+    }
+
+    pub fn trim_uv(self, uv_rect: impl Into<[f32; 4]>) -> SubTexture2D {
+        SubTexture2D {
+            texture: self,
+            uv_rect: uv_rect.into(),
+        }
+    }
 }
 
 /// Texture loading methods
@@ -159,6 +180,11 @@ impl Texture2D {
     }
 }
 
+/// A 2D texture handle with some metadata
+///
+/// # Safety
+///
+/// `Texture2D` does NOT guarantee if it's still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
 pub struct SubTexture2D {
     pub texture: Texture2D,
@@ -171,5 +197,11 @@ impl SubTexture2D {
             texture,
             uv_rect: uv_rect.into(),
         }
+    }
+}
+
+impl AsRef<Texture2D> for SubTexture2D {
+    fn as_ref(&self) -> &Texture2D {
+        &self.texture
     }
 }

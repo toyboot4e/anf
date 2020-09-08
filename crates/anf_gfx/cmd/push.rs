@@ -42,13 +42,10 @@ impl<T> Scaled<T> {
 }
 
 // --------------------------------------------------------------------------------
-// traits
+// traits (impls are in
 
-pub trait RawTexture {
+pub trait SizedTexture {
     fn raw_texture(&self) -> *mut fna3d::Texture;
-}
-
-pub trait SizedTexture: RawTexture {
     /// Pixel
     fn w(&self) -> f32;
     /// Pixel
@@ -183,7 +180,7 @@ impl QuadPush {
 #[inline]
 fn push_sized_texture(
     batch: &mut SpriteBatch,
-    texture: &impl RawTexture,
+    texture: &impl SizedTexture,
     origin: Vec2f,
     src_rect: Rect2f,
     dest_rect: Rect2f,

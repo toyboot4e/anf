@@ -40,6 +40,7 @@
 //! [examples]: https://github.com/toyboot4e/anf/examples
 
 pub mod app;
+pub mod input;
 
 use crate::{gfx::DrawContext, vfs};
 use app::{App, SdlWindowHandle};
@@ -56,8 +57,12 @@ pub trait GameState {
 /// Return type of [`GameLoop::run`]
 pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
+pub fn run_game<T: GameState>(app: App, state: T) -> GameResult {
+    GameLoop::new(state, app).run()
+}
+
 /// Does everything after window creation
-pub struct GameLoop<T: GameState> {
+struct GameLoop<T: GameState> {
     dcx: DrawContext,
     state: T,
     win: SdlWindowHandle,
@@ -66,10 +71,6 @@ pub struct GameLoop<T: GameState> {
 /// Device initialization
 /// ---
 impl<T: GameState> GameLoop<T> {
-    pub fn run_app(app: App, state: T) -> GameResult {
-        Self::new(state, app).run()
-    }
-
     fn new(state: T, mut src: App) -> Self {
         self::init_device(&mut src.device, &src.params);
         GameLoop {
@@ -154,11 +155,10 @@ impl<T: GameState> GameLoop<T> {
     /// Just quits on `Escape` key down for now
     fn handle_event(&mut self, ev: &Event) -> UpdateResult {
         match ev {
-            Event::Quit { .. }
-            | Event::KeyDown {
-                keycode: Some(Keycode::Escape),
-                ..
-            } => UpdateResult::Quit,
+            Event::Quit { .. } => UpdateResult::Quit,
+            Event::KeyDown {
+                keycode, repeat, ..
+            } => UpdateResult::Continue,
             _ => UpdateResult::Continue,
         }
     }

@@ -5,19 +5,17 @@ use crate::{
     texture::{SubTexture2D, Texture2D},
 };
 
-impl RawTexture for *mut fna3d::Texture {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
-        self.clone()
-    }
+pub trait SubTexture: SizedTexture {
+    /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
+    fn uv_rect(&self) -> [f32; 4];
 }
 
-impl RawTexture for &Texture2D {
+// Texture2D
+impl SizedTexture for Texture2D {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         self.raw()
     }
-}
 
-impl SizedTexture for &Texture2D {
     fn w(&self) -> f32 {
         self.w as f32
     }
@@ -27,14 +25,51 @@ impl SizedTexture for &Texture2D {
     }
 }
 
-pub trait SubTexture: SizedTexture {
-    /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
-    fn uv_rect(&self) -> [f32; 4];
-}
-
-impl SubTexture for &crate::texture::Texture2D {
+impl SubTexture for Texture2D {
     fn uv_rect(&self) -> [f32; 4] {
         [0.0, 0.0, 1.0, 1.0]
+    }
+}
+
+// SubTexture2D (delegated to `Texture2D`) (TODO: automate?)
+impl SizedTexture for SubTexture2D {
+    fn raw_texture(&self) -> *mut fna3d::Texture {
+        self.texture.raw()
+    }
+
+    fn w(&self) -> f32 {
+        self.texture.w()
+    }
+
+    fn h(&self) -> f32 {
+        self.texture.h()
+    }
+}
+
+impl SubTexture for SubTexture2D {
+    fn uv_rect(&self) -> [f32; 4] {
+        self.uv_rect
+    }
+}
+
+// reference types
+impl<T: SizedTexture> SizedTexture for &T {
+    fn raw_texture(&self) -> *mut fna3d::Texture {
+        (*self).raw_texture()
+    }
+
+    fn w(&self) -> f32 {
+        (*self).w()
+    }
+
+    fn h(&self) -> f32 {
+        (*self).h()
+    }
+}
+
+impl<T: SubTexture> SubTexture for &T {
+    fn uv_rect(&self) -> [f32; 4] {
+        (*self).uv_rect()
     }
 }
 
