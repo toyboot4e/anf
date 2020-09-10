@@ -52,6 +52,7 @@ pub trait GameState {
     fn update(&mut self) {}
     #[allow(unused_variables)]
     fn render(&mut self, dcx: &mut DrawContext) {}
+    fn listen_event(&mut self, ev: &Event) {}
 }
 
 /// Return type of [`GameLoop::run`]
@@ -156,10 +157,10 @@ impl<T: GameState> GameLoop<T> {
     fn handle_event(&mut self, ev: &Event) -> UpdateResult {
         match ev {
             Event::Quit { .. } => UpdateResult::Quit,
-            Event::KeyDown {
-                keycode, repeat, ..
-            } => UpdateResult::Continue,
-            _ => UpdateResult::Continue,
+            ev => {
+                self.state.listen_event(&ev);
+                UpdateResult::Continue
+            }
         }
     }
 }

@@ -2,16 +2,26 @@ use crate::{
     batcher::batch::SpriteBatch,
     cmd::push::*,
     geom::*,
-    texture::{SubTexture2D, Texture2D},
+    texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
 
-pub trait SubTexture: SizedTexture {
+pub trait SubTexture: Texture2D {
     /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
     fn uv_rect(&self) -> [f32; 4];
 }
 
-// Texture2D
-impl SizedTexture for Texture2D {
+pub trait Sprite: SubTexture {
+    fn rot(&self) -> f32;
+    fn scale(&self) -> [f32; 2];
+}
+
+// --------------------------------------------------------------------------------
+// impls
+
+// TODO: share implementations?
+
+// TextureData2D
+impl Texture2D for TextureData2D {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         self.raw()
     }
@@ -25,14 +35,14 @@ impl SizedTexture for Texture2D {
     }
 }
 
-impl SubTexture for Texture2D {
+impl SubTexture for TextureData2D {
     fn uv_rect(&self) -> [f32; 4] {
         [0.0, 0.0, 1.0, 1.0]
     }
 }
 
-// SubTexture2D (delegated to `Texture2D`) (TODO: automate?)
-impl SizedTexture for SubTexture2D {
+// SubTextureData2D (delegated to `Texture2D`)
+impl Texture2D for SubTextureData2D {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         self.texture.raw()
     }
@@ -46,14 +56,35 @@ impl SizedTexture for SubTexture2D {
     }
 }
 
-impl SubTexture for SubTexture2D {
+impl SubTexture for SubTextureData2D {
     fn uv_rect(&self) -> [f32; 4] {
         self.uv_rect
     }
 }
 
-// reference types
-impl<T: SizedTexture> SizedTexture for &T {
+// Sprite (delegated to `TextureData2D`)
+impl Texture2D for SpriteData {
+    fn raw_texture(&self) -> *mut fna3d::Texture {
+        self.sub_tex.raw_texture()
+    }
+
+    fn w(&self) -> f32 {
+        self.sub_tex.w()
+    }
+
+    fn h(&self) -> f32 {
+        self.sub_tex.h()
+    }
+}
+
+impl SubTexture for SpriteData {
+    fn uv_rect(&self) -> [f32; 4] {
+        self.sub_tex.uv_rect()
+    }
+}
+
+// implementations for reference types
+impl<T: Texture2D> Texture2D for &T {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         (*self).raw_texture()
     }
@@ -73,8 +104,12 @@ impl<T: SubTexture> SubTexture for &T {
     }
 }
 
-/// Default implementation of `SpritePush` builder
+// --------------------------------------------------------------------------------
+// push
+
+/// [`SpritePushCommand`] builder
 pub trait PushGeometryBuilder {
+    /// This is mainly for default implementations, but it can be used to modify [`QuadPush`] manually
     fn data(&mut self) -> &mut QuadPush;
 
     fn src_rect_normalized(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
@@ -153,28 +188,40 @@ impl<'a, 'b> SpritePushCommand<'b> {
 
         SizedTexturePush { cmd: self, texture }
     }
+
+    /// Sets sprite
+    pub fn sprite<T: Sprite>(&'a mut self, sprite: T) -> SizedTexturePush<'a, 'b, T> {
+        self.src_rect_normalized(sprite.uv_rect());
+        let scale = sprite.scale();
+        self.dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]]);
+        self.data().rot = sprite.rot();
+
+        SizedTexturePush {
+            cmd: self,
+            texture: sprite,
+        }
+    }
 }
 
-// QuadPush with SizedTexture
-
-pub struct SizedTexturePush<'a, 'b, T: SizedTexture> {
+/// Handle to push quads with a texture
+pub struct SizedTexturePush<'a, 'b, T: Texture2D> {
     cmd: &'a mut SpritePushCommand<'b>,
     texture: T,
 }
 
-impl<'a, 'b, T: SizedTexture> PushGeometryBuilder for SizedTexturePush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> PushGeometryBuilder for SizedTexturePush<'a, 'b, T> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.cmd.push
     }
 }
 
-impl<'a, 'b, T: SizedTexture> Drop for SizedTexturePush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> Drop for SizedTexturePush<'a, 'b, T> {
     fn drop(&mut self) {
         self.run();
     }
 }
 
-impl<'a, 'b, T: SizedTexture> SizedTexturePush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> SizedTexturePush<'a, 'b, T> {
     fn run(&mut self) {
         // log::info!("{:?}", self.cmd.push);
         self.cmd.push.run_sized_texture(

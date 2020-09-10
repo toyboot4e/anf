@@ -6,17 +6,19 @@ use std::{
     os::raw::c_void,
 };
 
+use crate::geom::Flips;
+
 /// 2D texture handle with some metadata
 ///
 /// # Safety
 ///
-/// `Texture2D` does NOT guarantee if it's still alive because it's using a pointer.
+/// `TextureData2D` does NOT guarantee if it's still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
-pub struct Texture2D {
+pub struct TextureData2D {
     raw: *mut fna3d::Texture,
-    pub w: u32,
-    pub h: u32,
-    pub fmt: fna3d::SurfaceFormat,
+    pub(crate) w: u32,
+    pub(crate) h: u32,
+    pub(crate) fmt: fna3d::SurfaceFormat,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -51,7 +53,7 @@ fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::Surfa
     }
 }
 
-impl Texture2D {
+impl TextureData2D {
     pub fn raw(&self) -> *mut fna3d::Texture {
         self.raw
     }
@@ -89,7 +91,7 @@ impl Texture2D {
         )
     }
 
-    pub fn trim_px(self, rect: impl Into<[u32; 4]>) -> SubTexture2D {
+    pub fn trim_px(self, rect: impl Into<[u32; 4]>) -> SubTextureData2D {
         let rect = rect.into();
         let uv_rect = [
             rect[0] as f32 / self.w as f32,
@@ -97,14 +99,14 @@ impl Texture2D {
             rect[2] as f32 / self.w as f32,
             rect[3] as f32 / self.h as f32,
         ];
-        SubTexture2D {
+        SubTextureData2D {
             texture: self,
             uv_rect,
         }
     }
 
-    pub fn trim_uv(self, uv_rect: impl Into<[f32; 4]>) -> SubTexture2D {
-        SubTexture2D {
+    pub fn trim_uv(self, uv_rect: impl Into<[f32; 4]>) -> SubTextureData2D {
+        SubTextureData2D {
             texture: self,
             uv_rect: uv_rect.into(),
         }
@@ -113,7 +115,7 @@ impl Texture2D {
 
 /// Texture loading methods
 /// ---
-impl Texture2D {
+impl TextureData2D {
     pub fn from_path(
         device: &mut fna3d::Device,
         path: impl AsRef<std::path::Path>,
@@ -180,19 +182,19 @@ impl Texture2D {
     }
 }
 
-/// A 2D texture handle with some metadata
+/// Region of a 2D texture handle
 ///
 /// # Safety
 ///
-/// `Texture2D` does NOT guarantee if it's still alive because it's using a pointer.
+/// `TextureData2D` does NOT guarantee if it's still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
-pub struct SubTexture2D {
-    pub texture: Texture2D,
-    pub uv_rect: [f32; 4],
+pub struct SubTextureData2D {
+    pub(crate) texture: TextureData2D,
+    pub(crate) uv_rect: [f32; 4],
 }
 
-impl SubTexture2D {
-    pub fn new(texture: Texture2D, uv_rect: impl Into<[f32; 4]>) -> Self {
+impl SubTextureData2D {
+    pub fn new(texture: TextureData2D, uv_rect: impl Into<[f32; 4]>) -> Self {
         Self {
             texture,
             uv_rect: uv_rect.into(),
@@ -200,8 +202,17 @@ impl SubTexture2D {
     }
 }
 
-impl AsRef<Texture2D> for SubTexture2D {
-    fn as_ref(&self) -> &Texture2D {
+impl AsRef<TextureData2D> for SubTextureData2D {
+    fn as_ref(&self) -> &TextureData2D {
         &self.texture
     }
+}
+
+/// A full-featured 2D texture handle
+pub struct SpriteData {
+    pub(crate) sub_tex: SubTextureData2D,
+    pub(crate) scale: [f32; 2],
+    /// Radian
+    pub(crate) rot: f32,
+    pub(crate) flips: Flips,
 }

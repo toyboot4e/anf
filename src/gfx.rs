@@ -20,7 +20,7 @@
 //!
 //! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
-pub use anf_gfx::texture::{SubTexture2D, Texture2D};
+pub use anf_gfx::texture::{SpriteData, SubTextureData2D, TextureData2D};
 
 pub mod prelude {
     //! [`DrawContext`] and traits to push sprites

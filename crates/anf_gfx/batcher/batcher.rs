@@ -49,7 +49,7 @@ impl Batcher {
             return;
         }
         self.is_begin_called = false;
-        if self.batch.n_quads == 0 {
+        if !self.batch.any_quads_pushed() {
             return;
         }
 
@@ -57,7 +57,7 @@ impl Batcher {
     }
 
     fn flush_impl(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
-        // blend, sampler, depth/stencil, rasterizer
+        // Material (blend, sampler, depth/stencil, rasterizer)
         // viewport, scissors rect
 
         // pipe.shader.apply_uniforms();
@@ -67,7 +67,7 @@ impl Batcher {
             Self::make_draw_call(device, pipe, &mut self.bufs, call);
         }
 
-        self.batch.n_quads = 0;
+        self.batch.clear();
     }
 }
 
@@ -77,7 +77,7 @@ impl Batcher {
     /// Copies vertex data from CPU to GPU ([`SpriteBatch::vertex_data`] to [`VertexBuffer`])
     fn upload_vertices(&mut self, device: &mut fna3d::Device) {
         let offset = 0;
-        let data = &mut self.batch.quads[0..self.batch.n_quads];
+        let data = &mut self.batch.quads_to_upload_to_gpu();
         self.bufs
             .vbuf
             .upload_vertices(device, offset, data, fna3d::SetDataOptions::None);

@@ -2,8 +2,8 @@ mod push;
 mod push_cmd;
 
 pub mod prelude {
-    pub use crate::cmd::push::{DrawPolicy, QuadPush, SizedTexture};
-    pub use crate::cmd::push_cmd::{PushGeometryBuilder, SubTexture};
+    pub use crate::cmd::push::{DrawPolicy, QuadPush, Texture2D};
+    pub use crate::cmd::push_cmd::{PushGeometryBuilder, Sprite, SubTexture};
 }
 
 pub use push::QuadPush;

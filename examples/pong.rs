@@ -1,13 +1,15 @@
 use anf::fna3d;
+use anf::sdl2::event::Event;
 use anf::{
     game::{
         app::{App, AppConfig},
+        input::Input,
         run_game, GameResult, GameState,
     },
     gfx::{
         geom::{Rect2f, Vec2f},
         prelude::*,
-        SubTexture2D, Texture2D,
+        SubTextureData2D, TextureData2D,
     },
     vfs,
 };
@@ -15,8 +17,9 @@ use anf::{
 // --------------------------------------------------------------------------------
 // game data
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct PongGameData {
+    input: Input,
     entities: Entities,
     textures: Textures,
 }
@@ -32,14 +35,15 @@ fn new_game(device: &mut fna3d::Device) -> PongGameData {
         vel: [0.0, 0.0].into(),
     };
 
-    let paddle = Texture2D::from_path(device, vfs::path("pong/paddle.png")).unwrap();
+    let paddle = TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap();
     let paddle = paddle.trim_px([0, 0, 90, 288]);
     let textures = Textures {
         paddle,
-        ball: Texture2D::from_path(device, vfs::path("pong/paddle.png")).unwrap(),
+        ball: TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap(),
     };
 
     PongGameData {
+        input: Input::new(),
         entities: Entities {
             left,
             right,
@@ -65,12 +69,16 @@ impl GameState for PongGameData {
             .dest_pos_px(&self.entities.right.pos)
             .texture(&self.textures.paddle);
     }
+
+    fn listen_event(&mut self, ev: &Event) {
+        //
+    }
 }
 
 #[derive(Debug, Clone)]
 struct Textures {
-    paddle: SubTexture2D,
-    ball: Texture2D,
+    paddle: SubTextureData2D,
+    ball: TextureData2D,
 }
 
 #[derive(Debug, Clone, Default)]

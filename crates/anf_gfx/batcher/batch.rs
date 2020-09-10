@@ -7,9 +7,10 @@ use crate::batcher::bufspecs::{QuadData, MAX_QUADS};
 /// Sprites are technically textured quadliterals.
 #[derive(Debug)]
 pub struct SpriteBatch {
-    pub quads: Vec<QuadData>,
-    pub raw_texture_track: Vec<*mut fna3d::Texture>,
-    pub n_quads: usize,
+    quads: Vec<QuadData>,
+    // TODO: use run-length encoding
+    raw_texture_track: Vec<*mut fna3d::Texture>,
+    n_quads: usize,
 }
 
 impl SpriteBatch {
@@ -23,6 +24,23 @@ impl SpriteBatch {
             n_quads: 0,
         }
     }
+}
+
+/// For quad push
+impl SpriteBatch {
+    pub fn next_quad_mut(&mut self, texture: *mut fna3d::Texture) -> &mut QuadData {
+        self.raw_texture_track[self.n_quads] = texture;
+        let quad = &mut self.quads[self.n_quads];
+        self.n_quads += 1;
+        quad
+    }
+}
+
+/// For batcher
+impl SpriteBatch {
+    pub fn any_quads_pushed(&self) -> bool {
+        self.n_quads != 0
+    }
 
     pub fn iter(&self) -> SpriteDrawCallIter<'_> {
         SpriteDrawCallIter {
@@ -30,6 +48,15 @@ impl SpriteBatch {
             current: 0,
             quad_count: 0,
         }
+    }
+
+    pub fn quads_to_upload_to_gpu(&mut self) -> &mut [QuadData] {
+        &mut self.quads[0..self.n_quads]
+    }
+
+    /// Called after flushing
+    pub fn clear(&mut self) {
+        self.n_quads = 0;
     }
 }
 

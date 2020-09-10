@@ -18,6 +18,15 @@ pub struct DrawPolicy {
     // is_batching_disabled: bool,
 }
 
+/// Required to be drawn via [`QuadPush`]
+pub trait Texture2D {
+    fn raw_texture(&self) -> *mut fna3d::Texture;
+    /// Pixel
+    fn w(&self) -> f32;
+    /// Pixel
+    fn h(&self) -> f32;
+}
+
 #[derive(Debug, Clone, PartialEq, Default, Copy)]
 pub struct Rect2u {
     pub x: u32,
@@ -39,17 +48,6 @@ impl<T> Scaled<T> {
             Scaled::Normalized(x) => x,
         }
     }
-}
-
-// --------------------------------------------------------------------------------
-// traits (impls are in
-
-pub trait SizedTexture {
-    fn raw_texture(&self) -> *mut fna3d::Texture;
-    /// Pixel
-    fn w(&self) -> f32;
-    /// Pixel
-    fn h(&self) -> f32;
 }
 
 // --------------------------------------------------------------------------------
@@ -109,7 +107,7 @@ impl QuadPush {
     pub fn run_sized_texture(
         &self,
         batch: &mut SpriteBatch,
-        texture: &impl SizedTexture,
+        texture: &impl Texture2D,
         policy: DrawPolicy,
         flips: Flips,
     ) {
@@ -138,7 +136,7 @@ impl QuadPush {
     fn geometry_normalized(
         &self,
         policy: DrawPolicy,
-        texture: &impl SizedTexture,
+        texture: &impl Texture2D,
     ) -> (Rect2f, Rect2f) {
         let inv_tex_w = 1.0 / texture.w();
         let inv_tex_h = 1.0 / texture.h();
@@ -180,7 +178,7 @@ impl QuadPush {
 #[inline]
 fn push_sized_texture(
     batch: &mut SpriteBatch,
-    texture: &impl SizedTexture,
+    texture: &impl Texture2D,
     origin: Vec2f,
     src_rect: Rect2f,
     dest_rect: Rect2f,
@@ -190,12 +188,10 @@ fn push_sized_texture(
     depth: f32,
     flips: Flips,
 ) {
-    let quad = &mut batch.quads[batch.n_quads];
+    let quad = batch.next_quad_mut(texture.raw_texture());
     self::set_quad(
         quad, skew, origin, src_rect, dest_rect, color, rot, depth, flips,
     );
-    batch.raw_texture_track[batch.n_quads] = texture.raw_texture();
-    batch.n_quads += 1;
 }
 
 /// Normalized x offsets at top-left, top-right, bottom-left, bottom-right
