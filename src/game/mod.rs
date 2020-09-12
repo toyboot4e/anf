@@ -128,6 +128,7 @@ impl<T: GameState> GameLoop<T> {
                 match self.handle_event(&ev) {
                     UpdateResult::Quit => break 'main_loop,
                     UpdateResult::Continue => {}
+                    _ => self.state.listen_event(&ev),
                 }
             }
 

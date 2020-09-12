@@ -2,6 +2,9 @@
 //!
 //! Vectors and rectangles can be converted from/to arrays.
 
+// https://docs.rs/auto_ops/
+use auto_ops::*;
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec2f {
@@ -10,11 +13,89 @@ pub struct Vec2f {
 }
 
 impl Vec2f {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+
     pub fn round(&mut self) {
         self.x = self.x.round();
         self.y = self.y.round();
     }
 }
+
+// Vec2f, f32
+impl_op_ex!(*|lhs: &Vec2f, rhs: &f32| -> Vec2f {
+    Vec2f {
+        x: lhs.x * rhs,
+        y: lhs.y * rhs,
+    }
+});
+
+impl_op_ex!(/|lhs: &Vec2f, rhs: &f32| -> Vec2f {
+    Vec2f {
+        x: lhs.x / rhs,
+        y: lhs.y / rhs,
+    }
+});
+
+impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &f32| {
+    lhs.x *= rhs;
+    lhs.y *= rhs;
+});
+
+impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &f32| {
+    lhs.x /= rhs;
+    lhs.y /= rhs;
+});
+
+// Vec2f, Vec2f
+impl_op_ex!(+ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
+    Vec2f {
+        x: lhs.x + rhs.x,
+        y: lhs.y + rhs.y,
+    }
+});
+
+impl_op_ex!(-|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
+    Vec2f {
+        x: lhs.x - rhs.x,
+        y: lhs.y - rhs.y,
+    }
+});
+
+impl_op_ex!(*|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
+    Vec2f {
+        x: lhs.x * rhs.x,
+        y: lhs.y * rhs.y,
+    }
+});
+
+impl_op_ex!(/ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
+    Vec2f {
+        x: lhs.x / rhs.x,
+        y: lhs.y / rhs.y,
+    }
+});
+
+impl_op_ex!(+= |lhs: &mut Vec2f, rhs: &Vec2f| {
+    lhs.x += rhs.x;
+    lhs.y += rhs.y;
+});
+
+impl_op_ex!(-= |lhs: &mut Vec2f, rhs: &Vec2f| {
+    lhs.x -= rhs.x;
+    lhs.y -= rhs.y;
+});
+
+impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &Vec2f| {
+    lhs.x *= rhs.x;
+    lhs.y *= rhs.y;
+});
+
+impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &Vec2f| {
+    lhs.x /= rhs.x;
+    lhs.y /= rhs.y;
+});
 
 impl From<[f32; 2]> for Vec2f {
     fn from(xs: [f32; 2]) -> Self {
@@ -47,6 +128,98 @@ pub struct Vec3f {
     pub y: f32,
     pub z: f32,
 }
+
+impl Vec3f {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
+    }
+}
+
+// Vec3f, f32
+impl_op_ex!(*|lhs: &Vec3f, rhs: &f32| -> Vec3f {
+    Vec3f {
+        x: lhs.x * rhs,
+        y: lhs.y * rhs,
+        z: lhs.z * rhs,
+    }
+});
+
+impl_op_ex!(/|lhs: &Vec3f, rhs: &f32| -> Vec3f {
+    Vec3f {
+        x: lhs.x / rhs,
+        y: lhs.y / rhs,
+        z: lhs.z / rhs,
+    }
+});
+
+impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &f32| {
+    lhs.x *= rhs;
+    lhs.y *= rhs;
+    lhs.z *= rhs;
+});
+
+impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &f32| {
+    lhs.x /= rhs;
+    lhs.y /= rhs;
+    lhs.z /= rhs;
+});
+
+// Vec3f, Vec3f
+impl_op_ex!(+ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
+    Vec3f {
+        x: lhs.x + rhs.x,
+        y: lhs.y + rhs.y,
+        z: lhs.z + rhs.z,
+    }
+});
+
+impl_op_ex!(-|lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
+    Vec3f {
+        x: lhs.x - rhs.x,
+        y: lhs.y - rhs.y,
+        z: lhs.z - rhs.z,
+    }
+});
+
+impl_op_ex!(*|lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
+    Vec3f {
+        x: lhs.x * rhs.x,
+        y: lhs.y * rhs.y,
+        z: lhs.z * rhs.z,
+    }
+});
+
+impl_op_ex!(/ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
+    Vec3f {
+        x: lhs.x / rhs.x,
+        y: lhs.y / rhs.y,
+        z: lhs.z / rhs.z,
+    }
+});
+
+impl_op_ex!(+= |lhs: &mut Vec3f, rhs: &Vec3f| {
+    lhs.x += rhs.x;
+    lhs.y += rhs.y;
+    lhs.z += rhs.z;
+});
+
+impl_op_ex!(-= |lhs: &mut Vec3f, rhs: &Vec3f| {
+    lhs.x -= rhs.x;
+    lhs.y -= rhs.y;
+    lhs.z -= rhs.z;
+});
+
+impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &Vec3f| {
+    lhs.x *= rhs.x;
+    lhs.y *= rhs.y;
+    lhs.z *= rhs.z;
+});
+
+impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &Vec3f| {
+    lhs.x /= rhs.x;
+    lhs.y /= rhs.y;
+    lhs.z /= rhs.z;
+});
 
 /// Top-left point and size
 #[derive(Debug, Clone, PartialEq, Default)]

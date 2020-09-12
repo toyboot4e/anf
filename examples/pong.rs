@@ -3,7 +3,7 @@ use anf::sdl2::event::Event;
 use anf::{
     game::{
         app::{App, AppConfig},
-        input::Input,
+        input::{Key, Keyboard},
         run_game, GameResult, GameState,
     },
     gfx::{
@@ -19,7 +19,7 @@ use anf::{
 
 #[derive(Debug)]
 struct PongGameData {
-    input: Input,
+    input: Keyboard,
     entities: Entities,
     textures: Textures,
 }
@@ -43,7 +43,7 @@ fn new_game(device: &mut fna3d::Device) -> PongGameData {
     };
 
     PongGameData {
-        input: Input::new(),
+        input: Keyboard::new(),
         entities: Entities {
             left,
             right,
@@ -53,9 +53,27 @@ fn new_game(device: &mut fna3d::Device) -> PongGameData {
     }
 }
 
+impl PongGameData {
+    fn handle_input(&mut self) {
+        if self.input.is_key_pressed(Key::D) {
+            self.entities.left.vel += Vec2f::new(5.0, 0.0);
+            println!("pressed");
+        }
+    }
+
+    fn handle_physics(&mut self) {
+        let dt = 1.0 / 60.0; // FIXME: dt input
+        for e in &mut [&mut self.entities.left, &mut self.entities.right] {
+            e.pos += e.vel * dt;
+        }
+    }
+}
+
 impl GameState for PongGameData {
+    // TODO: delta time
     fn update(&mut self) {
-        //
+        self.handle_input();
+        self.handle_physics();
     }
 
     fn render(&mut self, dcx: &mut DrawContext) {
@@ -65,13 +83,30 @@ impl GameState for PongGameData {
         pass.cmd()
             .dest_pos_px(&self.entities.left.pos)
             .texture(&self.textures.paddle);
+
         pass.cmd()
             .dest_pos_px(&self.entities.right.pos)
             .texture(&self.textures.paddle);
+
+        self.input.on_next_frame(); // FIXME:
     }
 
     fn listen_event(&mut self, ev: &Event) {
-        //
+        match ev {
+            Event::KeyDown {
+                keycode: Some(sdl_key),
+                ..
+            } => {
+                self.input.on_key_down(*sdl_key);
+            }
+            Event::KeyUp {
+                keycode: Some(sdl_key),
+                ..
+            } => {
+                self.input.on_key_up(*sdl_key);
+            }
+            _ => {}
+        }
     }
 }
 
