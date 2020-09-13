@@ -1,18 +1,18 @@
 //! Runs user state
 
 use crate::{
-    framework::{
-        app::{App, SdlWindowHandle},
+    gfx::api::DrawContext,
+    preset::framework::{
+        app::{AnfApp, SdlWindowHandle},
         time::{GameClock, TimeStep},
     },
-    gfx::api::DrawContext,
     vfs,
 };
 use sdl2::{event::Event, EventPump};
 use std::time::Duration;
 
 /// User data driven by the ANF game loop
-pub trait GameState {
+pub trait AnfGame {
     #[allow(unused_variables)]
     fn update(&mut self, ts: TimeStep) {}
     #[allow(unused_variables)]
@@ -21,16 +21,16 @@ pub trait GameState {
     fn listen_event(&mut self, ev: &Event) {}
 }
 
-/// Runs application with user's [`GameState`]
-pub fn run_game<T: GameState>(app: App, state: T) -> GameResult {
+/// Runs application with user's [`AnfGame`]
+pub fn run_game<T: AnfGame>(app: AnfApp, state: T) -> AnfResult {
     GameLoop::new(state, app).run()
 }
 
 /// Return type of [`run_game`]
-pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;
+pub type AnfResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
-/// Drives user's [`GameState`]
-struct GameLoop<T: GameState> {
+/// Drives user's [`AnfGame`]
+struct GameLoop<T: AnfGame> {
     win: SdlWindowHandle,
     clock: GameClock,
     dcx: DrawContext,
@@ -39,8 +39,8 @@ struct GameLoop<T: GameState> {
 
 /// Device initialization
 /// ---
-impl<T: GameState> GameLoop<T> {
-    fn new(state: T, mut src: App) -> Self {
+impl<T: AnfGame> GameLoop<T> {
+    fn new(state: T, mut src: AnfApp) -> Self {
         self::init_device(&mut src.device, &src.params);
         GameLoop {
             win: src.win,
@@ -86,8 +86,8 @@ enum UpdateResult {
     Quit,
 }
 
-impl<T: GameState> GameLoop<T> {
-    fn run(mut self) -> GameResult {
+impl<T: AnfGame> GameLoop<T> {
+    fn run(mut self) -> AnfResult {
         let mut events = self.win.sdl.event_pump().unwrap();
         log::trace!("Start ANF game loop");
 

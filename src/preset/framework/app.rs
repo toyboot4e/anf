@@ -2,20 +2,20 @@
 
 use sdl2::sys::SDL_Window;
 
-/// Data to create [`App`]
+/// Data to create [`AnfApp`]
 ///
 /// It only contains initial window settings (for now).
 ///
 /// * TODO: high DPI
-pub struct AppConfig {
+pub struct AnfAppConfig {
     pub title: String,
     pub w: u32,
     pub h: u32,
 }
 
-impl AppConfig {
+impl AnfAppConfig {
     pub fn default() -> Self {
-        Self {
+        AnfAppConfig {
             title: "† ANF game †".to_string(),
             w: 1280,
             h: 720,
@@ -23,7 +23,7 @@ impl AppConfig {
     }
 }
 
-pub struct App {
+pub struct AnfApp {
     pub win: SdlWindowHandle,
     pub device: fna3d::Device,
     pub params: fna3d::PresentationParameters,
@@ -31,9 +31,9 @@ pub struct App {
 
 /// Window & device creation
 /// ---
-impl App {
+impl AnfApp {
     /// Creates the `App` = window + device
-    pub fn from_cfg(cfg: AppConfig) -> Self {
+    pub fn from_cfg(cfg: AnfAppConfig) -> Self {
         // setup FNA3D
         log::info!("FNA version {}", fna3d::linked_version());
         fna3d::utils::hook_log_functions_default();
@@ -41,7 +41,7 @@ impl App {
         let win = SdlWindowHandle::from_cfg(&cfg);
         let (params, device) = cfg.device(win.raw_window);
 
-        App {
+        AnfApp {
             win,
             params,
             device,
@@ -64,7 +64,7 @@ pub struct SdlWindowHandle {
 
 impl SdlWindowHandle {
     // TODO: do wee need canavs?
-    pub fn from_cfg(cfg: &AppConfig) -> Self {
+    pub fn from_cfg(cfg: &AnfAppConfig) -> Self {
         let flags = fna3d::prepare_window_attributes();
 
         let sdl = sdl2::init().unwrap();
@@ -80,7 +80,7 @@ impl SdlWindowHandle {
 }
 
 /// Creation methods based on Rust-SDL2 and Rust-FNA3D
-impl AppConfig {
+impl AnfAppConfig {
     fn window(&self, sdl: &sdl2::Sdl, flags: u32) -> sdl2::video::Window {
         let video = sdl.video().unwrap();
         video

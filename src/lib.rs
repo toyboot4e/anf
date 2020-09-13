@@ -4,18 +4,18 @@
 //!
 //! # Index
 //!
-//! * To run your application, see [`framework`]
-//! * To make your game content, see [`prelude`]
-//!     * To render sprites, see [`gfx::api`]
-//! * For more examples, see [examples]
+//! * To get started, see [`prelude`]
+//! * To render sprites, see [`gfx::api`]
+//! * To see more examples, see [anf/examples] (GitHub)
 //!
-//! [examples]: https://github/toyboot4e/anf/examples
+//! [anf/examples]: https://github/toyboot4e/anf/examples
 
-pub use fna3d;
 pub use sdl2;
 
-pub mod framework;
 pub mod prelude;
+
+pub mod preset;
+pub use preset::framework::game::run_game;
 
 pub mod gfx;
 pub mod input;

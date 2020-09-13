@@ -13,7 +13,7 @@ pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
 }
 
 pub mod api {
-    //! [`DrawContext`] and traits to push sprites
+    //! [`DrawContext`] and traits to push sprites. Re-exported to [`crate::prelude`]
     //!
     //! Draw calls are automatically batched.
     //!
@@ -33,6 +33,8 @@ pub mod api {
     //!     pass.cmd().dest_pos_px([100.0, 400.0]).texture(tx);
     //! }
     //! ```
+    //!
+    //! In real cde, prefer `use anf::prelude::*` to `anf::gfx::api::*`
 
     pub use anf_gfx::cmd::prelude::*;
 
