@@ -1,16 +1,17 @@
 use anf::fna3d;
 use anf::sdl2::event::Event;
 use anf::{
-    game::{
-        app::{App, AppConfig},
-        input::{Key, Keyboard},
-        run_game, GameResult, GameState,
+    framework::{
+        gameloop::{run_game, GameResult, GameState},
+        startup::{App, AppConfig},
+        utils::Keyboard,
     },
     gfx::{
         geom::{Rect2f, Vec2f},
-        prelude::*,
         SubTextureData2D, TextureData2D,
     },
+    input::Key,
+    prelude::*,
     vfs,
 };
 
@@ -56,13 +57,17 @@ fn new_game(device: &mut fna3d::Device) -> PongGameData {
 impl PongGameData {
     fn handle_input(&mut self) {
         if self.input.is_key_pressed(Key::D) {
-            self.entities.left.vel += Vec2f::new(5.0, 0.0);
+            self.entities.left.vel += Vec2f::new(100.0, 0.0);
+            println!("pressed");
+        }
+        if self.input.is_key_pressed(Key::S) {
+            self.entities.left.vel += Vec2f::new(0.0, 100.0);
             println!("pressed");
         }
     }
 
-    fn handle_physics(&mut self) {
-        let dt = 1.0 / 60.0; // FIXME: dt input
+    fn handle_physics(&mut self, ts: TimeStep) {
+        let dt = ts.dt_secs_f32();
         for e in &mut [&mut self.entities.left, &mut self.entities.right] {
             e.pos += e.vel * dt;
         }
@@ -71,12 +76,12 @@ impl PongGameData {
 
 impl GameState for PongGameData {
     // TODO: delta time
-    fn update(&mut self) {
+    fn update(&mut self, ts: TimeStep) {
         self.handle_input();
-        self.handle_physics();
+        self.handle_physics(ts);
     }
 
-    fn render(&mut self, dcx: &mut DrawContext) {
+    fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
         anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
 
         let mut pass = dcx.pass();

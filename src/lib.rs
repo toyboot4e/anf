@@ -1,6 +1,6 @@
 //! ANF is a 2D framework powered by SDL & FNA3D
 //!
-//! See the [`game`] or [examples] to get started. Note that ANF is **very much a work in
+//! See the [`framework`] or [examples] to get started. Note that ANF is **very much a work in
 //! progress**.
 //!
 //! # Restrictions
@@ -18,12 +18,10 @@
 pub use fna3d;
 pub use sdl2;
 
-// pub use fna3d_hie;
-// pub use anf_lib;
-// pub use anf_gfx;
-
-pub mod game;
+pub mod framework;
 pub mod gfx;
+pub mod input;
+pub mod prelude;
 pub mod vfs;
 
 /// for `examples/`. FIXME: delete this

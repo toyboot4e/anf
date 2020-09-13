@@ -8,11 +8,11 @@ use std::{
 
 use crate::geom::Flips;
 
-/// 2D texture handle with some metadata
+/// 2D texture handle
 ///
 /// # Safety
 ///
-/// `TextureData2D` does NOT guarantee if it's still alive because it's using a pointer.
+/// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
 pub struct TextureData2D {
     raw: *mut fna3d::Texture,
@@ -182,11 +182,11 @@ impl TextureData2D {
     }
 }
 
-/// Region of a 2D texture handle
+/// 2D texture handle with region (uv values)
 ///
 /// # Safety
 ///
-/// `TextureData2D` does NOT guarantee if it's still alive because it's using a pointer.
+/// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
 pub struct SubTextureData2D {
     pub(crate) texture: TextureData2D,
@@ -208,7 +208,11 @@ impl AsRef<TextureData2D> for SubTextureData2D {
     }
 }
 
-/// A full-featured 2D texture handle
+/// 2D texture handle with full-feature to render (uv values, scale, rotation and flips)
+///
+/// # Safety
+///
+/// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 pub struct SpriteData {
     pub(crate) sub_tex: SubTextureData2D,
     pub(crate) scale: [f32; 2],

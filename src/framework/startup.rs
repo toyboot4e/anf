@@ -1,3 +1,5 @@
+//! Building an application
+
 use sdl2::sys::SDL_Window;
 
 /// Data to create [`App`]

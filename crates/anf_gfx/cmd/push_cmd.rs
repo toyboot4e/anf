@@ -1,15 +1,17 @@
 use crate::{
     batcher::batch::SpriteBatch,
-    cmd::push::*,
+    cmd::push::{DrawPolicy, QuadPush, Scaled, Texture2D},
     geom::*,
     texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
 
+/// Texture with region. Used by [`QuadPushBuilder`]
 pub trait SubTexture: Texture2D {
     /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
     fn uv_rect(&self) -> [f32; 4];
 }
 
+/// Texture with region and other geometry data. Used by [`QuadPushBuilder`]
 pub trait Sprite: SubTexture {
     fn rot(&self) -> f32;
     fn scale(&self) -> [f32; 2];
@@ -107,8 +109,8 @@ impl<T: SubTexture> SubTexture for &T {
 // --------------------------------------------------------------------------------
 // push
 
-/// [`SpritePushCommand`] builder
-pub trait PushGeometryBuilder {
+/// Default implementation to build [`QuadPush`]
+pub trait QuadPushBuilder {
     /// This is mainly for default implementations, but it can be used to modify [`QuadPush`] manually
     fn data(&mut self) -> &mut QuadPush;
 
@@ -174,7 +176,7 @@ pub struct SpritePushCommand<'a> {
     pub flips: Flips,
 }
 
-impl<'a> PushGeometryBuilder for SpritePushCommand<'a> {
+impl<'a> QuadPushBuilder for SpritePushCommand<'a> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.push
     }
@@ -182,21 +184,21 @@ impl<'a> PushGeometryBuilder for SpritePushCommand<'a> {
 
 impl<'a, 'b> SpritePushCommand<'b> {
     /// Sets texture
-    pub fn texture<T: SubTexture>(&'a mut self, texture: T) -> SizedTexturePush<'a, 'b, T> {
+    pub fn texture<T: SubTexture>(&'a mut self, texture: T) -> Texture2DPush<'a, 'b, T> {
         self.src_rect_normalized(texture.uv_rect());
         self.dest_size_px([texture.w(), texture.h()]);
 
-        SizedTexturePush { cmd: self, texture }
+        Texture2DPush { cmd: self, texture }
     }
 
     /// Sets sprite
-    pub fn sprite<T: Sprite>(&'a mut self, sprite: T) -> SizedTexturePush<'a, 'b, T> {
+    pub fn sprite<T: Sprite>(&'a mut self, sprite: T) -> Texture2DPush<'a, 'b, T> {
         self.src_rect_normalized(sprite.uv_rect());
         let scale = sprite.scale();
         self.dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]]);
         self.data().rot = sprite.rot();
 
-        SizedTexturePush {
+        Texture2DPush {
             cmd: self,
             texture: sprite,
         }
@@ -204,24 +206,24 @@ impl<'a, 'b> SpritePushCommand<'b> {
 }
 
 /// Handle to push quads with a texture
-pub struct SizedTexturePush<'a, 'b, T: Texture2D> {
+pub struct Texture2DPush<'a, 'b, T: Texture2D> {
     cmd: &'a mut SpritePushCommand<'b>,
     texture: T,
 }
 
-impl<'a, 'b, T: Texture2D> PushGeometryBuilder for SizedTexturePush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> QuadPushBuilder for Texture2DPush<'a, 'b, T> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.cmd.push
     }
 }
 
-impl<'a, 'b, T: Texture2D> Drop for SizedTexturePush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> Drop for Texture2DPush<'a, 'b, T> {
     fn drop(&mut self) {
         self.run();
     }
 }
 
-impl<'a, 'b, T: Texture2D> SizedTexturePush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> Texture2DPush<'a, 'b, T> {
     fn run(&mut self) {
         // log::info!("{:?}", self.cmd.push);
         self.cmd.push.run_sized_texture(

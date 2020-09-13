@@ -18,7 +18,7 @@ pub struct DrawPolicy {
     // is_batching_disabled: bool,
 }
 
-/// Required to be drawn via [`QuadPush`]
+/// Texture handle with size data. Used by [`QuadPush`]
 pub trait Texture2D {
     fn raw_texture(&self) -> *mut fna3d::Texture;
     /// Pixel
@@ -53,10 +53,9 @@ impl<T> Scaled<T> {
 // --------------------------------------------------------------------------------
 // SpritePush
 
-/// Full-featured parameter to push a sprite into `SpriteBatch`
+/// Full-featured geometry parameter to push a sprite into [`SpriteBatch`]
 ///
-/// Geometry values may be normalized or un-normalized and they're normalized when we push
-/// quadliterals.
+/// `QuadPush` does not accumulate texture handle.
 #[derive(Debug)]
 pub struct QuadPush {
     // TODO: consider using two vectors per src/dest
