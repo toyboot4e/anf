@@ -1,12 +1,12 @@
 //! Re-exported to root
 
-use num_enum::TryFromPrimitive;
 use std::convert::TryFrom;
 
 use crate::input::Key;
 pub use sdl2::keyboard::{Keycode, Mod, Scancode};
 use std::collections::HashMap;
 
+/// Full-feature keyboard state
 #[derive(Debug)]
 pub struct Keyboard {
     /// SDL2 keycode to ANF keycode

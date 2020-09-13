@@ -1,14 +1,11 @@
-//! The game loop
-
-mod time;
-pub use time::TimeStep;
+//! Runs user state
 
 use crate::{
     framework::{
-        gameloop::time::GameClock,
-        startup::{App, SdlWindowHandle},
+        app::{App, SdlWindowHandle},
+        time::{GameClock, TimeStep},
     },
-    gfx::prelude::DrawContext,
+    gfx::api::DrawContext,
     vfs,
 };
 use sdl2::{event::Event, EventPump};

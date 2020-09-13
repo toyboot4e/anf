@@ -1,4 +1,4 @@
-//! Building an application
+//! Creates window with graphics device
 
 use sdl2::sys::SDL_Window;
 

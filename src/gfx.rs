@@ -1,33 +1,10 @@
 //! Graphics, the sprite rendering API
-//!
-//! Draw calls are automatically batched.
-//!
-//! # Example
-//!
-//! [`DrawContext`] → [`BatchPass`] → [`SpritePushCommand`]s:
-//!
-//! [`BatchPass`]: prelude::BatchPass
-//! [`SpritePushCommand`]: prelude::SpritePushCommand
-//!
-//! ```no_run
-//! use anf::gfx::{prelude::*, TextureData2D};
-//!
-//! fn example_rendering(dcx: &mut DrawContext, tx: &TextureData2D) {
-//!     let mut pass = dcx.pass(); // batch pass
-//!     pass.cmd().dest_pos_px([100.0, 100.0]).texture(tx); // push texture
-//!     pass.cmd().dest_pos_px([100.0, 400.0]).texture(tx);
-//! }
-//! ```
-//!
-//! Other functionalities are performed via functions such as [`clear_frame`].
-//!
-//! [convension]: https://rustc-dev-guide.rust-lang.org/conventions.html#naming-conventions
 
 pub use anf_gfx::{
     geom,
     texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
-use prelude::DrawContext;
+use api::DrawContext;
 
 /// Clears the frame buffer, that is, the screen
 pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
@@ -35,8 +12,28 @@ pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
         .clear(fna3d::ClearOptions::TARGET, clear_color, 0.0, 0);
 }
 
-pub mod prelude {
+pub mod api {
     //! [`DrawContext`] and traits to push sprites
+    //!
+    //! Draw calls are automatically batched.
+    //!
+    //! # Example
+    //!
+    //! [`DrawContext`] → [`BatchPass`] → [`SpritePushCommand`]s:
+    //!
+    //! [`BatchPass`]: BatchPass
+    //! [`SpritePushCommand`]: SpritePushCommand
+    //!
+    //! ```no_run
+    //! use anf::gfx::{api::*, TextureData2D};
+    //!
+    //! fn example_rendering(dcx: &mut DrawContext, tx: &TextureData2D) {
+    //!     let mut pass = dcx.pass(); // batch pass
+    //!     pass.cmd().dest_pos_px([100.0, 100.0]).texture(tx); // push texture
+    //!     pass.cmd().dest_pos_px([100.0, 400.0]).texture(tx);
+    //! }
+    //! ```
+
     pub use anf_gfx::cmd::prelude::*;
 
     use anf_gfx::{

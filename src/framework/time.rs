@@ -1,3 +1,5 @@
+//! Creates [`TimeStep`]s
+
 use std::time::{Duration, Instant};
 
 /// Delta time
@@ -23,7 +25,7 @@ impl TimeStep {
     }
 }
 
-/// Genetares [`TimeStep`]s
+/// Genetares [`GameClockTick`]s
 #[derive(Debug, Clone)]
 pub struct GameClock {
     time: TimeStep,
@@ -56,7 +58,7 @@ impl GameClock {
         Duration::from_millis(500)
     }
 
-    pub fn tick(&mut self) -> TimeStepIter {
+    pub fn tick(&mut self) -> GameClockTick {
         let elapsed = {
             let mut elapsed = self.get_elapsed();
             // Do not allow any update to take longer than our maximum.
@@ -66,7 +68,7 @@ impl GameClock {
             elapsed
         };
 
-        TimeStepIter::new(self, elapsed)
+        GameClockTick::new(self, elapsed)
     }
 
     pub fn timestep(&self) -> TimeStep {
@@ -98,16 +100,17 @@ impl GameClock {
     }
 }
 
-pub struct TimeStepIter<'a> {
+/// Iterator of [`TimeStep`] that corresponds to one tick of [`GameClock`]
+pub struct GameClockTick<'a> {
     clock: &'a mut GameClock,
     elapsed: Duration,
     n_updates: u32,
 }
 
-impl<'a> TimeStepIter<'a> {
+impl<'a> GameClockTick<'a> {
     fn new(clock: &'a mut GameClock, elapsed: Duration) -> Self {
         clock.time.elapsed = clock.target_elapsed();
-        Self {
+        GameClockTick {
             clock,
             elapsed,
             n_updates: 0,
@@ -174,7 +177,7 @@ impl<'a> TimeStepIter<'a> {
     }
 }
 
-impl<'a> Iterator for TimeStepIter<'a> {
+impl<'a> Iterator for GameClockTick<'a> {
     type Item = TimeStep;
 
     fn next(&mut self) -> Option<Self::Item> {

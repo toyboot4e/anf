@@ -2,8 +2,9 @@ use anf::fna3d;
 use anf::sdl2::event::Event;
 use anf::{
     framework::{
-        gameloop::{run_game, GameResult, GameState},
-        startup::{App, AppConfig},
+        app::{App, AppConfig},
+        game::{run_game, GameResult, GameState},
+        time::TimeStep,
         utils::Keyboard,
     },
     gfx::{

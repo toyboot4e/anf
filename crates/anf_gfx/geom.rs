@@ -1,6 +1,6 @@
 //! Geometry primitives
 //!
-//! Vectors and rectangles can be converted from/to arrays.
+//! Vectors and rectanglesm can be converted from/to arrays.
 
 // https://docs.rs/auto_ops/
 use auto_ops::*;

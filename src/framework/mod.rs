@@ -5,10 +5,10 @@
 //! This is a hello-world program:
 //!
 //! ```no_run
-//! // main.rs or bin.rs side
+//! // main.rs (bin.rs) side
 //! use anf::framework::{
-//!     startup::{App, AppConfig},
-//!     gameloop::{GameResult, run_game},
+//!     app::{App, AppConfig},
+//!     game::{run_game, GameResult},
 //! };
 //!
 //! fn main() -> GameResult {
@@ -18,7 +18,8 @@
 //! }
 //!
 //! // lib.rs side
-//! use anf::{framework::gameloop::GameState, prelude::*};
+//! use anf::prelude::*;
+//! use anf::framework::game::GameState;
 //! use fna3d::Color;
 //!
 //! struct MyState {}
@@ -39,6 +40,7 @@
 //! [cornflower blue]: https://www.google.com/search?q=cornflower%20blue
 //! [examples]: https://github.com/toyboot4e/anf/examples
 
-pub mod gameloop;
-pub mod startup;
+pub mod app;
+pub mod game;
+pub mod time;
 pub mod utils;
