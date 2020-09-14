@@ -1,4 +1,29 @@
-//! Input
+//! Input, the abstraction
+//!
+//! # Usage
+//!
+//! The primary ANF input system is just a state:
+//! handle input:
+//!
+//! ```
+//! use anf::input::{Key, Keyboard};
+//!
+//! fn handle_input(kbd: &Keyboard) {
+//!     if kbd.is_pressed(kbd::Enter) {
+//!         // do something
+//!     }
+//! }
+//! ```
+//!
+//! Why is it not event-based? Because it's for emitting higher-level input events like UI commands,
+//! where it's natural to be updated every frame. Same for the virtual input ([`vinput`]).
+//!
+//! * TODO: explain why I think it's simpler to pull input when emitting higher-level input events
+//! * TODO: mention Android where `update` it not allowed (?)`
+//!
+//! # Integration
+//!
+//! Call the lifecycle methods of input objects:
 //!
 //! ```
 //! use anf::prelude::*;
@@ -22,6 +47,7 @@
 mod keyboard;
 use num_enum::TryFromPrimitive;
 
+pub mod vinput;
 pub use keyboard::Keyboard;
 
 /// ANF key code

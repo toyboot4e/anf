@@ -34,12 +34,9 @@ pub trait AnfGame {
     fn on_next_frame(&mut self) {}
 }
 
-/// Return type of [`run_game`]
-pub type AnfResult = std::result::Result<(), Box<dyn std::error::Error>>;
-
-/// Drives user's [`AnfGame`]
+/// Drives user data ([`AnfGame`])
 pub struct AnfGameLoop {
-    pub raw_window: *mut SDL_Window,
+    raw_window: *mut SDL_Window,
     pub clock: GameClock,
     pub dcx: DrawContext,
 }
@@ -61,6 +58,7 @@ impl AsMut<fna3d::Device> for AnfGameLoop {
         self.dcx.as_mut()
     }
 }
+
 /// Visitor
 impl AnfGameLoop {
     /// Returns if we continue next frame

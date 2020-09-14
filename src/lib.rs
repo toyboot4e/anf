@@ -7,6 +7,10 @@
 //! * To handle input, see [`input`]
 //! * For more examples, see [anf/examples] (GitHub)
 //!
+//! # Restrictions
+//!
+//! * One-window, single-threaded
+//!
 //! Note that ANF is unstable.
 //!
 //! [SDL]: https://www.sdl.com/

@@ -1,4 +1,4 @@
-//! Prelude, primary types to write ANF game
+//! Prelude, primary types for writing ANF games
 
 pub use crate::framework::{AnfGame, TimeStep};
 pub use crate::gfx::api::*;
