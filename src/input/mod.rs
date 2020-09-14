@@ -1,4 +1,28 @@
+//! Input
+//!
+//! ```
+//! use anf::prelude::*;
+//! use anf::input::Keyboard;
+//! use sdl2::event::Event;
+//!
+//! struct SampleState {
+//!      kbd: Keyboard,
+//! }
+//!
+//! impl AnfGame for SampleState {
+//!     fn event(&mut self, ev: &Event) {
+//!         self.kbd.listen_sdl_event(ev);
+//!     }
+//!     fn on_next_frame(&mut self) {
+//!         self.kbd.on_next_frame();
+//!     }
+//! }
+//! ```
+
+mod keyboard;
 use num_enum::TryFromPrimitive;
+
+pub use keyboard::Keyboard;
 
 /// ANF key code
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]

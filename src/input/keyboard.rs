@@ -1,9 +1,12 @@
-//! Re-exported to root
+//! Re-exported to super module
 
 use std::convert::TryFrom;
 
 use crate::input::Key;
-pub use sdl2::keyboard::{Keycode, Mod, Scancode};
+pub use sdl2::{
+    event::Event,
+    keyboard::{Keycode, Mod, Scancode},
+};
 use std::collections::HashMap;
 
 /// Full-feature keyboard state
@@ -44,7 +47,33 @@ impl Keyboard {
 
 /// Lifecycle
 impl Keyboard {
-    pub fn on_key_down(&mut self, sdl_key: Keycode) {
+    pub fn listen_sdl_event(&mut self, ev: &Event) {
+        match ev {
+            Event::KeyDown {
+                keycode: Some(sdl_key),
+                ..
+            } => {
+                self.on_key_down(*sdl_key);
+            }
+            Event::KeyUp {
+                keycode: Some(sdl_key),
+                ..
+            } => {
+                self.on_key_up(*sdl_key);
+            }
+            _ => {}
+        }
+    }
+
+    pub fn on_next_frame(&mut self) {
+        // to continue from the previous state, we have to copy it
+        // because key up events are only sent when they happen
+        self.kbd.b.bits = self.kbd.a.bits;
+    }
+}
+
+impl Keyboard {
+    fn on_key_down(&mut self, sdl_key: Keycode) {
         let anf_key = match self.s2f.get(&sdl_key) {
             Some(key) => key.clone(),
             None => return,
@@ -52,18 +81,12 @@ impl Keyboard {
         self.kbd.a.on_key_down(anf_key);
     }
 
-    pub fn on_key_up(&mut self, sdl_key: Keycode) {
+    fn on_key_up(&mut self, sdl_key: Keycode) {
         let anf_key = match self.s2f.get(&sdl_key) {
             Some(key) => key.clone(),
             None => return,
         };
         self.kbd.a.on_key_up(anf_key);
-    }
-
-    pub fn on_next_frame(&mut self) {
-        // to continue from the previous state, we have to copy it
-        // because key up events are only sent when they happen
-        self.kbd.b.bits = self.kbd.a.bits;
     }
 }
 

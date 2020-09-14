@@ -4,11 +4,12 @@ pub use anf_gfx::{
     geom,
     texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
+
 use api::DrawContext;
 
 /// Clears the frame buffer, that is, the screen
 pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
-    dcx.device
+    dcx.as_mut()
         .clear(fna3d::ClearOptions::TARGET, clear_color, 0.0, 0);
 }
 
@@ -25,16 +26,23 @@ pub mod api {
     //! [`SpritePushCommand`]: SpritePushCommand
     //!
     //! ```no_run
-    //! use anf::gfx::{api::*, TextureData2D};
+    //! use anf::prelude::*;
+    //! use anf::gfx::TextureData2D;
+    //! use fna3d::Color;
     //!
-    //! fn example_rendering(dcx: &mut DrawContext, tx: &TextureData2D) {
-    //!     let mut pass = dcx.pass(); // batch pass
-    //!     pass.cmd().dest_pos_px([100.0, 100.0]).texture(tx); // push texture
-    //!     pass.cmd().dest_pos_px([100.0, 400.0]).texture(tx);
+    //! struct SampleState {
+    //!     tx: TextureData2D,
+    //! }
+    //!
+    //! impl AnfGame for SampleState {
+    //!     fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
+    //!         anf::gfx::clear_frame(dcx, Color::cornflower_blue());
+    //!         let mut pass = dcx.pass(); // batch pass
+    //!         pass.cmd().dest_pos_px([100.0, 100.0]).texture(&self.tx); // push texture
+    //!         pass.cmd().dest_pos_px([100.0, 400.0]).texture(&self.tx);
+    //!     }
     //! }
     //! ```
-    //!
-    //! In real cde, prefer `use anf::prelude::*` to `anf::gfx::api::*`
 
     pub use anf_gfx::cmd::prelude::*;
 
@@ -53,7 +61,8 @@ pub mod api {
     ///
     /// * TODO: drop `Device`
     pub struct DrawContext {
-        pub(crate) device: Device, // open for `App`
+        /// Use `as_mut` to get access
+        device: Device,
         batcher: Batcher,
         pipe: Pipeline,
         /// Buffer that reduces allocation
@@ -70,6 +79,12 @@ pub mod api {
                 pipe,
                 push: QuadPush::default(),
             }
+        }
+    }
+
+    impl AsMut<fna3d::Device> for DrawContext {
+        fn as_mut(&mut self) -> &mut fna3d::Device {
+            &mut self.device
         }
     }
 

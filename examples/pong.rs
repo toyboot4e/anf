@@ -1,25 +1,21 @@
 //! Pong example
 
-use anf::prelude::*;
+use anf::framework::*;
 
 fn main() -> AnfResult {
     anf::env_logger::init();
-    let mut app = AnfApp::from_cfg(self::config());
-    let state = self::lib_rs::new_game(&mut app.device);
-    anf::run_game(app, state)
+    anf_run_game(&self::config(), pong::new_game)
 }
 
-fn config() -> AnfAppConfig {
-    AnfAppConfig {
-        title: "ANF pong game".to_string(),
+pub fn config() -> AnfConfig {
+    AnfConfig {
+        title: "Pong".to_string(),
         w: 1280,
         h: 720,
     }
 }
 
-mod lib_rs {
-    //! Corresponds t `lib.rs`
-
+mod pong {
     use anf::prelude::*;
     use fna3d::Color;
     use sdl2::event::Event;
@@ -29,8 +25,7 @@ mod lib_rs {
             geom::{Rect2f, Vec2f},
             SubTextureData2D, TextureData2D,
         },
-        input::Key,
-        preset::Keyboard,
+        input::{Key, Keyboard},
         vfs,
     };
 
@@ -40,8 +35,8 @@ mod lib_rs {
     #[derive(Debug)]
     pub struct PongGameData {
         input: Keyboard,
-        entities: Entities,
         textures: Textures,
+        entities: Entities,
     }
 
     pub fn new_game(device: &mut fna3d::Device) -> PongGameData {
@@ -55,54 +50,48 @@ mod lib_rs {
             vel: [0.0, 0.0].into(),
         };
 
-        let paddle = TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap();
-        let paddle = paddle.trim_px([0, 0, 90, 288]);
-        let textures = Textures {
-            paddle,
-            ball: TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap(),
+        let textures = {
+            let paddle = TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap();
+            let paddle = paddle.trim_px([0, 0, 90, 288]);
+            Textures {
+                paddle,
+                ball: TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap(),
+            }
         };
 
         PongGameData {
             input: Keyboard::new(),
+            textures,
             entities: Entities {
                 left,
                 right,
                 ball: Ball::default(),
             },
-            textures,
         }
     }
 
+    /// Logic
     impl PongGameData {
         fn handle_input(&mut self) {
             if self.input.is_key_pressed(Key::D) {
                 self.entities.left.vel += Vec2f::new(100.0, 0.0);
-                println!("pressed");
+                println!("D");
             }
             if self.input.is_key_pressed(Key::S) {
                 self.entities.left.vel += Vec2f::new(0.0, 100.0);
-                println!("pressed");
+                println!("S");
             }
         }
 
         fn handle_physics(&mut self, ts: TimeStep) {
             let dt = ts.dt_secs_f32();
+            // wow, ECS looks simpler than this
             for e in &mut [&mut self.entities.left, &mut self.entities.right] {
                 e.pos += e.vel * dt;
             }
         }
-    }
 
-    impl AnfGame for PongGameData {
-        // TODO: delta time
-        fn update(&mut self, ts: TimeStep) {
-            self.handle_input();
-            self.handle_physics(ts);
-        }
-
-        fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
-            anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
-
+        fn render_scene(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
             let mut pass = dcx.pass();
             pass.cmd()
                 .dest_pos_px(&self.entities.left.pos)
@@ -111,28 +100,34 @@ mod lib_rs {
             pass.cmd()
                 .dest_pos_px(&self.entities.right.pos)
                 .texture(&self.textures.paddle);
-
-            self.input.on_next_frame(); // FIXME:
-        }
-
-        fn listen_event(&mut self, ev: &Event) {
-            match ev {
-                Event::KeyDown {
-                    keycode: Some(sdl_key),
-                    ..
-                } => {
-                    self.input.on_key_down(*sdl_key);
-                }
-                Event::KeyUp {
-                    keycode: Some(sdl_key),
-                    ..
-                } => {
-                    self.input.on_key_up(*sdl_key);
-                }
-                _ => {}
-            }
         }
     }
+
+    /// Lifecycle
+    impl AnfGame for PongGameData {
+        fn event(&mut self, ev: &Event) {
+            self.input.listen_sdl_event(ev);
+        }
+
+        fn update(&mut self, ts: TimeStep) {
+            self.handle_input();
+            self.handle_physics(ts);
+        }
+
+        fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
+            anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
+            self.render_scene(ts, dcx);
+        }
+
+        fn on_next_frame(&mut self) {
+            self.input.on_next_frame();
+        }
+    }
+
+    // --------------------------------------------------------------------------------
+    // World
+
+    // (Not) generic resources
 
     #[derive(Debug, Clone)]
     struct Textures {
