@@ -34,7 +34,7 @@ pub mod api {
     //!     tx: TextureData2D,
     //! }
     //!
-    //! impl AnfGame for SampleState {
+    //! impl AnfLifecycle for SampleState {
     //!     fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
     //!         anf::gfx::clear_frame(dcx, Color::cornflower_blue());
     //!         let mut pass = dcx.pass(); // batch pass

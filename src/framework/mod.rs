@@ -1,7 +1,7 @@
 //! Framework, the partially built application
 //!
-//! [`anf_run_game`] drives user data [`AnfGame`]. I hope this is generic enough for you. If not,
-//! TODO: provide a way to build custom game loop without much efforts. Maybe separate crate
+//! [`anf_run_game`] drives user data [`AnfLifecycle`]. I hope this is generic enough for you. If
+//! not, TODO: provide a way to build custom game loop without much efforts. Maybe separate crate
 //!
 //! # Getting started
 //!
@@ -20,7 +20,7 @@
 //!
 //!     pub struct MyState {}
 //!
-//!     impl AnfGame for MyState {
+//!     impl AnfLifecycle for MyState {
 //!         fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
 //!             anf::gfx::clear_frame(dcx, Color::cornflower_blue());
 //!         }
@@ -44,18 +44,18 @@ mod core;
 mod game;
 mod time;
 
-pub use self::{core::AnfConfig, game::AnfGame, time::TimeStep};
+pub use self::{core::AnfConfig, game::AnfLifecycle, time::TimeStep};
 
 use self::{
     core::{anf_create_core, SdlWindowHandle},
-    game::AnfGameLoop,
+    game::AnfLifecycleLoop,
 };
 
 /// Return type of [`anf_run_game`]
 pub type AnfResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
 /// Drives user data
-pub fn anf_run_game<T: AnfGame>(
+pub fn anf_run_game<T: AnfLifecycle>(
     cfg: &AnfConfig,
     f: impl FnOnce(&mut fna3d::Device) -> T,
 ) -> AnfResult {
@@ -71,9 +71,9 @@ pub fn anf_run_game<T: AnfGame>(
 }
 
 /// Creates window and game loop runner
-fn init_framework(cfg: &AnfConfig) -> (SdlWindowHandle, AnfGameLoop) {
+fn init_framework(cfg: &AnfConfig) -> (SdlWindowHandle, AnfLifecycleLoop) {
     // create SDL window and fna3d Device
     let (win, device, _params) = anf_create_core(&cfg);
-    let looper = AnfGameLoop::new(win.raw_window(), device);
+    let looper = AnfLifecycleLoop::new(win.raw_window(), device);
     (win, looper)
 }

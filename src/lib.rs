@@ -10,6 +10,7 @@
 //! # Restrictions
 //!
 //! * One-window, single-threaded
+//! * Pre-defined game loop
 //!
 //! Note that ANF is unstable.
 //!

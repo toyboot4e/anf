@@ -12,7 +12,7 @@ use sdl2::{event::Event, sys::SDL_Window, EventPump};
 /// The internal game loop is like this:
 ///
 /// ```c
-/// // game: impl AnfGame
+/// // game: impl AnfLifecycle
 /// loop {
 ///     for ev in poll_sdl_event() {
 ///         game.listen(ev);
@@ -24,7 +24,7 @@ use sdl2::{event::Event, sys::SDL_Window, EventPump};
 ///     game.on_frame_end();
 /// }
 /// ```
-pub trait AnfGame {
+pub trait AnfLifecycle {
     #[allow(unused_variables)]
     fn event(&mut self, ev: &Event) {}
     #[allow(unused_variables)]
@@ -34,8 +34,8 @@ pub trait AnfGame {
     fn on_next_frame(&mut self) {}
 }
 
-/// Drives user data ([`AnfGame`])
-pub struct AnfGameLoop {
+/// Drives user data ([`AnfLifecycle`])
+pub struct AnfLifecycleLoop {
     raw_window: *mut SDL_Window,
     pub clock: GameClock,
     pub dcx: DrawContext,
@@ -43,7 +43,7 @@ pub struct AnfGameLoop {
 
 /// Device initialization
 /// ---
-impl AnfGameLoop {
+impl AnfLifecycleLoop {
     pub fn new(raw_window: *mut SDL_Window, device: fna3d::Device) -> Self {
         Self {
             raw_window,
@@ -53,16 +53,20 @@ impl AnfGameLoop {
     }
 }
 
-impl AsMut<fna3d::Device> for AnfGameLoop {
+impl AsMut<fna3d::Device> for AnfLifecycleLoop {
     fn as_mut(&mut self) -> &mut fna3d::Device {
         self.dcx.as_mut()
     }
 }
 
 /// Visitor
-impl AnfGameLoop {
+impl AnfLifecycleLoop {
     /// Returns if we continue next frame
-    pub fn tick_one_frame(&mut self, state: &mut impl AnfGame, events: &mut EventPump) -> bool {
+    pub fn tick_one_frame(
+        &mut self,
+        state: &mut impl AnfLifecycle,
+        events: &mut EventPump,
+    ) -> bool {
         if !self.pump_events(state, events) {
             return false;
         }
@@ -75,7 +79,7 @@ impl AnfGameLoop {
         true
     }
 
-    fn pump_events(&mut self, state: &mut impl AnfGame, events: &mut EventPump) -> bool {
+    fn pump_events(&mut self, state: &mut impl AnfLifecycle, events: &mut EventPump) -> bool {
         for ev in events.poll_iter() {
             match ev {
                 Event::Quit { .. } => return false,
@@ -87,7 +91,7 @@ impl AnfGameLoop {
         true
     }
 
-    fn render(&mut self, state: &mut impl AnfGame, ts: TimeStep) {
+    fn render(&mut self, state: &mut impl AnfLifecycle, ts: TimeStep) {
         state.render(ts, &mut self.dcx);
         self.dcx
             .as_mut()

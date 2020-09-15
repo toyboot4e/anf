@@ -9,17 +9,14 @@
 //! use anf::input::{Key, Keyboard};
 //!
 //! fn handle_input(kbd: &Keyboard) {
-//!     if kbd.is_pressed(kbd::Enter) {
+//!     if kbd.is_key_pressed(Key::Enter) {
 //!         // do something
 //!     }
 //! }
 //! ```
 //!
 //! Why is it not event-based? Because it's for emitting higher-level input events like UI commands,
-//! where it's natural to be updated every frame. Same for the virtual input ([`vinput`]).
-//!
-//! * TODO: explain why I think it's simpler to pull input when emitting higher-level input events
-//! * TODO: mention Android where `update` it not allowed (?)`
+//! and there are not many listeners to primitive events such as key down or key up.
 //!
 //! # Integration
 //!
@@ -34,7 +31,7 @@
 //!      kbd: Keyboard,
 //! }
 //!
-//! impl AnfGame for SampleState {
+//! impl AnfLifecycle for SampleState {
 //!     fn event(&mut self, ev: &Event) {
 //!         self.kbd.listen_sdl_event(ev);
 //!     }

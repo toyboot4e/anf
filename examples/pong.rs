@@ -104,7 +104,7 @@ mod pong {
     }
 
     /// Lifecycle
-    impl AnfGame for PongGameData {
+    impl AnfLifecycle for PongGameData {
         fn event(&mut self, ev: &Event) {
             self.input.listen_sdl_event(ev);
         }
