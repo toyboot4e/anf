@@ -3,7 +3,7 @@
 use std::time::{Duration, Instant};
 
 /// Delta time
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TimeStep {
     elapsed: Duration,
     /// Total duration passed in game time

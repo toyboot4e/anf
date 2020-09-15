@@ -3,18 +3,12 @@
 use sdl2::{sys::SDL_Window, EventPump};
 
 /// Returns `(window, device, params): (SdlWindowHandle, fna3d::Device, fna3d::PresentationParameters)`
-pub fn anf_create_core(
-    cfg: &AnfConfig,
-) -> (
-    SdlWindowHandle,
-    fna3d::Device,
-    fna3d::PresentationParameters,
-) {
+pub fn init(cfg: &AnfConfig) -> (WindowHandle, fna3d::Device, fna3d::PresentationParameters) {
     // setup FNA3D
     log::info!("FNA version {}", fna3d::linked_version());
     fna3d::utils::hook_log_functions_default();
 
-    let win = SdlWindowHandle::from_cfg(&cfg);
+    let win = WindowHandle::from_cfg(&cfg);
     let (params, device) = self::create_fna3d_device(cfg, win.raw_window());
 
     (win, device, params)
@@ -37,26 +31,40 @@ impl AnfConfig {
     }
 }
 
-/// The window is dropped when this handle goes out of scope
-pub struct SdlWindowHandle {
+/// Window object
+///
+/// The window is dropped when this handle goes out of scope.
+pub struct WindowHandle {
     sdl: sdl2::Sdl,
     win: sdl2::video::Window,
 }
 
-impl SdlWindowHandle {
+impl WindowHandle {
     pub fn from_cfg(cfg: &AnfConfig) -> Self {
         let flags = fna3d::prepare_window_attributes();
         let sdl = sdl2::init().unwrap();
         let win = self::create_sdl_window(cfg, &sdl, flags.0);
 
-        SdlWindowHandle { sdl, win }
+        WindowHandle { sdl, win }
     }
 
-    pub fn raw_window(&self) -> *mut SDL_Window {
+    pub fn screen_size(&self) -> [u32; 2] {
+        let size = self.win.size();
+        [size.0, size.1]
+    }
+
+    pub fn set_screen_size(&mut self, size: [u32; 2], dcx: &mut crate::gfx::api::DrawContext) {
+        self.win.set_size(size[0], size[1]).unwrap();
+        dcx.params.backBufferWidth = size[0] as i32;
+        dcx.params.backBufferHeight = size[1] as i32;
+        dcx.device.reset_backbuffer(&dcx.params);
+    }
+
+    pub(crate) fn raw_window(&self) -> *mut SDL_Window {
         self.win.raw()
     }
 
-    pub fn event_pump(&mut self) -> Result<EventPump, String> {
+    pub(crate) fn event_pump(&mut self) -> Result<EventPump, String> {
         self.sdl.event_pump()
     }
 }

@@ -7,7 +7,7 @@ use crate::{
 };
 use sdl2::{event::Event, sys::SDL_Window, EventPump};
 
-/// User data driven by the ANF game loop
+/// User data driven by [`AnfGameLoop`]
 ///
 /// The internal game loop is like this:
 ///
@@ -30,12 +30,12 @@ pub trait AnfLifecycle {
     #[allow(unused_variables)]
     fn update(&mut self, ts: TimeStep) {}
     #[allow(unused_variables)]
-    fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {}
+    fn render(&mut self, dcx: &mut DrawContext) {}
     fn on_next_frame(&mut self) {}
 }
 
 /// Drives user data ([`AnfLifecycle`])
-pub struct AnfLifecycleLoop {
+pub struct AnfGameLoop {
     raw_window: *mut SDL_Window,
     pub clock: GameClock,
     pub dcx: DrawContext,
@@ -43,25 +43,25 @@ pub struct AnfLifecycleLoop {
 
 /// Device initialization
 /// ---
-impl AnfLifecycleLoop {
-    pub fn new(raw_window: *mut SDL_Window, device: fna3d::Device) -> Self {
+impl AnfGameLoop {
+    pub fn new(raw_window: *mut SDL_Window, dcx: DrawContext) -> Self {
         Self {
             raw_window,
             clock: GameClock::new(),
-            dcx: DrawContext::new(device, vfs::default_shader()),
+            dcx,
         }
     }
 }
 
-impl AsMut<fna3d::Device> for AnfLifecycleLoop {
+impl AsMut<fna3d::Device> for AnfGameLoop {
     fn as_mut(&mut self) -> &mut fna3d::Device {
         self.dcx.as_mut()
     }
 }
 
 /// Visitor
-impl AnfLifecycleLoop {
-    /// Returns if we continue next frame
+impl AnfGameLoop {
+    /// The game loop. Returns if `true` not finished
     pub fn tick_one_frame(
         &mut self,
         state: &mut impl AnfLifecycle,
@@ -92,7 +92,8 @@ impl AnfLifecycleLoop {
     }
 
     fn render(&mut self, state: &mut impl AnfLifecycle, ts: TimeStep) {
-        state.render(ts, &mut self.dcx);
+        self.dcx.time_step = ts;
+        state.render(&mut self.dcx);
         self.dcx
             .as_mut()
             .swap_buffers(None, None, self.raw_window as *mut _);

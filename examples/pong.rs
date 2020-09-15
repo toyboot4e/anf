@@ -3,7 +3,7 @@
 use anf::framework::*;
 
 fn main() -> AnfResult {
-    anf::env_logger::init();
+    env_logger::init();
     anf_run_game(&self::config(), pong::new_game)
 }
 
@@ -91,7 +91,7 @@ mod pong {
             }
         }
 
-        fn render_scene(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
+        fn render_scene(&mut self, dcx: &mut DrawContext) {
             let mut pass = dcx.pass();
             pass.cmd()
                 .dest_pos_px(&self.entities.left.pos)
@@ -114,9 +114,9 @@ mod pong {
             self.handle_physics(ts);
         }
 
-        fn render(&mut self, ts: TimeStep, dcx: &mut DrawContext) {
+        fn render(&mut self, dcx: &mut DrawContext) {
             anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
-            self.render_scene(ts, dcx);
+            self.render_scene(dcx);
         }
 
         fn on_next_frame(&mut self) {

@@ -1,4 +1,6 @@
-//! ANF is a 2D framework powered by [SDL] & [FNA3D] ([Rust-SDL2] and [Rust-FNA3D])
+//! ANF is an 2D framework powered by [SDL] & [FNA3D] ([Rust-SDL2] and [Rust-FNA3D])
+//!
+//! The primary feature of ANF is object-oriented API.
 //!
 //! # Index
 //!
@@ -28,6 +30,3 @@ pub mod vfs;
 
 pub mod framework;
 pub mod prelude;
-
-// This is for `examples/`. FIXME: delete this
-pub use env_logger;

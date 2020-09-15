@@ -7,4 +7,4 @@ pub mod prelude {
 }
 
 pub use push::QuadPush;
-pub use push_cmd::SpritePushCommand;
+pub use push_cmd::{QuadPushCommand, SpritePushCommand};

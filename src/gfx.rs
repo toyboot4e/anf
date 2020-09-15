@@ -44,33 +44,41 @@ pub mod api {
     //! }
     //! ```
 
-    pub use anf_gfx::cmd::prelude::*;
+    use std::path::Path;
 
+    pub use anf_gfx::cmd::prelude::*;
     use anf_gfx::{
         batcher::{bufspecs::ColoredVertexData, Batcher},
-        cmd::{QuadPush, SpritePushCommand},
+        cmd::{QuadPush, QuadPushCommand, SpritePushCommand},
         geom::*,
     };
-
     use fna3d::{self, Device};
     use fna3d_hie::Pipeline;
 
-    use std::path::Path;
+    use crate::framework::TimeStep;
 
     /// The ANF graphics API
     ///
     /// * TODO: drop `Device`
     pub struct DrawContext {
-        /// Use `as_mut` to get access
-        device: Device,
+        // states
         batcher: Batcher,
         pipe: Pipeline,
-        /// Buffer that reduces allocation
         push: QuadPush,
+        /// dependency
+        pub(crate) device: Device,
+        /// dependency
+        pub(crate) params: fna3d::PresentationParameters,
+        /// interface
+        pub(crate) time_step: TimeStep,
     }
 
     impl DrawContext {
-        pub fn new(mut device: Device, default_shader: impl AsRef<Path>) -> Self {
+        pub fn new(
+            mut device: Device,
+            default_shader: impl AsRef<Path>,
+            params: fna3d::PresentationParameters,
+        ) -> Self {
             let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader);
             let batcher = Batcher::from_device(&mut device);
             Self {
@@ -78,6 +86,8 @@ pub mod api {
                 batcher,
                 pipe,
                 push: QuadPush::default(),
+                params,
+                time_step: TimeStep::default(),
             }
         }
     }
@@ -92,6 +102,17 @@ pub mod api {
         /// Begins a batch pass, rendering with particular set of state
         pub fn pass(&mut self) -> BatchPass<'_> {
             BatchPass::new(self)
+        }
+
+        pub fn screen_size(&self) -> [u32; 2] {
+            [
+                self.params.backBufferWidth as u32,
+                self.params.backBufferHeight as u32,
+            ]
+        }
+
+        pub fn dt_secs_f32(&self) -> f32 {
+            self.time_step.dt_secs_f32()
         }
     }
 
@@ -114,10 +135,22 @@ pub mod api {
         }
 
         /// [`QuadPush`] command
-        pub fn cmd(&mut self) -> SpritePushCommand<'_> {
+        pub fn cmd(&mut self) -> QuadPushCommand<'_> {
+            self.dcx.push.reset_to_defaults();
+
+            QuadPushCommand {
+                push: &mut self.dcx.push,
+                batch: &mut self.dcx.batcher.batch,
+                policy: DrawPolicy { do_round: false },
+                flips: Flips::NONE,
+            }
+        }
+
+        pub fn texture<T: Texture2D>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
             self.dcx.push.reset_to_defaults();
 
             SpritePushCommand {
+                texture,
                 push: &mut self.dcx.push,
                 batch: &mut self.dcx.batcher.batch,
                 policy: DrawPolicy { do_round: false },

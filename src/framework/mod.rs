@@ -40,16 +40,17 @@
 //! * TODO: use `AnfResult`
 //! * TODO: access to non-fixed FPS
 
-mod core;
-mod game;
+mod game_loop;
 mod time;
+mod window;
 
-pub use self::{core::AnfConfig, game::AnfLifecycle, time::TimeStep};
-
-use self::{
-    core::{anf_create_core, SdlWindowHandle},
-    game::AnfLifecycleLoop,
+pub use self::{
+    game_loop::AnfLifecycle,
+    time::TimeStep,
+    window::{AnfConfig, WindowHandle},
 };
+
+use crate::{framework::game_loop::AnfGameLoop, gfx::api::DrawContext, vfs};
 
 /// Return type of [`anf_run_game`]
 pub type AnfResult = std::result::Result<(), Box<dyn std::error::Error>>;
@@ -57,23 +58,23 @@ pub type AnfResult = std::result::Result<(), Box<dyn std::error::Error>>;
 /// Drives user data
 pub fn anf_run_game<T: AnfLifecycle>(
     cfg: &AnfConfig,
-    f: impl FnOnce(&mut fna3d::Device) -> T,
+    user_state_constructor: impl FnOnce(&mut fna3d::Device) -> T,
 ) -> AnfResult {
-    // create window and game loop runner
-    let (mut window, mut loop_runner) = init_framework(cfg);
-    // get Rust-SDL2 event pump
-    let mut events = window.event_pump().unwrap();
-    // create user data giving access to `fna3d::Device`
-    let mut state = f(loop_runner.as_mut());
-    // run the game loop
-    while loop_runner.tick_one_frame(&mut state, &mut events) {}
-    Ok(())
-}
+    let (mut window, mut game_loop) = {
+        // construct SDL window handle and FNA3D device
+        let (window, device, params) = window::init(&cfg);
 
-/// Creates window and game loop runner
-fn init_framework(cfg: &AnfConfig) -> (SdlWindowHandle, AnfLifecycleLoop) {
-    // create SDL window and fna3d Device
-    let (win, device, _params) = anf_create_core(&cfg);
-    let looper = AnfLifecycleLoop::new(win.raw_window(), device);
-    (win, looper)
+        let dcx = DrawContext::new(device, vfs::default_shader(), params);
+        let game_loop = AnfGameLoop::new(window.raw_window(), dcx);
+
+        (window, game_loop)
+    };
+
+    // run the game loop
+    let mut state = user_state_constructor(game_loop.as_mut());
+    let mut events = window.event_pump().unwrap();
+    while game_loop.tick_one_frame(&mut state, &mut events) {}
+
+    // it's always Ok for now
+    Ok(())
 }

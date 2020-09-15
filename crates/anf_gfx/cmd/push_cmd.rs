@@ -168,62 +168,87 @@ pub trait QuadPushBuilder {
     }
 }
 
-/// Quads with color, rotation and skews
-pub struct SpritePushCommand<'a> {
+/// Textured quads with color, rotation and skews
+pub struct SpritePushCommand<'a, T: Texture2D> {
+    pub texture: T,
     pub push: &'a mut QuadPush,
     pub batch: &'a mut SpriteBatch,
+    // not implemented
     pub policy: DrawPolicy,
     pub flips: Flips,
 }
 
-impl<'a> QuadPushBuilder for SpritePushCommand<'a> {
+impl<'a, T: Texture2D> QuadPushBuilder for SpritePushCommand<'a, T> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.push
     }
 }
 
-impl<'a, 'b> SpritePushCommand<'b> {
+impl<'a, T: Texture2D> SpritePushCommand<'a, T> {
+    fn run(&mut self) {
+        // log::info!("{:?}", self.cmd.push);
+        self.push
+            .run_sized_texture(&mut self.batch, &self.texture, self.policy, self.flips);
+    }
+}
+
+impl<'a, T: Texture2D> Drop for SpritePushCommand<'a, T> {
+    fn drop(&mut self) {
+        self.run();
+    }
+}
+
+/// Quads with color, rotation and skews
+pub struct QuadPushCommand<'a> {
+    pub push: &'a mut QuadPush,
+    pub batch: &'a mut SpriteBatch,
+    // not implemented
+    pub policy: DrawPolicy,
+    pub flips: Flips,
+}
+
+impl<'a> QuadPushBuilder for QuadPushCommand<'a> {
+    fn data(&mut self) -> &mut QuadPush {
+        &mut self.push
+    }
+}
+
+impl<'a, 'b> QuadPushCommand<'b> {
     /// Sets texture
-    pub fn texture<T: SubTexture>(&'a mut self, texture: T) -> Texture2DPush<'a, 'b, T> {
+    pub fn texture<T: SubTexture>(&'a mut self, texture: T) -> TexturedQuadPushCommand<'a, 'b, T> {
         self.src_rect_normalized(texture.uv_rect());
         self.dest_size_px([texture.w(), texture.h()]);
 
-        Texture2DPush { cmd: self, texture }
+        TexturedQuadPushCommand { cmd: self, texture }
     }
 
     /// Sets sprite
-    pub fn sprite<T: Sprite>(&'a mut self, sprite: T) -> Texture2DPush<'a, 'b, T> {
+    pub fn sprite<T: Sprite>(&'a mut self, sprite: T) -> TexturedQuadPushCommand<'a, 'b, T> {
         self.src_rect_normalized(sprite.uv_rect());
         let scale = sprite.scale();
         self.dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]]);
         self.data().rot = sprite.rot();
 
-        Texture2DPush {
+        TexturedQuadPushCommand {
             cmd: self,
             texture: sprite,
         }
     }
 }
 
-/// Handle to push quads with a texture
-pub struct Texture2DPush<'a, 'b, T: Texture2D> {
-    cmd: &'a mut SpritePushCommand<'b>,
+/// [`QuadPushCommand`] with texture binding
+pub struct TexturedQuadPushCommand<'a, 'b, T: Texture2D> {
+    cmd: &'a mut QuadPushCommand<'b>,
     texture: T,
 }
 
-impl<'a, 'b, T: Texture2D> QuadPushBuilder for Texture2DPush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> QuadPushBuilder for TexturedQuadPushCommand<'a, 'b, T> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.cmd.push
     }
 }
 
-impl<'a, 'b, T: Texture2D> Drop for Texture2DPush<'a, 'b, T> {
-    fn drop(&mut self) {
-        self.run();
-    }
-}
-
-impl<'a, 'b, T: Texture2D> Texture2DPush<'a, 'b, T> {
+impl<'a, 'b, T: Texture2D> TexturedQuadPushCommand<'a, 'b, T> {
     fn run(&mut self) {
         // log::info!("{:?}", self.cmd.push);
         self.cmd.push.run_sized_texture(
@@ -232,5 +257,10 @@ impl<'a, 'b, T: Texture2D> Texture2DPush<'a, 'b, T> {
             self.cmd.policy,
             self.cmd.flips,
         );
+    }
+}
+impl<'a, 'b, T: Texture2D> Drop for TexturedQuadPushCommand<'a, 'b, T> {
+    fn drop(&mut self) {
+        self.run();
     }
 }
