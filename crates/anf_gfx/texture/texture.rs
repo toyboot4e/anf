@@ -1,12 +1,10 @@
-//! 2D texture
+//! [`Texture2D`]
 
 use std::{
     fs::File,
     io::{BufReader, Read, Seek},
     os::raw::c_void,
 };
-
-use crate::geom::Flips;
 
 /// 2D texture handle
 ///
@@ -90,26 +88,20 @@ impl TextureData2D {
             TextureKind::Texture,
         )
     }
+}
 
-    pub fn trim_px(self, rect: impl Into<[u32; 4]>) -> SubTextureData2D {
-        let rect = rect.into();
-        let uv_rect = [
-            rect[0] as f32 / self.w as f32,
-            rect[1] as f32 / self.h as f32,
-            rect[2] as f32 / self.w as f32,
-            rect[3] as f32 / self.h as f32,
-        ];
-        SubTextureData2D {
-            texture: self,
-            uv_rect,
-        }
+/// Accessors
+impl TextureData2D {
+    /// Size in `f32`
+    ///
+    /// `f32` is is reasonable in rendering context
+    pub fn size(&self) -> [f32; 2] {
+        [self.w as f32, self.h as f32]
     }
 
-    pub fn trim_uv(self, uv_rect: impl Into<[f32; 4]>) -> SubTextureData2D {
-        SubTextureData2D {
-            texture: self,
-            uv_rect: uv_rect.into(),
-        }
+    /// Size in pixels
+    pub fn size_px(&self) -> [u32; 2] {
+        [self.w, self.h]
     }
 }
 
@@ -117,7 +109,7 @@ impl TextureData2D {
 /// ---
 impl TextureData2D {
     pub fn from_path(
-        device: &mut fna3d::Device,
+        device: &mut impl AsMut<fna3d::Device>,
         path: impl AsRef<std::path::Path>,
     ) -> Option<Self> {
         let path = path.as_ref();
@@ -128,7 +120,10 @@ impl TextureData2D {
         Self::from_reader(device, reader)
     }
 
-    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, reader: R) -> Option<Self> {
+    pub fn from_reader<R: Read + Seek>(
+        device: &mut impl AsMut<fna3d::Device>,
+        reader: R,
+    ) -> Option<Self> {
         let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
 
         if pixels_ptr == std::ptr::null_mut() {
@@ -144,7 +139,13 @@ impl TextureData2D {
         return Some(texture);
     }
 
-    pub fn from_pixels(device: &mut fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+    pub fn from_pixels(
+        device: &mut impl AsMut<fna3d::Device>,
+        pixels: &[u8],
+        w: u32,
+        h: u32,
+    ) -> Self {
+        let device = device.as_mut();
         let mut t = Self::with_size(device, w, h);
         t.set_data(device, 0, None, pixels);
         t
@@ -180,43 +181,4 @@ impl TextureData2D {
             data.len() as u32,
         );
     }
-}
-
-/// 2D texture handle with region (uv values)
-///
-/// # Safety
-///
-/// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
-#[derive(Debug, PartialEq, Clone)]
-pub struct SubTextureData2D {
-    pub(crate) texture: TextureData2D,
-    pub(crate) uv_rect: [f32; 4],
-}
-
-impl SubTextureData2D {
-    pub fn new(texture: TextureData2D, uv_rect: impl Into<[f32; 4]>) -> Self {
-        Self {
-            texture,
-            uv_rect: uv_rect.into(),
-        }
-    }
-}
-
-impl AsRef<TextureData2D> for SubTextureData2D {
-    fn as_ref(&self) -> &TextureData2D {
-        &self.texture
-    }
-}
-
-/// 2D texture handle with full-feature to render (uv values, scale, rotation and flips)
-///
-/// # Safety
-///
-/// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
-pub struct SpriteData {
-    pub(crate) sub_tex: SubTextureData2D,
-    pub(crate) scale: [f32; 2],
-    /// Radian
-    pub(crate) rot: f32,
-    pub(crate) flips: Flips,
 }

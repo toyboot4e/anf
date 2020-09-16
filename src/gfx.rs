@@ -5,12 +5,21 @@ pub use anf_gfx::{
     texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
 
-use api::DrawContext;
+use crate::gfx::api::DrawContext;
 
 /// Clears the frame buffer, that is, the screen
 pub fn clear_frame(dcx: &mut DrawContext, clear_color: fna3d::Color) {
     dcx.as_mut()
         .clear(fna3d::ClearOptions::TARGET, clear_color, 0.0, 0);
+}
+
+pub mod prelude {
+    //! All graphics types
+    //!
+    //! That is, API types, geometry types and texture/sprite types
+
+    pub use crate::gfx::{api::*, geom::*};
+    pub use anf_gfx::texture::{SpriteData, SubTextureData2D, TextureData2D};
 }
 
 pub mod api {
@@ -49,7 +58,7 @@ pub mod api {
     pub use anf_gfx::cmd::prelude::*;
     use anf_gfx::{
         batcher::{bufspecs::ColoredVertexData, Batcher},
-        cmd::{QuadPush, QuadPushCommand, SpritePushCommand},
+        cmd::{QuadPush, QuadPushBinding, SpritePushCommand},
         geom::*,
     };
     use fna3d::{self, Device};
@@ -105,18 +114,14 @@ pub mod api {
             BatchPass::new(self)
         }
 
-        pub fn screen_size(&self) -> [u32; 2] {
+        pub fn screen(&self) -> Rect2f {
             [
-                self.params.backBufferWidth as u32,
-                self.params.backBufferHeight as u32,
-            ]
-        }
-
-        pub fn screen_size_f32(&self) -> [f32; 2] {
-            [
+                0.0,
+                0.0,
                 self.params.backBufferWidth as f32,
                 self.params.backBufferHeight as f32,
             ]
+            .into()
         }
 
         pub fn dt_secs_f32(&self) -> f32 {
@@ -136,51 +141,37 @@ pub mod api {
         dcx: &'a mut DrawContext,
     }
 
+    /// Flush batch when it goes out of scope
+    impl<'a> Drop for BatchPass<'a> {
+        fn drop(&mut self) {
+            self.dcx
+                .batcher
+                .end(&mut self.dcx.device, &mut self.dcx.pipe);
+        }
+    }
+
     impl<'a> BatchPass<'a> {
         pub fn new(dcx: &'a mut DrawContext) -> Self {
             dcx.batcher.begin();
             Self { dcx }
         }
 
-        /// [`QuadPush`] command
-        pub fn cmd(&mut self) -> QuadPushCommand<'_> {
+        pub fn texture<T: SubTexture2D>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
             self.dcx.push.reset_to_defaults();
-
-            QuadPushCommand {
+            let quad = QuadPushBinding {
                 push: &mut self.dcx.push,
                 batch: &mut self.dcx.batcher.batch,
-                policy: DrawPolicy { do_round: false },
-                flips: Flips::NONE,
-            }
-        }
-
-        pub fn texture<T: SubTexture>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
-            self.dcx.push.reset_to_defaults();
-
-            let uv_rect = texture.uv_rect();
-            let size = [texture.w(), texture.h()];
-
-            let mut x = SpritePushCommand {
-                texture,
-                quad: QuadPushCommand {
-                    push: &mut self.dcx.push,
-                    batch: &mut self.dcx.batcher.batch,
-                    policy: DrawPolicy { do_round: false },
-                    flips: Flips::NONE,
-                },
             };
-
-            x.src_rect_normalized(uv_rect);
-            x.dest_size_px(size);
-            x
+            SpritePushCommand::from_sub_texture(quad, texture)
         }
-    }
 
-    impl<'a> Drop for BatchPass<'a> {
-        fn drop(&mut self) {
-            self.dcx
-                .batcher
-                .end(&mut self.dcx.device, &mut self.dcx.pipe);
+        pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePushCommand<'_, T> {
+            self.dcx.push.reset_to_defaults();
+            let quad = QuadPushBinding {
+                push: &mut self.dcx.push,
+                batch: &mut self.dcx.batcher.batch,
+            };
+            SpritePushCommand::from_sprite(quad, sprite)
         }
     }
 }

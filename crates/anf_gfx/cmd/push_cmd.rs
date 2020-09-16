@@ -2,122 +2,30 @@ use crate::{
     batcher::batch::SpriteBatch,
     cmd::push::{DrawPolicy, QuadPush, Scaled, Texture2D},
     geom::*,
-    texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
 
-// --------------------------------------------------------------------------------
-// traits
-
 /// Texture with region. Used by [`QuadPushBuilder`]
-pub trait SubTexture: Texture2D {
+pub trait SubTexture2D: Texture2D {
     /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
     fn uv_rect(&self) -> [f32; 4];
 }
 
 /// Texture with region and other geometry data. Used by [`QuadPushBuilder`]
-pub trait Sprite: SubTexture {
+pub trait Sprite: SubTexture2D {
+    /// Rotation in radian
     fn rot(&self) -> f32;
     fn scale(&self) -> [f32; 2];
+    /// Normalized origin
+    fn origin(&self) -> [f32; 2];
 }
-
-// --------------------------------------------------------------------------------
-// trait impls
-
-// TODO: share implementations?
-
-// TextureData2D
-impl Texture2D for TextureData2D {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
-        self.raw()
-    }
-
-    fn w(&self) -> f32 {
-        self.w as f32
-    }
-
-    fn h(&self) -> f32 {
-        self.h as f32
-    }
-}
-
-impl SubTexture for TextureData2D {
-    fn uv_rect(&self) -> [f32; 4] {
-        [0.0, 0.0, 1.0, 1.0]
-    }
-}
-
-// SubTextureData2D (delegated to `Texture2D`)
-impl Texture2D for SubTextureData2D {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
-        self.texture.raw()
-    }
-
-    fn w(&self) -> f32 {
-        self.texture.w()
-    }
-
-    fn h(&self) -> f32 {
-        self.texture.h()
-    }
-}
-
-impl SubTexture for SubTextureData2D {
-    fn uv_rect(&self) -> [f32; 4] {
-        self.uv_rect
-    }
-}
-
-// Sprite (delegated to `TextureData2D`)
-impl Texture2D for SpriteData {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
-        self.sub_tex.raw_texture()
-    }
-
-    fn w(&self) -> f32 {
-        self.sub_tex.w()
-    }
-
-    fn h(&self) -> f32 {
-        self.sub_tex.h()
-    }
-}
-
-impl SubTexture for SpriteData {
-    fn uv_rect(&self) -> [f32; 4] {
-        self.sub_tex.uv_rect()
-    }
-}
-
-// implementations for reference types
-impl<T: Texture2D> Texture2D for &T {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
-        (*self).raw_texture()
-    }
-
-    fn w(&self) -> f32 {
-        (*self).w()
-    }
-
-    fn h(&self) -> f32 {
-        (*self).h()
-    }
-}
-
-impl<T: SubTexture> SubTexture for &T {
-    fn uv_rect(&self) -> [f32; 4] {
-        (*self).uv_rect()
-    }
-}
-
-// --------------------------------------------------------------------------------
-// push
 
 /// Default implementation to build [`QuadPush`]
 pub trait QuadPushBuilder {
     /// This is mainly for default implementations, but it can be used to modify [`QuadPush`] manually
     fn data(&mut self) -> &mut QuadPush;
 
-    fn src_rect_normalized(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
+    /// Set source rectangle in normalized coordinates
+    fn src_rect_uv(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
         self.data().src_rect = Scaled::Normalized(rect.into());
         self
     }
@@ -160,8 +68,8 @@ pub trait QuadPushBuilder {
         self
     }
 
-    fn origin(&mut self, origin: Vec2f) -> &mut Self {
-        self.data().origin = origin;
+    fn origin(&mut self, origin: impl Into<Vec2f>) -> &mut Self {
+        self.data().origin = origin.into();
         self
     }
 
@@ -169,103 +77,98 @@ pub trait QuadPushBuilder {
         self.data().color = color;
         self
     }
+
+    fn rot(&mut self, rot: f32) -> &mut Self {
+        self.data().rot = rot;
+        self
+    }
+
+    fn flips(&mut self, flips: Flips) -> &mut Self {
+        self.data().flips = flips;
+        self
+    }
+
+    fn skew(&mut self, skew: Skew2f) -> &mut Self {
+        self.data().skew = skew;
+        self
+    }
 }
 
-/// Quads with color, rotation and skews
-pub struct QuadPushCommand<'a> {
+pub struct QuadPushBinding<'a> {
     pub push: &'a mut QuadPush,
     pub batch: &'a mut SpriteBatch,
-    // not implemented
-    pub policy: DrawPolicy,
-    pub flips: Flips,
 }
 
-impl<'a> QuadPushBuilder for QuadPushCommand<'a> {
+impl<'a> QuadPushBuilder for QuadPushBinding<'a> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.push
     }
 }
 
-impl<'a, 'b> QuadPushCommand<'b> {
-    /// Sets texture
-    pub fn texture<T: SubTexture>(&'a mut self, texture: T) -> TexturedQuadPushCommand<'a, 'b, T> {
-        self.src_rect_normalized(texture.uv_rect());
-        self.dest_size_px([texture.w(), texture.h()]);
-
-        TexturedQuadPushCommand {
-            quad: self,
-            texture,
-        }
+impl<'a> QuadPushBinding<'a> {
+    fn on_set_sub_texture<T: SubTexture2D>(&'_ mut self, texture: &T) {
+        self.src_rect_uv(texture.uv_rect())
+            .dest_size_px([texture.w(), texture.h()]);
     }
 
-    /// Sets sprite
-    pub fn sprite<T: Sprite>(&'a mut self, sprite: T) -> TexturedQuadPushCommand<'a, 'b, T> {
+    pub fn on_set_sprite<T: Sprite>(&'_ mut self, sprite: &T) {
         let scale = sprite.scale();
-        self.src_rect_normalized(sprite.uv_rect());
-        self.dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]]);
-        self.data().rot = sprite.rot();
-
-        TexturedQuadPushCommand {
-            quad: self,
-            texture: sprite,
-        }
+        self.src_rect_uv(sprite.uv_rect())
+            .dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]])
+            .origin(sprite.origin())
+            .rot(sprite.rot());
     }
 }
 
-/// Textured quads with color, rotation and skews
+/// Primary interface to push sprite
 pub struct SpritePushCommand<'a, T: Texture2D> {
-    pub texture: T,
-    pub quad: QuadPushCommand<'a>,
+    quad: QuadPushBinding<'a>,
+    texture: T,
+    policy: DrawPolicy,
+    flips: Flips,
 }
 
-impl<'a, T: Texture2D> QuadPushBuilder for SpritePushCommand<'a, T> {
-    fn data(&mut self) -> &mut QuadPush {
-        &mut self.quad.push
-    }
-}
-
-impl<'a, T: Texture2D> SpritePushCommand<'a, T> {
-    fn run(&mut self) {
-        self.quad.push.run_texture2d(
-            &mut self.quad.batch,
-            &self.texture,
-            self.quad.policy,
-            self.quad.flips,
-        );
-    }
-}
-
+/// Push sprite to batch data when it goes out of scope
 impl<'a, T: Texture2D> Drop for SpritePushCommand<'a, T> {
     fn drop(&mut self) {
         self.run();
     }
 }
 
-/// [`QuadPushCommand`] with texture binding
-pub struct TexturedQuadPushCommand<'a, 'b, T: Texture2D> {
-    quad: &'a mut QuadPushCommand<'b>,
-    texture: T,
+impl<'a, T: Texture2D> SpritePushCommand<'a, T> {
+    pub fn new(quad: QuadPushBinding<'a>, texture: T) -> Self {
+        Self {
+            quad,
+            texture,
+            policy: DrawPolicy { do_round: false },
+            flips: Flips::NONE,
+        }
+    }
+
+    fn run(&mut self) {
+        self.quad
+            .push
+            .run_texture2d(&mut self.quad.batch, &self.texture, self.policy, self.flips);
+    }
 }
 
-impl<'a, 'b, T: Texture2D> QuadPushBuilder for TexturedQuadPushCommand<'a, 'b, T> {
+/// impl default builder methods
+impl<'a, T: Texture2D> QuadPushBuilder for SpritePushCommand<'a, T> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.quad.push
     }
 }
 
-impl<'a, 'b, T: Texture2D> TexturedQuadPushCommand<'a, 'b, T> {
-    fn run(&mut self) {
-        self.quad.push.run_texture2d(
-            &mut self.quad.batch,
-            &self.texture,
-            self.quad.policy,
-            self.quad.flips,
-        );
+impl<'a, T: SubTexture2D> SpritePushCommand<'a, T> {
+    pub fn from_sub_texture(mut quad: QuadPushBinding<'a>, sub_texture: T) -> Self {
+        quad.on_set_sub_texture(&sub_texture);
+        Self::new(quad, sub_texture)
     }
 }
 
-impl<'a, 'b, T: Texture2D> Drop for TexturedQuadPushCommand<'a, 'b, T> {
-    fn drop(&mut self) {
-        self.run();
+impl<'a, T: Sprite> SpritePushCommand<'a, T> {
+    pub fn from_sprite(mut quad: QuadPushBinding<'a>, sub_texture: T) -> Self {
+        quad.on_set_sprite(&sub_texture);
+        Self::new(quad, sub_texture)
     }
 }

@@ -73,7 +73,7 @@ pub struct QuadPush {
 impl Default for QuadPush {
     fn default() -> Self {
         Self {
-            src_rect: Scaled::Normalized(Rect2f::normalized()),
+            src_rect: Scaled::Normalized(Rect2f::unit()),
             dest_rect: Scaled::Normalized(Rect2f::default()),
             origin: Vec2f::default(),
             color: fna3d::Color::white(),
@@ -87,7 +87,7 @@ impl Default for QuadPush {
 
 impl QuadPush {
     pub fn reset_to_defaults(&mut self) {
-        self.src_rect = Scaled::Normalized(Rect2f::normalized());
+        self.src_rect = Scaled::Normalized(Rect2f::unit());
         self.dest_rect = Scaled::Normalized(Rect2f::default());
         self.origin = Vec2f::default();
         self.color = fna3d::Color::white();
@@ -212,23 +212,7 @@ fn set_quad(
     depth: f32,
     flips: Flips,
 ) {
-    let rot = if rot >= f32::EPSILON {
-        let sin = rot.sin();
-        let cos = rot.cos();
-        Rot2f {
-            x1: cos,
-            y1: sin,
-            x2: -sin,
-            y2: cos,
-        }
-    } else {
-        Rot2f {
-            x1: 1.0,
-            y1: 0.0,
-            x2: 0.0,
-            y2: 1.0,
-        }
-    };
+    let rot = Rot2f::from_rad(rot);
 
     // flip our skew values if we have a flipped sprite
     // FIXME is this OK??

@@ -1,5 +1,7 @@
 //! Pong example
 
+// main.rs side
+
 use anf::framework::*;
 
 fn main() -> AnfResult {
@@ -16,92 +18,25 @@ pub fn config() -> AnfConfig {
 }
 
 mod pong {
-    use std::cmp;
+    //! lib.rs side
 
-    use anf::prelude::*;
     use fna3d::Color;
     use sdl2::event::Event;
 
     use anf::{
-        gfx::{
-            geom::{Rect2f, Vec2f},
-            SubTextureData2D, TextureData2D,
-        },
+        gfx::prelude::*,
         input::{Key, Keyboard},
+        prelude::*,
         vfs,
     };
 
     // --------------------------------------------------------------------------------
-    // game data
+    // the game
 
     #[derive(Debug)]
     pub struct PongGameData {
         input: Keyboard,
-        textures: Textures,
-        entities: Entities,
-    }
-
-    pub fn new_game(device: &mut fna3d::Device) -> PongGameData {
-        let size = [90.0, 288.0];
-
-        let left = Paddle {
-            rect: ([100.0, 100.0], size).into(),
-            vel: [0.0, 0.0].into(),
-        };
-
-        let right = Paddle {
-            rect: ([1000.0, 100.0], size).into(),
-            vel: [0.0, 0.0].into(),
-        };
-
-        let textures = {
-            let paddle = TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap();
-            let paddle = paddle.trim_px([0, 0, 90, 288]);
-            Textures {
-                paddle,
-                ball: TextureData2D::from_path(device, vfs::path("pong/paddle.png")).unwrap(),
-            }
-        };
-
-        PongGameData {
-            input: Keyboard::new(),
-            textures,
-            entities: Entities {
-                left,
-                right,
-                ball: Ball::default(),
-            },
-        }
-    }
-
-    /// Logic
-    impl PongGameData {
-        fn handle_input(&mut self) {
-            if self.input.is_key_pressed(Key::D) {
-                self.entities.left.vel += Vec2f::new(100.0, 0.0);
-                println!("D");
-            }
-            if self.input.is_key_pressed(Key::S) {
-                self.entities.left.vel += Vec2f::new(0.0, 100.0);
-                println!("S");
-            }
-        }
-
-        fn handle_physics(&mut self, dt: f32) {
-            // wow, ECS looks simpler than this
-            for e in &mut [&mut self.entities.left, &mut self.entities.right] {
-                e.rect.translate(e.vel * dt);
-            }
-        }
-
-        fn render_scene(&mut self, dcx: &mut DrawContext) {
-            let mut pass = dcx.pass();
-            pass.texture(&self.textures.paddle)
-                .dest_pos_px(&self.entities.left.rect.left_up());
-
-            pass.texture(&self.textures.paddle)
-                .dest_pos_px(&self.entities.right.rect.left_up());
-        }
+        entities: Vec<Entity>,
     }
 
     /// Lifecycle
@@ -111,14 +46,9 @@ mod pong {
         }
 
         fn update(&mut self, ucx: &UpdateContext) {
-            let size = ucx.screen_size_f32();
             self.handle_input();
-            self.handle_physics(ucx.dt_secs_f32());
-            for e in &mut [&mut self.entities.left, &mut self.entities.right] {
-                // TODO: handle velocity
-                e.rect.clamp_x(0.0, size[0]);
-                e.rect.clamp_y(0.0, size[1]);
-            }
+            self.handle_physics(ucx);
+            self.post_physics(ucx);
         }
 
         fn draw(&mut self, dcx: &mut DrawContext) {
@@ -131,35 +61,97 @@ mod pong {
         }
     }
 
+    /// Logic
+    impl PongGameData {
+        fn handle_input(&mut self) {
+            if self.input.is_key_pressed(Key::D) {
+                self.entities[0].vel += Vec2f::new(100.0, 0.0);
+            }
+            if self.input.is_key_pressed(Key::S) {
+                self.entities[0].vel += Vec2f::new(0.0, 100.0);
+            }
+        }
+
+        fn handle_physics(&mut self, ucx: &UpdateContext) {
+            let dt = ucx.dt_secs_f32();
+            for e in self.entities.iter_mut() {
+                e.rect.translate(e.vel * dt);
+            }
+        }
+
+        fn post_physics(&mut self, ucx: &UpdateContext) {
+            let size = ucx.screen().size();
+            for e in self.entities.iter_mut() {
+                // TODO: handle velocity
+                e.rect.clamp_x(0.0, size.x);
+                e.rect.clamp_y(0.0, size.y);
+            }
+        }
+
+        fn render_scene(&mut self, dcx: &mut DrawContext) {
+            let mut pass = dcx.pass();
+            for e in &self.entities {
+                pass.sprite(&e.sprite).dest_pos_px(e.rect.left_up());
+            }
+        }
+    }
+
     // --------------------------------------------------------------------------------
     // World
 
-    // (Not) generic resources
-
-    #[derive(Debug, Clone)]
-    struct Textures {
-        paddle: SubTextureData2D,
-        ball: TextureData2D,
-    }
-
     #[derive(Debug, Clone, Default)]
-    struct Entities {
-        left: Paddle,
-        right: Paddle,
-        ball: Ball,
-    }
-
-    // Entities
-
-    #[derive(Debug, Clone, Default)]
-    struct Paddle {
+    struct Entity {
         rect: Rect2f,
         vel: Vec2f,
+        sprite: SpriteData,
     }
 
-    #[derive(Debug, Clone, Default)]
-    struct Ball {
-        rect: Rect2f,
-        vel: Vec2f,
+    /// Initializes the `PongGameData`] with two paddles and one ball
+    pub fn new_game(dcx: &mut DrawContext) -> PongGameData {
+        let atlas = TextureData2D::from_path(dcx, vfs::path("ikachan.png")).unwrap();
+        let atlas_size_px: Vec2f = atlas.size().into();
+
+        // uv, I mean, normalized
+        let paddle_size_uv = Vec2f::new(1.0 / 3.0, 3.0 * 1.0 / 4.0);
+        let ball_size_uv = Vec2f::new(1.0 / 3.0, 1.0 * 1.0 / 4.0);
+
+        let paddle_sprite = SpriteData {
+            texture: atlas.clone(),
+            uv_rect: [(0.0, 0.0), paddle_size_uv.into()].into(),
+            origin: Vec2f::new(0.5, 0.5),
+            ..Default::default()
+        };
+
+        let ball_sprite = SpriteData {
+            texture: atlas.clone(),
+            uv_rect: [(2.0 / 3.0, 0.0), ball_size_uv.into()].into(),
+            origin: Vec2f::new(0.5, 0.5),
+            ..Default::default()
+        };
+
+        let paddle_size_px = paddle_size_uv * atlas_size_px;
+        let left = Entity {
+            rect: ([100.0, 100.0], paddle_size_px).into(),
+            vel: Vec2f::zero(),
+            sprite: paddle_sprite.clone(),
+        };
+
+        let right = Entity {
+            rect: ([1000.0, 100.0], paddle_size_px).into(),
+            vel: Vec2f::zero(),
+            sprite: paddle_sprite.clone(),
+        };
+
+        let ball_size_px = ball_size_uv * atlas_size_px;
+        let ball = Entity {
+            rect: (dcx.screen().center(), ball_size_px).into(),
+            vel: Vec2f::zero(),
+            sprite: ball_sprite.clone(),
+        };
+
+        PongGameData {
+            input: Keyboard::new(),
+            entities: vec![left, right, ball],
+        }
     }
 }

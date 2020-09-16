@@ -58,7 +58,7 @@ pub type AnfResult = std::result::Result<(), Box<dyn std::error::Error>>;
 /// Drives user data
 pub fn anf_run_game<T: AnfLifecycle>(
     cfg: &AnfConfig,
-    user_state_constructor: impl FnOnce(&mut fna3d::Device) -> T,
+    user_state_constructor: impl FnOnce(&mut DrawContext) -> T,
 ) -> AnfResult {
     let (mut window, mut game_loop) = {
         // construct SDL window handle and FNA3D device
@@ -71,7 +71,7 @@ pub fn anf_run_game<T: AnfLifecycle>(
     };
 
     // run the game loop
-    let mut state = user_state_constructor(game_loop.as_mut());
+    let mut state = user_state_constructor(&mut game_loop.dcx);
     let mut events = window.event_pump().unwrap();
     while game_loop.tick_one_frame(&mut state, &mut events) {}
 

@@ -1,6 +1,22 @@
 //! Geometry primitives
 //!
-//! Vectors and rectanglesm can be converted from/to arrays.
+//! They have public fields so they we can easily be modified, but they're not indexed as the
+//! drawcback.
+//!
+//! # Intent
+//!
+//! Return `SomeGeometryType` to provide geomrty information with cozy interface.
+//!
+//! Accept `impl Into<SomeGeometryType>` as a variety of input types:
+//!
+//! ```
+//! let a: Rect2f = [0.0, 0.0, 128.0, 72.0];
+//! let b: Rect2f = [(0.0, 0.0), (128.0, 72.0)].into();
+//! let c: [f32; 4] = a.into();
+//!
+//! let size: Vec2f = [200.0, 300.0].into();
+//! let d: Rect2f = ([0.0, 0.0], size).into();
+//! ```
 
 // https://docs.rs/auto_ops/
 use auto_ops::*;
@@ -15,6 +31,14 @@ pub struct Vec2f {
 impl Vec2f {
     pub fn new(x: f32, y: f32) -> Self {
         Self { x, y }
+    }
+
+    pub fn zero() -> Self {
+        Self { x: 0.0, y: 0.0 }
+    }
+
+    pub fn one() -> Self {
+        Self { x: 1.0, y: 1.0 }
     }
 
     pub fn round(&mut self) {
@@ -109,6 +133,18 @@ impl From<&[f32; 2]> for Vec2f {
     }
 }
 
+impl From<(f32, f32)> for Vec2f {
+    fn from(xs: (f32, f32)) -> Self {
+        Self { x: xs.0, y: xs.1 }
+    }
+}
+
+impl From<&(f32, f32)> for Vec2f {
+    fn from(xs: &(f32, f32)) -> Self {
+        Self { x: xs.0, y: xs.1 }
+    }
+}
+
 impl Into<[f32; 2]> for Vec2f {
     fn into(self) -> [f32; 2] {
         [self.x, self.y]
@@ -118,6 +154,18 @@ impl Into<[f32; 2]> for Vec2f {
 impl Into<[f32; 2]> for &Vec2f {
     fn into(self) -> [f32; 2] {
         [self.x, self.y]
+    }
+}
+
+impl Into<(f32, f32)> for Vec2f {
+    fn into(self) -> (f32, f32) {
+        (self.x, self.y)
+    }
+}
+
+impl Into<(f32, f32)> for &Vec2f {
+    fn into(self) -> (f32, f32) {
+        (self.x, self.y)
     }
 }
 
@@ -235,7 +283,7 @@ impl Rect2f {
         Self { x, y, w, h }
     }
 
-    pub fn normalized() -> Self {
+    pub fn unit() -> Self {
         Self {
             x: 0.0,
             y: 0.0,
@@ -250,7 +298,10 @@ impl Rect2f {
             y: self.h,
         }
     }
+}
 
+/// Primitive
+impl Rect2f {
     // scalars
     pub fn left(&self) -> f32 {
         self.x
@@ -313,33 +364,55 @@ impl Rect2f {
         }
     }
 
-    pub fn set_left_up(&mut self, pos: Vec2f) {
-        self.x = pos.x;
-        self.y = pos.y;
+    pub fn set_left_up(&mut self, pos: impl Into<[f32; 2]>) {
+        let pos = pos.into();
+        self.x = pos[0];
+        self.y = pos[1];
     }
 
-    pub fn set_right_up(&mut self, pos: Vec2f) {
-        self.x = pos.x - self.w;
-        self.y = pos.y;
+    pub fn set_right_up(&mut self, pos: impl Into<[f32; 2]>) {
+        let pos = pos.into();
+        self.x = pos[0] - self.w;
+        self.y = pos[1];
     }
 
-    pub fn set_left_down(&mut self, pos: Vec2f) {
-        self.x = pos.x;
-        self.y = pos.y - self.h;
+    pub fn set_left_down(&mut self, pos: impl Into<[f32; 2]>) {
+        let pos = pos.into();
+        self.x = pos[0];
+        self.y = pos[1] - self.h;
     }
 
-    pub fn set_right_down(&mut self, pos: Vec2f) {
-        self.x = pos.x - self.w;
-        self.y = pos.y - self.h;
+    pub fn set_right_down(&mut self, pos: impl Into<[f32; 2]>) {
+        let pos = pos.into();
+        self.x = pos[0] - self.w;
+        self.y = pos[1] - self.h;
     }
+}
 
-    // more accessors
-    pub fn origin(&self, origin: Vec2f) -> Vec2f {
-        self.left_up() * (Vec2f::new(1.0, 1.0) - origin) + self.right_up() * origin
-    }
-
+/// More semantic
+impl Rect2f {
     pub fn center(&self) -> Vec2f {
         (self.left_up() + self.right_down()) / 2.0
+    }
+
+    /// Origin in pixels from origin in normalized coordinates
+    pub fn origin_px(&self, origin: impl Into<Vec2f>) -> Vec2f {
+        self.left_up() + self.size() * origin.into()
+    }
+
+    /// Sets the position of the center
+    pub fn set_center(&mut self, pos: impl Into<[f32; 2]>) {
+        let pos = pos.into();
+        self.x = pos[0] - self.w / 2.0;
+        self.y = pos[1] - self.h / 2.0;
+    }
+
+    /// Sets the position of the origin specified with normalized coordinates
+    pub fn set_origin(&mut self, pos: impl Into<[f32; 2]>, origin: impl Into<[f32; 2]>) {
+        let pos = pos.into();
+        let origin = origin.into();
+        self.x = pos[0] - self.w * origin[0];
+        self.y = pos[1] - self.h * origin[1];
     }
 
     // mutations
@@ -368,7 +441,12 @@ impl Rect2f {
     }
 }
 
-impl<T: Into<[f32; 2]>, U: Into<[f32; 2]>> From<(T, U)> for Rect2f {
+/// ([x, y], [w, h]) -> Rect2f
+impl<T, U> From<(T, U)> for Rect2f
+where
+    T: Into<[f32; 2]>,
+    U: Into<[f32; 2]>,
+{
     fn from(xs: (T, U)) -> Self {
         let (xy, wh) = xs;
         let xy = xy.into();
@@ -382,13 +460,35 @@ impl<T: Into<[f32; 2]>, U: Into<[f32; 2]>> From<(T, U)> for Rect2f {
     }
 }
 
-impl From<[Vec2f; 2]> for Rect2f {
-    fn from(xs: [Vec2f; 2]) -> Self {
+// [[x, y], [w, h]] -> Rect2f
+//
+// confclits with the preceding impl
+// impl<T: Into<[f32; 2]> + Copy> From<[T; 2]> for Rect2f {
+//     fn from(xs: [T; 2]) -> Self {
+//         let xy = xs[0].clone().into();
+//         let wh = xs[1].clone().into();
+//         Self {
+//             x: xy[0],
+//             y: xy[1],
+//             w: wh[0],
+//             h: wh[1],
+//         }
+//     }
+// }
+
+/// [(x, y), (w, h)] -> Rect2f
+impl<T> From<[T; 2]> for Rect2f
+where
+    T: Into<(f32, f32)> + Copy,
+{
+    fn from(xs: [T; 2]) -> Self {
+        let xy = xs[0].clone().into();
+        let wh = xs[1].clone().into();
         Self {
-            x: xs[0].x,
-            y: xs[0].y,
-            w: xs[1].x,
-            h: xs[1].y,
+            x: xy.0,
+            y: xy.1,
+            w: wh.0,
+            h: wh.1,
         }
     }
 }
@@ -428,7 +528,9 @@ fna3d::bitflags::bitflags! {
     }
 }
 
-/// Top-left and bottom-right
+/// Skew matrix
+///
+/// Top-left and bottom-right.
 #[derive(Debug, Clone, PartialEq, Default, Copy)]
 pub struct Skew2f {
     pub x1: f32,
@@ -448,11 +550,36 @@ impl Skew2f {
     }
 }
 
-/// Top-left and bottom-right
+/// Rotation matrix expanded from a radian value
+///
+/// Use radian to store rotation. Top-left and bottom-right.
 #[derive(Debug, Clone, PartialEq, Default, Copy)]
-pub struct Rot2f {
+pub(crate) struct Rot2f {
     pub x1: f32,
     pub y1: f32,
     pub x2: f32,
     pub y2: f32,
+}
+
+impl Rot2f {
+    pub fn from_rad(rad: f32) -> Self {
+        // TODO: what is this..
+        if rad >= f32::EPSILON {
+            let sin = rad.sin();
+            let cos = rad.cos();
+            Self {
+                x1: cos,
+                y1: sin,
+                x2: -sin,
+                y2: cos,
+            }
+        } else {
+            Self {
+                x1: 1.0,
+                y1: 0.0,
+                x2: 0.0,
+                y2: 1.0,
+            }
+        }
+    }
 }

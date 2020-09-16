@@ -2,6 +2,9 @@
 //!
 //! The primary feature of ANF is object-oriented API.
 //!
+//! ANF should always have API that is close to the best. If you feel anything uncomfortable, feel
+//! free to open issues or to send pull requests.
+//!
 //! # Index
 //!
 //! * To get started, see [`framework`]

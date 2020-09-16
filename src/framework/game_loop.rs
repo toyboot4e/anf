@@ -4,7 +4,7 @@ use sdl2::{event::Event, sys::SDL_Window, EventPump};
 
 use crate::{
     framework::time::{GameClock, TimeStep},
-    gfx::api::DrawContext,
+    gfx::{api::DrawContext, geom::Rect2f},
 };
 
 /// User data driven by [`AnfGameLoop`]
@@ -46,7 +46,7 @@ pub struct AnfGameLoop {
 #[derive(Debug, Clone)]
 pub struct UpdateContext {
     ts: TimeStep,
-    screen_size: [u32; 2],
+    screen: Rect2f,
 }
 
 impl UpdateContext {
@@ -58,12 +58,8 @@ impl UpdateContext {
         self.ts.dt_secs_f32()
     }
 
-    pub fn screen_size(&self) -> [u32; 2] {
-        self.screen_size
-    }
-
-    pub fn screen_size_f32(&self) -> [f32; 2] {
-        [self.screen_size[0] as f32, self.screen_size[1] as f32]
+    pub fn screen(&self) -> &Rect2f {
+        &self.screen
     }
 }
 
@@ -116,9 +112,12 @@ impl AnfGameLoop {
     }
 
     fn update(&mut self, state: &mut impl AnfLifecycle) {
-        let screen_size = self.dcx.screen_size();
+        let screen = self.dcx.screen();
         for ts in self.clock.tick() {
-            let ucx = UpdateContext { ts, screen_size };
+            let ucx = UpdateContext {
+                ts,
+                screen: screen.clone(),
+            };
             state.update(&ucx);
         }
     }
