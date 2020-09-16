@@ -59,7 +59,8 @@ pub mod api {
 
     /// The ANF graphics API
     ///
-    /// * TODO: drop `Device`
+    /// Drops FNA3D device
+    #[derive(Debug)]
     pub struct DrawContext {
         // states
         batcher: Batcher,
@@ -111,6 +112,13 @@ pub mod api {
             ]
         }
 
+        pub fn screen_size_f32(&self) -> [f32; 2] {
+            [
+                self.params.backBufferWidth as f32,
+                self.params.backBufferHeight as f32,
+            ]
+        }
+
         pub fn dt_secs_f32(&self) -> f32 {
             self.time_step.dt_secs_f32()
         }
@@ -146,16 +154,25 @@ pub mod api {
             }
         }
 
-        pub fn texture<T: Texture2D>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
+        pub fn texture<T: SubTexture>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
             self.dcx.push.reset_to_defaults();
 
-            SpritePushCommand {
+            let uv_rect = texture.uv_rect();
+            let size = [texture.w(), texture.h()];
+
+            let mut x = SpritePushCommand {
                 texture,
-                push: &mut self.dcx.push,
-                batch: &mut self.dcx.batcher.batch,
-                policy: DrawPolicy { do_round: false },
-                flips: Flips::NONE,
-            }
+                quad: QuadPushCommand {
+                    push: &mut self.dcx.push,
+                    batch: &mut self.dcx.batcher.batch,
+                    policy: DrawPolicy { do_round: false },
+                    flips: Flips::NONE,
+                },
+            };
+
+            x.src_rect_normalized(uv_rect);
+            x.dest_size_px(size);
+            x
         }
     }
 

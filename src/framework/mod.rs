@@ -45,7 +45,7 @@ mod time;
 mod window;
 
 pub use self::{
-    game_loop::AnfLifecycle,
+    game_loop::{AnfLifecycle, UpdateContext},
     time::TimeStep,
     window::{AnfConfig, WindowHandle},
 };

@@ -244,6 +244,47 @@ impl Rect2f {
         }
     }
 
+    pub fn size(&self) -> Vec2f {
+        Vec2f {
+            x: self.w,
+            y: self.h,
+        }
+    }
+
+    // scalars
+    pub fn left(&self) -> f32 {
+        self.x
+    }
+
+    pub fn right(&self) -> f32 {
+        self.x + self.w
+    }
+
+    pub fn up(&self) -> f32 {
+        self.y
+    }
+
+    pub fn down(&self) -> f32 {
+        self.y + self.h
+    }
+
+    pub fn set_left(&mut self, x: f32) {
+        self.x = x;
+    }
+
+    pub fn set_right(&mut self, x: f32) {
+        self.x = x - self.w;
+    }
+
+    pub fn set_up(&mut self, y: f32) {
+        self.y = y;
+    }
+
+    pub fn set_down(&mut self, y: f32) {
+        self.y = y - self.h;
+    }
+
+    // vectors
     pub fn left_up(&self) -> Vec2f {
         Vec2f {
             x: self.x,
@@ -251,10 +292,92 @@ impl Rect2f {
         }
     }
 
-    pub fn size(&self) -> Vec2f {
+    pub fn right_up(&self) -> Vec2f {
         Vec2f {
-            x: self.w,
-            y: self.h,
+            x: self.x + self.w,
+            y: self.y,
+        }
+    }
+
+    pub fn left_down(&self) -> Vec2f {
+        Vec2f {
+            x: self.x,
+            y: self.y + self.h,
+        }
+    }
+
+    pub fn right_down(&self) -> Vec2f {
+        Vec2f {
+            x: self.x + self.w,
+            y: self.y + self.h,
+        }
+    }
+
+    pub fn set_left_up(&mut self, pos: Vec2f) {
+        self.x = pos.x;
+        self.y = pos.y;
+    }
+
+    pub fn set_right_up(&mut self, pos: Vec2f) {
+        self.x = pos.x - self.w;
+        self.y = pos.y;
+    }
+
+    pub fn set_left_down(&mut self, pos: Vec2f) {
+        self.x = pos.x;
+        self.y = pos.y - self.h;
+    }
+
+    pub fn set_right_down(&mut self, pos: Vec2f) {
+        self.x = pos.x - self.w;
+        self.y = pos.y - self.h;
+    }
+
+    // more accessors
+    pub fn origin(&self, origin: Vec2f) -> Vec2f {
+        self.left_up() * (Vec2f::new(1.0, 1.0) - origin) + self.right_up() * origin
+    }
+
+    pub fn center(&self) -> Vec2f {
+        (self.left_up() + self.right_down()) / 2.0
+    }
+
+    // mutations
+    pub fn translate(&mut self, v: impl Into<Vec2f>) {
+        let v = v.into();
+        self.x += v.x;
+        self.y += v.y;
+    }
+
+    pub fn clamp_x(&mut self, min: f32, max: f32) {
+        if self.left() < min {
+            self.set_left(min);
+        }
+        if self.right() > max {
+            self.set_right(max)
+        }
+    }
+
+    pub fn clamp_y(&mut self, min: f32, max: f32) {
+        if self.up() < min {
+            self.set_up(min);
+        }
+        if self.down() > max {
+            self.set_down(max)
+        }
+    }
+}
+
+impl<T: Into<[f32; 2]>, U: Into<[f32; 2]>> From<(T, U)> for Rect2f {
+    fn from(xs: (T, U)) -> Self {
+        let (xy, wh) = xs;
+        let xy = xy.into();
+        let wh = wh.into();
+        Self {
+            x: xy[0],
+            y: xy[1],
+            w: wh[0],
+            h: wh[1],
         }
     }
 }

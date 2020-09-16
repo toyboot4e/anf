@@ -5,6 +5,9 @@ use crate::{
     texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
 
+// --------------------------------------------------------------------------------
+// traits
+
 /// Texture with region. Used by [`QuadPushBuilder`]
 pub trait SubTexture: Texture2D {
     /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
@@ -18,7 +21,7 @@ pub trait Sprite: SubTexture {
 }
 
 // --------------------------------------------------------------------------------
-// impls
+// trait impls
 
 // TODO: share implementations?
 
@@ -168,36 +171,6 @@ pub trait QuadPushBuilder {
     }
 }
 
-/// Textured quads with color, rotation and skews
-pub struct SpritePushCommand<'a, T: Texture2D> {
-    pub texture: T,
-    pub push: &'a mut QuadPush,
-    pub batch: &'a mut SpriteBatch,
-    // not implemented
-    pub policy: DrawPolicy,
-    pub flips: Flips,
-}
-
-impl<'a, T: Texture2D> QuadPushBuilder for SpritePushCommand<'a, T> {
-    fn data(&mut self) -> &mut QuadPush {
-        &mut self.push
-    }
-}
-
-impl<'a, T: Texture2D> SpritePushCommand<'a, T> {
-    fn run(&mut self) {
-        // log::info!("{:?}", self.cmd.push);
-        self.push
-            .run_sized_texture(&mut self.batch, &self.texture, self.policy, self.flips);
-    }
-}
-
-impl<'a, T: Texture2D> Drop for SpritePushCommand<'a, T> {
-    fn drop(&mut self) {
-        self.run();
-    }
-}
-
 /// Quads with color, rotation and skews
 pub struct QuadPushCommand<'a> {
     pub push: &'a mut QuadPush,
@@ -219,46 +192,78 @@ impl<'a, 'b> QuadPushCommand<'b> {
         self.src_rect_normalized(texture.uv_rect());
         self.dest_size_px([texture.w(), texture.h()]);
 
-        TexturedQuadPushCommand { cmd: self, texture }
+        TexturedQuadPushCommand {
+            quad: self,
+            texture,
+        }
     }
 
     /// Sets sprite
     pub fn sprite<T: Sprite>(&'a mut self, sprite: T) -> TexturedQuadPushCommand<'a, 'b, T> {
-        self.src_rect_normalized(sprite.uv_rect());
         let scale = sprite.scale();
+        self.src_rect_normalized(sprite.uv_rect());
         self.dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]]);
         self.data().rot = sprite.rot();
 
         TexturedQuadPushCommand {
-            cmd: self,
+            quad: self,
             texture: sprite,
         }
     }
 }
 
+/// Textured quads with color, rotation and skews
+pub struct SpritePushCommand<'a, T: Texture2D> {
+    pub texture: T,
+    pub quad: QuadPushCommand<'a>,
+}
+
+impl<'a, T: Texture2D> QuadPushBuilder for SpritePushCommand<'a, T> {
+    fn data(&mut self) -> &mut QuadPush {
+        &mut self.quad.push
+    }
+}
+
+impl<'a, T: Texture2D> SpritePushCommand<'a, T> {
+    fn run(&mut self) {
+        self.quad.push.run_texture2d(
+            &mut self.quad.batch,
+            &self.texture,
+            self.quad.policy,
+            self.quad.flips,
+        );
+    }
+}
+
+impl<'a, T: Texture2D> Drop for SpritePushCommand<'a, T> {
+    fn drop(&mut self) {
+        self.run();
+    }
+}
+
 /// [`QuadPushCommand`] with texture binding
 pub struct TexturedQuadPushCommand<'a, 'b, T: Texture2D> {
-    cmd: &'a mut QuadPushCommand<'b>,
+    quad: &'a mut QuadPushCommand<'b>,
     texture: T,
 }
 
 impl<'a, 'b, T: Texture2D> QuadPushBuilder for TexturedQuadPushCommand<'a, 'b, T> {
     fn data(&mut self) -> &mut QuadPush {
-        &mut self.cmd.push
+        &mut self.quad.push
     }
 }
 
 impl<'a, 'b, T: Texture2D> TexturedQuadPushCommand<'a, 'b, T> {
     fn run(&mut self) {
-        // log::info!("{:?}", self.cmd.push);
-        self.cmd.push.run_sized_texture(
-            &mut self.cmd.batch,
+        self.quad.push.run_texture2d(
+            &mut self.quad.batch,
             &self.texture,
-            self.cmd.policy,
-            self.cmd.flips,
+            self.quad.policy,
+            self.quad.flips,
         );
     }
 }
+
 impl<'a, 'b, T: Texture2D> Drop for TexturedQuadPushCommand<'a, 'b, T> {
     fn drop(&mut self) {
         self.run();

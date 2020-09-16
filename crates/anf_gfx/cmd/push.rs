@@ -103,7 +103,7 @@ impl QuadPush {
 ///
 /// Flush `SpriteBatch` before running if it's saturated.
 impl QuadPush {
-    pub fn run_sized_texture(
+    pub fn run_texture2d(
         &self,
         batch: &mut SpriteBatch,
         texture: &impl Texture2D,
@@ -116,7 +116,7 @@ impl QuadPush {
         //     rect.x = rect.x.round();
         //     rect.y = rect.y.round();
         // }
-        self::push_sized_texture(
+        self::push_texture2d(
             batch,
             texture,
             self.origin,
@@ -175,7 +175,7 @@ impl QuadPush {
 
 /// Pass normalized geometry values
 #[inline]
-fn push_sized_texture(
+fn push_texture2d(
     batch: &mut SpriteBatch,
     texture: &impl Texture2D,
     origin: Vec2f,

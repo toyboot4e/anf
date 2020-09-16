@@ -16,6 +16,8 @@ pub fn config() -> AnfConfig {
 }
 
 mod pong {
+    use std::cmp;
+
     use anf::prelude::*;
     use fna3d::Color;
     use sdl2::event::Event;
@@ -40,13 +42,15 @@ mod pong {
     }
 
     pub fn new_game(device: &mut fna3d::Device) -> PongGameData {
+        let size = [90.0, 288.0];
+
         let left = Paddle {
-            pos: [100.0, 100.0].into(),
+            rect: ([100.0, 100.0], size).into(),
             vel: [0.0, 0.0].into(),
         };
 
         let right = Paddle {
-            pos: [1000.0, 100.0].into(),
+            rect: ([1000.0, 100.0], size).into(),
             vel: [0.0, 0.0].into(),
         };
 
@@ -83,23 +87,20 @@ mod pong {
             }
         }
 
-        fn handle_physics(&mut self, ts: TimeStep) {
-            let dt = ts.dt_secs_f32();
+        fn handle_physics(&mut self, dt: f32) {
             // wow, ECS looks simpler than this
             for e in &mut [&mut self.entities.left, &mut self.entities.right] {
-                e.pos += e.vel * dt;
+                e.rect.translate(e.vel * dt);
             }
         }
 
         fn render_scene(&mut self, dcx: &mut DrawContext) {
             let mut pass = dcx.pass();
-            pass.cmd()
-                .dest_pos_px(&self.entities.left.pos)
-                .texture(&self.textures.paddle);
+            pass.texture(&self.textures.paddle)
+                .dest_pos_px(&self.entities.left.rect.left_up());
 
-            pass.cmd()
-                .dest_pos_px(&self.entities.right.pos)
-                .texture(&self.textures.paddle);
+            pass.texture(&self.textures.paddle)
+                .dest_pos_px(&self.entities.right.rect.left_up());
         }
     }
 
@@ -109,12 +110,18 @@ mod pong {
             self.input.listen_sdl_event(ev);
         }
 
-        fn update(&mut self, ts: TimeStep) {
+        fn update(&mut self, ucx: &UpdateContext) {
+            let size = ucx.screen_size_f32();
             self.handle_input();
-            self.handle_physics(ts);
+            self.handle_physics(ucx.dt_secs_f32());
+            for e in &mut [&mut self.entities.left, &mut self.entities.right] {
+                // TODO: handle velocity
+                e.rect.clamp_x(0.0, size[0]);
+                e.rect.clamp_y(0.0, size[1]);
+            }
         }
 
-        fn render(&mut self, dcx: &mut DrawContext) {
+        fn draw(&mut self, dcx: &mut DrawContext) {
             anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
             self.render_scene(dcx);
         }
@@ -146,13 +153,13 @@ mod pong {
 
     #[derive(Debug, Clone, Default)]
     struct Paddle {
-        pos: Vec2f,
+        rect: Rect2f,
         vel: Vec2f,
     }
 
     #[derive(Debug, Clone, Default)]
     struct Ball {
-        pos: Vec2f,
+        rect: Rect2f,
         vel: Vec2f,
     }
 }
