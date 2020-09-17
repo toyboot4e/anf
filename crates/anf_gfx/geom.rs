@@ -10,7 +10,9 @@
 //! Accept `impl Into<SomeGeometryType>` as a variety of input types:
 //!
 //! ```
-//! let a: Rect2f = [0.0, 0.0, 128.0, 72.0];
+//! use anf_gfx::geom::*;
+//!
+//! let a: Rect2f = [0.0, 0.0, 128.0, 72.0].into();
 //! let b: Rect2f = [(0.0, 0.0), (128.0, 72.0)].into();
 //! let c: [f32; 4] = a.into();
 //!

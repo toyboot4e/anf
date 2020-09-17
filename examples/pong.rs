@@ -2,39 +2,42 @@
 
 // main.rs side
 
-use anf::framework::*;
+use anf::app::{framework::*, prelude::*};
 
 fn main() -> AnfResult {
     env_logger::init();
-    anf_run_game(&self::config(), pong::new_game)
+    AnfFramework::with_cfg(self::config()).run(pong::new_game)
 }
 
-pub fn config() -> AnfConfig {
-    AnfConfig {
+pub fn config() -> WindowConfig {
+    WindowConfig {
         title: "Pong".to_string(),
         w: 1280,
         h: 720,
+        ..Default::default()
     }
 }
 
 mod pong {
     //! lib.rs side
 
-    use fna3d::Color;
     use sdl2::event::Event;
 
     use anf::{
         gfx::prelude::*,
         input::{Key, Keyboard},
         prelude::*,
+        utils::FpsCounter,
         vfs,
     };
 
     // --------------------------------------------------------------------------------
     // the game
 
-    #[derive(Debug)]
     pub struct PongGameData {
+        window: WindowHandle,
+        game_title: String,
+        fps: FpsCounter,
         input: Keyboard,
         entities: Vec<Entity>,
     }
@@ -46,12 +49,16 @@ mod pong {
         }
 
         fn update(&mut self, ucx: &UpdateContext) {
+            if let Some(fps) = self.fps.update(ucx.time_step().elapsed()) {
+                let name = format!("{} - {} FPS", &self.game_title, fps);
+                self.window.set_title(&name).unwrap();
+            }
             self.handle_input();
             self.handle_physics(ucx);
             self.post_physics(ucx);
         }
 
-        fn draw(&mut self, dcx: &mut DrawContext) {
+        fn render(&mut self, dcx: &mut DrawContext) {
             anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
             self.render_scene(dcx);
         }
@@ -107,7 +114,11 @@ mod pong {
     }
 
     /// Initializes the `PongGameData`] with two paddles and one ball
-    pub fn new_game(dcx: &mut DrawContext) -> PongGameData {
+    pub fn new_game(
+        window: WindowHandle,
+        cfg: &WindowConfig,
+        dcx: &mut DrawContext,
+    ) -> PongGameData {
         let atlas = TextureData2D::from_path(dcx, vfs::path("ikachan.png")).unwrap();
         let atlas_size_px: Vec2f = atlas.size().into();
 
@@ -150,6 +161,9 @@ mod pong {
         };
 
         PongGameData {
+            window,
+            game_title: cfg.title.clone(),
+            fps: FpsCounter::default(),
             input: Keyboard::new(),
             entities: vec![left, right, ball],
         }

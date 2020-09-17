@@ -1,9 +1,10 @@
-//! Input, the abstraction
+//! Input
+//!
+//! The primary ANF input system is just a state.
 //!
 //! # Usage
 //!
-//! The primary ANF input system is just a state:
-//! handle input:
+//! Handling input:
 //!
 //! ```
 //! use anf::input::{Key, Keyboard};
@@ -42,10 +43,10 @@
 //! ```
 
 mod keyboard;
-use num_enum::TryFromPrimitive;
-
 pub mod vinput;
 pub use keyboard::Keyboard;
+
+use num_enum::TryFromPrimitive;
 
 /// ANF key code
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
