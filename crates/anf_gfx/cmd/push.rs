@@ -8,7 +8,7 @@
 
 use crate::{
     batcher::{batch::SpriteBatch, bufspecs::QuadData},
-    geom::*,
+    geom2d::*,
 };
 
 /// Round or not
@@ -131,7 +131,7 @@ impl QuadPush {
     }
 
     /// -> (src_rect, origin, dest_rect)
-   #[inline]
+    #[inline]
     fn geometry_normalized(
         &self,
         policy: DrawPolicy,

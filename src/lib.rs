@@ -18,12 +18,11 @@
 pub use fna3d;
 pub use sdl2;
 
+pub mod game;
+
 pub mod gfx;
 pub mod input;
-pub mod utils;
 pub mod vfs;
-
-pub mod app;
 
 pub mod prelude {
     //! Prelude, primary types for writing ANF games
@@ -33,5 +32,5 @@ pub mod prelude {
     pub use fna3d;
     pub use sdl2;
 
-    pub use crate::app::prelude::*;
+    pub use crate::game::{app::*, draw::*, AnfFramework};
 }

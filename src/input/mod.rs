@@ -32,7 +32,7 @@
 //!      kbd: Keyboard,
 //! }
 //!
-//! impl AnfLifecycle for SampleState {
+//! impl AnfAppLifecycle for SampleState {
 //!     fn event(&mut self, ev: &Event) {
 //!         self.kbd.listen_sdl_event(ev);
 //!     }

@@ -1,7 +1,7 @@
 use crate::{
     batcher::batch::SpriteBatch,
     cmd::push::{DrawPolicy, QuadPush, Scaled, Texture2D},
-    geom::*,
+    geom2d::*,
 };
 
 /// Texture with region. Used by [`QuadPushBuilder`]
@@ -19,7 +19,7 @@ pub trait Sprite: SubTexture2D {
     fn origin(&self) -> [f32; 2];
 }
 
-/// Default implementation to build [`QuadPush`]
+/// Comes with default implementation
 pub trait QuadPushBuilder {
     /// This is mainly for default implementations, but it can be used to modify [`QuadPush`] manually
     fn data(&mut self) -> &mut QuadPush;

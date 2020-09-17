@@ -1,15 +1,16 @@
 //! Graphics, data for drawing
 //!
-//! Graphics API is under [`crate::app::prelude`].
+//! Drawing APIs are under [`crate::game::draw`], which is re-exported at [`crate::prelude`]]
 
 pub use anf_gfx::{
-    geom,
+    geom2d,
     texture::{SpriteData, SubTextureData2D, TextureData2D},
 };
 
 pub mod prelude {
+    //! All of the graphics data types
     pub use anf_gfx::{
-        geom::*,
+        geom2d::*,
         texture::{SpriteData, SubTextureData2D, TextureData2D},
     };
 }

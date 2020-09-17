@@ -10,7 +10,7 @@
 //! [`SpritePushCommand`]: SpritePushCommand
 //!
 //! ```no_run
-//! use anf::prelude::*;
+//! use anf::{game::{AnfGameState, Context}, prelude::*};
 //! use anf::gfx::TextureData2D;
 //! use fna3d::Color;
 //!
@@ -18,10 +18,10 @@
 //!     tx: TextureData2D,
 //! }
 //!
-//! impl AnfLifecycle for SampleState {
-//!     fn render(&mut self, dcx: &mut DrawContext) {
-//!         anf::gfx::clear_frame(dcx, Color::cornflower_blue());
-//!         let mut pass = dcx.pass(); // batch pass
+//! impl AnfGameState for SampleState {
+//!     fn update(&mut self, cx: &mut Context) {}
+//!     fn render(&mut self, cx: &mut Context) {
+//!         let mut pass = cx.dcx.pass(); // batch pass
 //!         pass.texture(&self.tx).dest_pos_px([100.0, 100.0]); // push texture
 //!         pass.texture(&self.tx).dest_pos_px([100.0, 400.0]);
 //!     }
@@ -34,12 +34,12 @@ pub use anf_gfx::cmd::prelude::*;
 use anf_gfx::{
     batcher::{bufspecs::ColoredVertexData, Batcher},
     cmd::{QuadPush, QuadPushBinding, SpritePushCommand},
-    geom::*,
+    geom2d::*,
 };
 use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
-use crate::app::prelude::TimeStep;
+use crate::game::app::TimeStep;
 
 /// The ANF graphics API
 ///

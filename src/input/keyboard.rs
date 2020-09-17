@@ -65,9 +65,8 @@ impl Keyboard {
         }
     }
 
+    /// Prepare for next frame
     pub fn on_next_frame(&mut self) {
-        // to continue from the previous state, we have to copy it
-        // because key up events are only sent when they happen
         self.kbd.b.bits = self.kbd.a.bits;
     }
 }

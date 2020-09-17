@@ -2,11 +2,14 @@
 
 // main.rs side
 
-use anf::app::{framework::*, prelude::*};
+use anf::{
+    game::{AnfGame, AnfGameState, Context},
+    prelude::*,
+};
 
-fn main() -> AnfResult {
+fn main() -> AnfAppResult {
     env_logger::init();
-    AnfFramework::with_cfg(self::config()).run(pong::new_game)
+    AnfGame::run(config(), pong::PongGameData::from_cx)
 }
 
 pub fn config() -> WindowConfig {
@@ -21,13 +24,15 @@ pub fn config() -> WindowConfig {
 mod pong {
     //! lib.rs side
 
+    use anf::{
+        game::{AnfGame, AnfGameState, Context},
+        prelude::*,
+    };
     use sdl2::event::Event;
 
     use anf::{
         gfx::prelude::*,
         input::{Key, Keyboard},
-        prelude::*,
-        utils::FpsCounter,
         vfs,
     };
 
@@ -35,70 +40,79 @@ mod pong {
     // the game
 
     pub struct PongGameData {
-        window: WindowHandle,
-        game_title: String,
-        fps: FpsCounter,
-        input: Keyboard,
         entities: Vec<Entity>,
     }
 
-    /// Lifecycle
-    impl AnfLifecycle for PongGameData {
-        fn event(&mut self, ev: &Event) {
-            self.input.listen_sdl_event(ev);
-        }
-
-        fn update(&mut self, ucx: &UpdateContext) {
-            if let Some(fps) = self.fps.update(ucx.time_step().elapsed()) {
-                let name = format!("{} - {} FPS", &self.game_title, fps);
-                self.window.set_title(&name).unwrap();
-            }
-            self.handle_input();
-            self.handle_physics(ucx);
-            self.post_physics(ucx);
-        }
-
-        fn render(&mut self, dcx: &mut DrawContext) {
-            anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
-            self.render_scene(dcx);
-        }
-
-        fn on_next_frame(&mut self) {
-            self.input.on_next_frame();
+    impl PongGameData {
+        pub fn from_cx(cx: &mut Context) -> Self {
+            new_game(&cx.win, &mut cx.dcx)
         }
     }
 
-    /// Logic
+    impl AnfGameState for PongGameData {
+        fn update(&mut self, cx: &mut Context) {
+            let dt = cx.dcx.dt_secs_f32();
+            let size = cx.dcx.screen().size();
+
+            self.handle_input(&cx.kbd);
+            self.handle_physics(dt);
+            self.post_physics(dt, size);
+        }
+
+        fn render(&mut self, cx: &mut Context) {
+            let mut pass = cx.dcx.pass();
+            for e in &self.entities {
+                pass.sprite(&e.sprite).dest_pos_px(e.rect.left_up());
+            }
+        }
+    }
+
+    //     fn update(&mut self, ucx: &UpdateContext) {
+    //         if let Some(fps) = self.fps.update(ucx.time_step().elapsed()) {
+    //             let name = format!("{} - {} FPS", &self.game_title, fps);
+    //             self.window.set_title(&name).unwrap();
+    //         }
+    //         self.handle_input();
+    //         self.handle_physics(ucx);
+    //         self.post_physics(ucx);
+    //     }
+
+    //     fn render(&mut self, dcx: &mut DrawContext) {
+    //         anf::gfx::clear_frame(dcx, fna3d::Color::cornflower_blue());
+
+    //         let mut pass = dcx.pass();
+    //         for e in &self.entities {
+    //             pass.sprite(&e.sprite).dest_pos_px(e.rect.left_up());
+    //         }
+    //     }
+
+    //     fn on_next_frame(&mut self) {
+    //         self.input.on_next_frame();
+    //     }
+    // }
+
+    /// Updating logic
     impl PongGameData {
-        fn handle_input(&mut self) {
-            if self.input.is_key_pressed(Key::D) {
+        fn handle_input(&mut self, kbd: &Keyboard) {
+            if kbd.is_key_pressed(Key::D) {
                 self.entities[0].vel += Vec2f::new(100.0, 0.0);
             }
-            if self.input.is_key_pressed(Key::S) {
+            if kbd.is_key_pressed(Key::S) {
                 self.entities[0].vel += Vec2f::new(0.0, 100.0);
             }
         }
 
-        fn handle_physics(&mut self, ucx: &UpdateContext) {
-            let dt = ucx.dt_secs_f32();
+        fn handle_physics(&mut self, dt: f32) {
             for e in self.entities.iter_mut() {
                 e.rect.translate(e.vel * dt);
             }
         }
 
-        fn post_physics(&mut self, ucx: &UpdateContext) {
-            let size = ucx.screen().size();
+        fn post_physics(&mut self, dt: f32, screen_size: Vec2f) {
             for e in self.entities.iter_mut() {
-                // TODO: handle velocity
-                e.rect.clamp_x(0.0, size.x);
-                e.rect.clamp_y(0.0, size.y);
-            }
-        }
-
-        fn render_scene(&mut self, dcx: &mut DrawContext) {
-            let mut pass = dcx.pass();
-            for e in &self.entities {
-                pass.sprite(&e.sprite).dest_pos_px(e.rect.left_up());
+                // TODO: top
+                e.rect.clamp_x(0.0, screen_size.x);
+                e.rect.clamp_y(0.0, screen_size.y);
             }
         }
     }
@@ -113,12 +127,8 @@ mod pong {
         sprite: SpriteData,
     }
 
-    /// Initializes the `PongGameData`] with two paddles and one ball
-    pub fn new_game(
-        window: WindowHandle,
-        cfg: &WindowConfig,
-        dcx: &mut DrawContext,
-    ) -> PongGameData {
+    /// Initializes the [`PongGameData`] with two paddles and one ball
+    pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> PongGameData {
         let atlas = TextureData2D::from_path(dcx, vfs::path("ikachan.png")).unwrap();
         let atlas_size_px: Vec2f = atlas.size().into();
 
@@ -126,17 +136,21 @@ mod pong {
         let paddle_size_uv = Vec2f::new(1.0 / 3.0, 3.0 * 1.0 / 4.0);
         let ball_size_uv = Vec2f::new(1.0 / 3.0, 1.0 * 1.0 / 4.0);
 
+        // TODO: center origin
+        // TODO: rotation and bounds (use matrix?)
+        let origin = Vec2f::new(0.0, 0.0);
+
         let paddle_sprite = SpriteData {
             texture: atlas.clone(),
             uv_rect: [(0.0, 0.0), paddle_size_uv.into()].into(),
-            origin: Vec2f::new(0.5, 0.5),
+            origin,
             ..Default::default()
         };
 
         let ball_sprite = SpriteData {
             texture: atlas.clone(),
             uv_rect: [(2.0 / 3.0, 0.0), ball_size_uv.into()].into(),
-            origin: Vec2f::new(0.5, 0.5),
+            origin,
             ..Default::default()
         };
 
@@ -161,10 +175,6 @@ mod pong {
         };
 
         PongGameData {
-            window,
-            game_title: cfg.title.clone(),
-            fps: FpsCounter::default(),
-            input: Keyboard::new(),
             entities: vec![left, right, ball],
         }
     }

@@ -1,4 +1,4 @@
-use crate::{cmd::prelude::*, geom::*};
+use crate::{cmd::prelude::*, geom2d::*};
 
 pub use crate::texture::texture::{TextureData2D, TextureKind};
 
