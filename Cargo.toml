@@ -19,3 +19,4 @@ num_enum = "0.5.1"
 
 [dev-dependencies]
 env_logger = "0.7.1"
+rand = "0.7.3"

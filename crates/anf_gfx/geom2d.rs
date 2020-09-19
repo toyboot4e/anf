@@ -50,78 +50,24 @@ impl Vec2f {
 }
 
 // Vec2f, f32
-impl_op_ex!(*|lhs: &Vec2f, rhs: &f32| -> Vec2f {
-    Vec2f {
-        x: lhs.x * rhs,
-        y: lhs.y * rhs,
-    }
-});
+impl_op_ex!(-|me: &Vec2f| -> Vec2f { Vec2f::new(-me.x, -me.y) });
 
-impl_op_ex!(/|lhs: &Vec2f, rhs: &f32| -> Vec2f {
-    Vec2f {
-        x: lhs.x / rhs,
-        y: lhs.y / rhs,
-    }
-});
-
-impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &f32| {
-    lhs.x *= rhs;
-    lhs.y *= rhs;
-});
-
-impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &f32| {
-    lhs.x /= rhs;
-    lhs.y /= rhs;
-});
+// Vec2f, f32
+impl_op_ex!(*|lhs: &Vec2f, rhs: &f32| -> Vec2f { Vec2f::new(lhs.x * rhs, lhs.y * rhs) });
+impl_op_ex!(/|lhs: &Vec2f, rhs: &f32| -> Vec2f { Vec2f::new(lhs.x / rhs, lhs.y / rhs) });
+impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &f32| { lhs.x *= rhs; lhs.y *= rhs; });
+impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &f32| { lhs.x /= rhs; lhs.y /= rhs; });
 
 // Vec2f, Vec2f
-impl_op_ex!(+ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
-    Vec2f {
-        x: lhs.x + rhs.x,
-        y: lhs.y + rhs.y,
-    }
-});
+impl_op_ex!(+ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x + rhs.x, lhs.y + rhs.y) });
+impl_op_ex!(-|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x - rhs.x, lhs.y - rhs.y) });
+impl_op_ex!(*|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x * rhs.x, lhs.y * rhs.y) });
+impl_op_ex!(/ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x / rhs.x, lhs.y / rhs.y) });
 
-impl_op_ex!(-|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
-    Vec2f {
-        x: lhs.x - rhs.x,
-        y: lhs.y - rhs.y,
-    }
-});
-
-impl_op_ex!(*|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
-    Vec2f {
-        x: lhs.x * rhs.x,
-        y: lhs.y * rhs.y,
-    }
-});
-
-impl_op_ex!(/ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f {
-    Vec2f {
-        x: lhs.x / rhs.x,
-        y: lhs.y / rhs.y,
-    }
-});
-
-impl_op_ex!(+= |lhs: &mut Vec2f, rhs: &Vec2f| {
-    lhs.x += rhs.x;
-    lhs.y += rhs.y;
-});
-
-impl_op_ex!(-= |lhs: &mut Vec2f, rhs: &Vec2f| {
-    lhs.x -= rhs.x;
-    lhs.y -= rhs.y;
-});
-
-impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &Vec2f| {
-    lhs.x *= rhs.x;
-    lhs.y *= rhs.y;
-});
-
-impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &Vec2f| {
-    lhs.x /= rhs.x;
-    lhs.y /= rhs.y;
-});
+impl_op_ex!(+= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x += rhs.x; lhs.y += rhs.y; });
+impl_op_ex!(-= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x -= rhs.x; lhs.y -= rhs.y; });
+impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x *= rhs.x; lhs.y *= rhs.y; });
+impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x /= rhs.x; lhs.y /= rhs.y; });
 
 impl From<[f32; 2]> for Vec2f {
     fn from(xs: [f32; 2]) -> Self {
@@ -185,93 +131,37 @@ impl Vec3f {
     }
 }
 
+impl_op_ex!(-|me: &Vec3f| -> Vec3f { Vec3f::new(-me.x, -me.y, -me.z) });
+
 // Vec3f, f32
 impl_op_ex!(*|lhs: &Vec3f, rhs: &f32| -> Vec3f {
-    Vec3f {
-        x: lhs.x * rhs,
-        y: lhs.y * rhs,
-        z: lhs.z * rhs,
-    }
+    Vec3f::new(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs)
 });
-
-impl_op_ex!(/|lhs: &Vec3f, rhs: &f32| -> Vec3f {
-    Vec3f {
-        x: lhs.x / rhs,
-        y: lhs.y / rhs,
-        z: lhs.z / rhs,
-    }
-});
-
-impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &f32| {
-    lhs.x *= rhs;
-    lhs.y *= rhs;
-    lhs.z *= rhs;
-});
-
-impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &f32| {
-    lhs.x /= rhs;
-    lhs.y /= rhs;
-    lhs.z /= rhs;
-});
+impl_op_ex!(/|lhs: &Vec3f, rhs: &f32| -> Vec3f { Vec3f::new( lhs.x / rhs, lhs.y / rhs, lhs.z / rhs) });
+impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &f32| { lhs.x *= rhs; lhs.y *= rhs; lhs.z *= rhs; });
+impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &f32| { lhs.x /= rhs; lhs.y /= rhs; lhs.z /= rhs; });
 
 // Vec3f, Vec3f
-impl_op_ex!(+ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
-    Vec3f {
-        x: lhs.x + rhs.x,
-        y: lhs.y + rhs.y,
-        z: lhs.z + rhs.z,
-    }
-});
-
+impl_op_ex!(+ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f { Vec3f::new( lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z) });
 impl_op_ex!(-|lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
-    Vec3f {
-        x: lhs.x - rhs.x,
-        y: lhs.y - rhs.y,
-        z: lhs.z - rhs.z,
-    }
+    Vec3f::new(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z)
 });
-
 impl_op_ex!(*|lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
-    Vec3f {
-        x: lhs.x * rhs.x,
-        y: lhs.y * rhs.y,
-        z: lhs.z * rhs.z,
-    }
+    Vec3f::new(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z)
 });
+impl_op_ex!(/ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f { Vec3f::new( lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z) });
 
-impl_op_ex!(/ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
-    Vec3f {
-        x: lhs.x / rhs.x,
-        y: lhs.y / rhs.y,
-        z: lhs.z / rhs.z,
-    }
-});
+impl_op_ex!(+= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x += rhs.x; lhs.y += rhs.y; lhs.z += rhs.z; });
+impl_op_ex!(-= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x -= rhs.x; lhs.y -= rhs.y; lhs.z -= rhs.z; });
+impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x *= rhs.x; lhs.y *= rhs.y; lhs.z *= rhs.z; });
+impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x /= rhs.x; lhs.y /= rhs.y; lhs.z /= rhs.z; });
 
-impl_op_ex!(+= |lhs: &mut Vec3f, rhs: &Vec3f| {
-    lhs.x += rhs.x;
-    lhs.y += rhs.y;
-    lhs.z += rhs.z;
-});
-
-impl_op_ex!(-= |lhs: &mut Vec3f, rhs: &Vec3f| {
-    lhs.x -= rhs.x;
-    lhs.y -= rhs.y;
-    lhs.z -= rhs.z;
-});
-
-impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &Vec3f| {
-    lhs.x *= rhs.x;
-    lhs.y *= rhs.y;
-    lhs.z *= rhs.z;
-});
-
-impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &Vec3f| {
-    lhs.x /= rhs.x;
-    lhs.y /= rhs.y;
-    lhs.z /= rhs.z;
-});
-
-/// Top-left point and size
+/// 2D rectangle
+///
+/// It doesn't consider offset, rotation and scales.
+///
+/// Note that the `x`, `y` fields correspond top-left point. If you consider an origin at somewhere
+/// else, then those methods don't make sense.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Rect2f {
     pub x: f32,
@@ -323,11 +213,13 @@ impl Rect2f {
         self.x + self.w
     }
 
-    pub fn up(&self) -> f32 {
+    /// Coordinate of visually up edge
+    pub fn top(&self) -> f32 {
         self.y
     }
 
-    pub fn down(&self) -> f32 {
+    /// Coordinate of visually down edge
+    pub fn bottom(&self) -> f32 {
         self.y + self.h
     }
 
@@ -428,8 +320,10 @@ impl Rect2f {
     }
 
     // mutations
-    pub fn translate(&mut self, v: impl Into<Vec2f>) {
-        let v = v.into();
+
+    /// Adds offset to `self`
+    pub fn translate(&mut self, offset: impl Into<Vec2f>) {
+        let v = offset.into();
         self.x += v.x;
         self.y += v.y;
     }
@@ -444,12 +338,33 @@ impl Rect2f {
     }
 
     pub fn clamp_y(&mut self, min: f32, max: f32) {
-        if self.up() < min {
+        if self.top() < min {
             self.set_up(min);
         }
-        if self.down() > max {
+        if self.bottom() > max {
             self.set_down(max)
         }
+    }
+}
+
+/// Interaction
+impl Rect2f {
+    pub fn contains(&self, pos: impl Into<Vec2f>) -> bool {
+        let pos = pos.into();
+        !(
+            //
+            pos.x < self.left()
+                || self.right() < pos.x
+                || pos.y < self.top()
+                || self.bottom() < pos.y
+        )
+    }
+
+    pub fn intersects(&self, other: &Rect2f) -> bool {
+        !(self.right() < other.left()
+            || other.right() < self.left()
+            || self.bottom() < other.top()
+            || other.bottom() < self.top())
     }
 }
 
