@@ -8,22 +8,23 @@
 
 use crate::{
     batcher::{batch::SpriteBatch, bufspecs::QuadData},
-    geom::*,
+    geom2d::*,
 };
 
-/// Round or not
+/// Round or not. TODO: utilize it
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DrawPolicy {
     pub do_round: bool,
     // is_batching_disabled: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Default, Copy)]
-pub struct Rect2u {
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
+/// Texture with size data. Used by [`QuadPush`]
+pub trait Texture2D {
+    fn raw_texture(&self) -> *mut fna3d::Texture;
+    /// Pixel
+    fn w(&self) -> f32;
+    /// Pixel
+    fn h(&self) -> f32;
 }
 
 #[derive(Debug)]
@@ -42,26 +43,9 @@ impl<T> Scaled<T> {
 }
 
 // --------------------------------------------------------------------------------
-// traits
+// QuadPush
 
-pub trait RawTexture {
-    fn raw_texture(&self) -> *mut fna3d::Texture;
-}
-
-pub trait SizedTexture: RawTexture {
-    /// Pixel
-    fn w(&self) -> f32;
-    /// Pixel
-    fn h(&self) -> f32;
-}
-
-// --------------------------------------------------------------------------------
-// SpritePush
-
-/// Full-featured parameter to push a sprite into `SpriteBatch`
-///
-/// Geometry values may be normalized or un-normalized and they're normalized when we push
-/// quadliterals.
+/// Full-featured geometry parameters to push a sprite onto [`SpriteBatch`]
 #[derive(Debug)]
 pub struct QuadPush {
     // TODO: consider using two vectors per src/dest
@@ -79,7 +63,7 @@ pub struct QuadPush {
 impl Default for QuadPush {
     fn default() -> Self {
         Self {
-            src_rect: Scaled::Normalized(Rect2f::normalized()),
+            src_rect: Scaled::Normalized(Rect2f::unit()),
             dest_rect: Scaled::Normalized(Rect2f::default()),
             origin: Vec2f::default(),
             color: fna3d::Color::white(),
@@ -93,7 +77,7 @@ impl Default for QuadPush {
 
 impl QuadPush {
     pub fn reset_to_defaults(&mut self) {
-        self.src_rect = Scaled::Normalized(Rect2f::normalized());
+        self.src_rect = Scaled::Normalized(Rect2f::unit());
         self.dest_rect = Scaled::Normalized(Rect2f::default());
         self.origin = Vec2f::default();
         self.color = fna3d::Color::white();
@@ -109,10 +93,10 @@ impl QuadPush {
 ///
 /// Flush `SpriteBatch` before running if it's saturated.
 impl QuadPush {
-    pub fn run_sized_texture(
+    pub fn run_texture2d(
         &self,
         batch: &mut SpriteBatch,
-        texture: &impl SizedTexture,
+        texture: &impl Texture2D,
         policy: DrawPolicy,
         flips: Flips,
     ) {
@@ -122,7 +106,7 @@ impl QuadPush {
         //     rect.x = rect.x.round();
         //     rect.y = rect.y.round();
         // }
-        self::push_sized_texture(
+        self::push_texture2d(
             batch,
             texture,
             self.origin,
@@ -141,7 +125,7 @@ impl QuadPush {
     fn geometry_normalized(
         &self,
         policy: DrawPolicy,
-        texture: &impl SizedTexture,
+        texture: &impl Texture2D,
     ) -> (Rect2f, Rect2f) {
         let inv_tex_w = 1.0 / texture.w();
         let inv_tex_h = 1.0 / texture.h();
@@ -181,9 +165,9 @@ impl QuadPush {
 
 /// Pass normalized geometry values
 #[inline]
-fn push_sized_texture(
+fn push_texture2d(
     batch: &mut SpriteBatch,
-    texture: &impl RawTexture,
+    texture: &impl Texture2D,
     origin: Vec2f,
     src_rect: Rect2f,
     dest_rect: Rect2f,
@@ -193,12 +177,10 @@ fn push_sized_texture(
     depth: f32,
     flips: Flips,
 ) {
-    let quad = &mut batch.quads[batch.n_quads];
+    let quad = batch.next_quad_mut(texture.raw_texture());
     self::set_quad(
         quad, skew, origin, src_rect, dest_rect, color, rot, depth, flips,
     );
-    batch.raw_texture_track[batch.n_quads] = texture.raw_texture();
-    batch.n_quads += 1;
 }
 
 /// Normalized x offsets at top-left, top-right, bottom-left, bottom-right
@@ -220,23 +202,7 @@ fn set_quad(
     depth: f32,
     flips: Flips,
 ) {
-    let rot = if rot >= f32::EPSILON {
-        let sin = rot.sin();
-        let cos = rot.cos();
-        Rot2f {
-            x1: cos,
-            y1: sin,
-            x2: -sin,
-            y2: cos,
-        }
-    } else {
-        Rot2f {
-            x1: 1.0,
-            y1: 0.0,
-            x2: 0.0,
-            y2: 1.0,
-        }
-    };
+    let rot = Rot2f::from_rad(rot);
 
     // flip our skew values if we have a flipped sprite
     // FIXME is this OK??

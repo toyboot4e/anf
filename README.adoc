@@ -1,12 +1,6 @@
 = ANF
 
-ANF is a 2D framework in Rust. It's powered by https://github.com/FNA-XNA/FNA3D[FNA3D] and https://www.libsdl.org/[SDL2]. It runs on desktops.
-
-== About
-
-See the https://docs.rs/anf[API documentation] to get started.
-
-ANF is just for https://github.com/toyboot4e/rlbox[my roguelike game development] and it's not a feature-complete framework. You would only need 5 minutes to get the whole picture.
+ANF is a 2D framework in Rust.  See the https://docs.rs/anf[API documentation] to get started.
 
 == Feedback
 

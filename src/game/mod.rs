@@ -1,165 +1,61 @@
-//! Game loop
+//! The framework
 //!
-//! It is rather fixed than being extensible.
-//!
-//! # Getting started
-//!
-//! This is a hello-world program:
-//!
-//! ```no_run
-//! // main.rs or bin.rs side
-//! use anf::game::{app::{App, AppConfig}, GameLoop, GameResult},
-//! };
-//!
-//! fn main() -> GameResult {
-//!     let app = App::from_cfg(AppConfig::default());
-//!     let state = MyState {};
-//!     GameLoop::run_app(app, state)
-//! }
-//!
-//! // lib.rs side
-//! use anf::{game::GameState, gfx::DrawContext};
-//! use anf::fna3d::Color;
-//!
-//! struct MyState {}
-//!
-//! impl GameState for MyState {
-//!     fn update(&mut self) {}
-//!     fn render(&mut self, dcx: &mut DrawContext) {
-//!         anf::gfx::clear_frame(dcx, Color::cornflower_blue());
-//!     }
-//! }
-//! ```
-//!
-//! Your screen will be filled with [cornflower blue] pixels. Feel like you're home -- you're
-//! welcome :)
-//!
-//! See the [examples] for more information.
-//!
-//! [cornflower blue]: https://www.google.com/search?q=cornflower%20blue
-//! [examples]: https://github.com/toyboot4e/anf/examples
+//! Build your own framework on top of it!
 
 pub mod app;
+pub mod draw;
+pub mod time;
+pub mod utils;
 
-use crate::{gfx::DrawContext, vfs};
-use app::{App, SdlWindowHandle};
-use sdl2::{event::Event, keyboard::Keycode};
-use std::time::Duration;
+// TODO: remove framework module
+mod framework;
+pub use framework::{AnfGameResult, AnfLifecycle};
 
-/// User data driven by [`GameLoop`]
-pub trait GameState {
-    fn update(&mut self) {}
-    #[allow(unused_variables)]
-    fn render(&mut self, dcx: &mut DrawContext) {}
-}
+use sdl2::event::Event;
 
-/// Return type of [`GameLoop::run`]
-pub type GameResult = std::result::Result<(), Box<dyn std::error::Error>>;
+use self::{app::*, draw::*, framework::*, time::*};
 
-/// Does everything after window creation
-pub struct GameLoop<T: GameState> {
-    dcx: DrawContext,
-    state: T,
-    win: SdlWindowHandle,
-}
-
-/// Device initialization
-/// ---
-impl<T: GameState> GameLoop<T> {
-    pub fn run_app(app: App, state: T) -> GameResult {
-        Self::new(state, app).run()
-    }
-
-    fn new(state: T, mut src: App) -> Self {
-        self::init_device(&mut src.device, &src.params);
-        GameLoop {
-            dcx: DrawContext::new(src.device, vfs::default_shader()),
-            state,
-            win: src.win,
-        }
-    }
-}
-
-/// Initializes the graphics devices
+/// Entry point of an ANF game
 ///
-/// FNA3D requires us to set viewport/rasterizer/blend state. **If this is skipped, we can't
-/// draw anything** (we only can clear the screen)
-fn init_device(
-    device: &mut fna3d::Device,
-    // batcher: &mut Batcher,
-    params: &fna3d::PresentationParameters,
-) {
-    let viewport = fna3d::Viewport {
-        x: 0,
-        y: 0,
-        w: params.backBufferWidth as i32,
-        h: params.backBufferHeight as i32,
-        minDepth: 0.0,
-        maxDepth: 1.0, // TODO: what's this
-    };
-    device.set_viewport(&viewport);
-
-    let rst = fna3d::RasterizerState::default();
-    device.apply_rasterizer_state(&rst);
-
-    let bst = fna3d::BlendState::alpha_blend();
-    device.set_blend_state(&bst);
-
-    // let dst = fna3d::DepthStencilState::default();
-    // device.set_depth_stencil_state(&dst);
+/// The context/user_data pattern where context is also provided by user.
+pub struct AnfGame<T: AnfGameState<U>, U: AnfLifecycle> {
+    user: T,
+    cx: U,
 }
 
-/// Internal type for the game loop
-enum UpdateResult {
-    Continue,
-    Quit,
+impl<T: AnfGameState<U>, U: AnfLifecycle> AnfGame<T, U> {
+    pub fn run(
+        cfg: WindowConfig,
+        cx: impl FnOnce(WindowHandle, &WindowConfig, DrawContext) -> U,
+        state: impl FnOnce(&mut U) -> T,
+    ) -> AnfGameResult {
+        AnfFramework::from_cfg(cfg).run(|win, cfg, dcx| {
+            let mut cx = cx(win, cfg, dcx);
+            let user = state(&mut cx);
+            Self { user, cx: cx }
+        })
+    }
 }
 
-impl<T: GameState> GameLoop<T> {
-    fn run(mut self) -> GameResult {
-        let mut events = self.win.sdl.event_pump().unwrap();
-        log::trace!("Start ANF game loop");
-
-        'main_loop: loop {
-            // pump events
-            for ev in events.poll_iter() {
-                match self.handle_event(&ev) {
-                    UpdateResult::Quit => break 'main_loop,
-                    UpdateResult::Continue => {}
-                }
-            }
-
-            self.update();
-            self.render();
-
-            // FIXME: timestep handling & `GameTime`
-            let fps = 60;
-            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / fps));
-        }
-
-        Ok(())
+impl<T: AnfGameState<U>, U: AnfLifecycle> AnfLifecycle for AnfGame<T, U> {
+    fn event(&mut self, ev: &Event) {
+        self.cx.event(ev);
     }
-
-    fn update(&mut self) {
-        self.state.update();
+    fn update(&mut self, time_step: TimeStep) {
+        self.cx.update(time_step);
+        self.user.update(&mut self.cx);
     }
-
-    fn render(&mut self) {
-        self.state.render(&mut self.dcx);
-        self.dcx
-            .device
-            .swap_buffers(None, None, self.win.raw_window as *mut _);
+    fn render(&mut self, time_step: TimeStep) {
+        self.cx.render(time_step);
+        self.user.render(&mut self.cx);
     }
-
-    /// Just quits on `Escape` key down for now
-    fn handle_event(&mut self, ev: &Event) -> UpdateResult {
-        match ev {
-            Event::Quit { .. }
-            | Event::KeyDown {
-                keycode: Some(Keycode::Escape),
-                ..
-            } => UpdateResult::Quit,
-            _ => UpdateResult::Continue,
-        }
+    fn on_end_frame(&mut self) {
+        self.cx.on_end_frame();
     }
+}
+
+/// Where we manage user game data
+pub trait AnfGameState<T: AnfLifecycle> {
+    fn update(&mut self, cx: &mut T);
+    fn render(&mut self, cx: &mut T);
 }

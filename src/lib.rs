@@ -1,30 +1,34 @@
-//! ANF is a 2D framework powered by SDL & FNA3D
+//! ANF is a 2D framework powered by [SDL] & [FNA3D] ([Rust-SDL2] and [Rust-FNA3D])
 //!
-//! See the [`game`] or [examples] to get started. Note that ANF is **very much a work in
-//! progress**.
+//! Note that ANF is unstable. ANF does not provide solutions in most areas.
 //!
 //! # Restrictions
 //!
-//! I could do more buuuut since I'm a goblin, ANF is:
+//! * One-window, single-threaded
+//! * Pre-defined game loop
 //!
-//! * feature-poor
-//! * desktop only
-//! * one window, single-threaded rendering
-//!
-//! Note that SDL2 and FNA3D have much more potencial.
-//!
-//! [examples]: https://github/toyboot4e/anf/examples
+//! [SDL]: https://www.sdl.com/
+//! [FNA3D]: https://github.com/FNA-XNA/FNA3D
+//! [Rust-SDL2]: https://github.com/Rust-SDL2/rust-sdl2
+//! [Rust-FNA3D]: https://github/toyboot4e/rust-fna3d
+//! [anf/examples]: https://github/toyboot4e/anf/examples
 
 pub use fna3d;
 pub use sdl2;
 
-// pub use fna3d_hie;
-// pub use anf_lib;
-// pub use anf_gfx;
-
 pub mod game;
+
 pub mod gfx;
+pub mod input;
 pub mod vfs;
 
-/// for `examples/`. FIXME: delete this
-pub use env_logger;
+pub mod prelude {
+    //! Dependent crates, draw APIs and lifecycle types
+    //!
+    //! They are primary types for writing ANF games.
+
+    pub use fna3d;
+    pub use sdl2;
+
+    pub use crate::game::{app::*, draw::*};
+}

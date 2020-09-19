@@ -1,0 +1,46 @@
+= TODOs
+
+== Pong
+
+* [ ] paddle in (any) screen
+** [ ] query screen size. separate `Context` object?
+* [ ] add ball & detect collision. the game runs!
+* [ ] rotating ball with physics
+* [ ] write funny article and post it to Note and Rust-jp
+
+== Window
+
+* [ ] show FPS
+* [ ] variable FPS
+* [ ] high DPI?
+* [ ] more window commands
+
+== Features (high priority)
+
+* [ ] asset management (look Bevy. or common crate?)
+** [ ] texture lifetime problem
+* [ ] fonts
+
+== Features (low priority)
+
+* [ ] text input handling
+
+== Details
+
+* [ ] easier to write game loop from scrach
+* [ ] dispose
+** [ ] debug and detect memory leaks
+
+== More of FNA3D
+
+* [ ] viewport, scissors rect
+* [ ] blend state, rasterizer state
+* [ ] custom shader
+** [ ] multiple sampler slots, multiple bindings
+* [ ] render target (take example from GL book)
+
+== Nez-like
+
+* [ ] virtual input
+* [ ] renderer and multiple windows?
+* [ ] ImGUI?

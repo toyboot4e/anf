@@ -1,4 +1,4 @@
-//! 2D texture
+//! [`TextureData2D`] & [`SpriteData`]
 
 use std::{
     fs::File,
@@ -6,17 +6,17 @@ use std::{
     os::raw::c_void,
 };
 
-/// 2D texture handle with some metadata
+/// 2D texture handle
 ///
 /// # Safety
 ///
-/// `Texture2D` does NOT guarantee if it's still alive because it's using a pointer.
+/// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
-pub struct Texture2D {
+pub struct TextureData2D {
     raw: *mut fna3d::Texture,
-    pub w: u32,
-    pub h: u32,
-    pub fmt: fna3d::SurfaceFormat,
+    pub(crate) w: u32,
+    pub(crate) h: u32,
+    pub(crate) fmt: fna3d::SurfaceFormat,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -51,7 +51,7 @@ fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::Surfa
     }
 }
 
-impl Texture2D {
+impl TextureData2D {
     pub fn raw(&self) -> *mut fna3d::Texture {
         self.raw
     }
@@ -90,11 +90,26 @@ impl Texture2D {
     }
 }
 
+/// Accessors
+impl TextureData2D {
+    /// Size in `f32`
+    ///
+    /// `f32` is is reasonable in rendering context
+    pub fn size(&self) -> [f32; 2] {
+        [self.w as f32, self.h as f32]
+    }
+
+    /// Size in pixels
+    pub fn size_px(&self) -> [u32; 2] {
+        [self.w, self.h]
+    }
+}
+
 /// Texture loading methods
 /// ---
-impl Texture2D {
+impl TextureData2D {
     pub fn from_path(
-        device: &mut fna3d::Device,
+        device: &mut impl AsMut<fna3d::Device>,
         path: impl AsRef<std::path::Path>,
     ) -> Option<Self> {
         let path = path.as_ref();
@@ -105,7 +120,10 @@ impl Texture2D {
         Self::from_reader(device, reader)
     }
 
-    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, reader: R) -> Option<Self> {
+    pub fn from_reader<R: Read + Seek>(
+        device: &mut impl AsMut<fna3d::Device>,
+        reader: R,
+    ) -> Option<Self> {
         let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
 
         if pixels_ptr == std::ptr::null_mut() {
@@ -121,7 +139,13 @@ impl Texture2D {
         return Some(texture);
     }
 
-    pub fn from_pixels(device: &mut fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+    pub fn from_pixels(
+        device: &mut impl AsMut<fna3d::Device>,
+        pixels: &[u8],
+        w: u32,
+        h: u32,
+    ) -> Self {
+        let device = device.as_mut();
         let mut t = Self::with_size(device, w, h);
         t.set_data(device, 0, None, pixels);
         t
@@ -156,20 +180,5 @@ impl Texture2D {
             data as *const [u8] as *mut c_void,
             data.len() as u32,
         );
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct SubTexture2D {
-    pub texture: Texture2D,
-    pub uv_rect: [f32; 4],
-}
-
-impl SubTexture2D {
-    pub fn new(texture: Texture2D, uv_rect: impl Into<[f32; 4]>) -> Self {
-        Self {
-            texture,
-            uv_rect: uv_rect.into(),
-        }
     }
 }
