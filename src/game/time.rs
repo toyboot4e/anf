@@ -1,6 +1,12 @@
-//! Creates [`TimeStep`]s
+//! Frames
 
 use std::time::{Duration, Instant};
+
+/// TODO: use this
+pub enum TargetFps {
+    Fixed(u32),
+    Variable(u32),
+}
 
 /// Delta time
 #[derive(Debug, Clone, Default)]
@@ -23,12 +29,6 @@ impl TimeStep {
     pub fn dt_secs_f32(&self) -> f32 {
         self.elapsed.as_secs_f32()
     }
-}
-
-/// TODO: use this
-pub enum TargetFps {
-    Fixed(u32),
-    Variable(u32),
 }
 
 /// Creates frames
@@ -69,6 +69,7 @@ impl GameClock {
         Duration::from_millis(500)
     }
 
+    /// Returns way to tick one frame
     pub fn tick(&mut self) -> GameClockTick {
         let elapsed = {
             let mut elapsed = self.wait_for_next_frame(self.accum);
@@ -124,7 +125,22 @@ impl<'a> GameClockTick<'a> {
             n_updates: 0,
         }
     }
+}
 
+impl<'a> Iterator for GameClockTick<'a> {
+    type Item = TimeStep;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.clock.is_fixed_timestep {
+            self.next_fixed()
+        } else {
+            self.next_variable()
+        }
+    }
+}
+
+/// Internals
+impl<'a> GameClockTick<'a> {
     fn next_fixed(&mut self) -> Option<TimeStep> {
         let target_elapsed = self.clock.target_elapsed();
 
@@ -180,17 +196,5 @@ impl<'a> GameClockTick<'a> {
         self.n_updates = 1;
 
         Some(self.clock.time_step.clone())
-    }
-}
-
-impl<'a> Iterator for GameClockTick<'a> {
-    type Item = TimeStep;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.clock.is_fixed_timestep {
-            self.next_fixed()
-        } else {
-            self.next_variable()
-        }
     }
 }

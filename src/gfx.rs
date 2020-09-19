@@ -1,6 +1,7 @@
-//! Graphics, data for drawing
+//! Data for drawing
 //!
-//! Drawing APIs are under [`crate::game::draw`], which is re-exported at [`crate::prelude`]]
+//! These structs implement draw API traits  in [`crate::game::draw`] so they can be pushed via
+//! [`crate::game::draw::DrawContext`].
 
 pub use anf_gfx::{
     geom2d,

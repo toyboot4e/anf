@@ -1,13 +1,11 @@
-//! ANF is an 2D framework powered by [SDL] & [FNA3D] ([Rust-SDL2] and [Rust-FNA3D])
+//! ANF is a 2D framework powered by [SDL] & [FNA3D] ([Rust-SDL2] and [Rust-FNA3D])
 //!
-//! ANF aims privide an object-oriented APIs.
+//! Note that ANF is unstable. ANF does not provide solutions in most areas.
 //!
 //! # Restrictions
 //!
 //! * One-window, single-threaded
 //! * Pre-defined game loop
-//!
-//! Also, note that ANF is unstable.
 //!
 //! [SDL]: https://www.sdl.com/
 //! [FNA3D]: https://github.com/FNA-XNA/FNA3D
@@ -25,12 +23,12 @@ pub mod input;
 pub mod vfs;
 
 pub mod prelude {
-    //! Prelude, primary types for writing ANF games
+    //! Dependent crates, draw APIs and lifecycle types
     //!
-    //! Contains external crates, draw API and lifecycle types
+    //! They are primary types for writing ANF games.
 
     pub use fna3d;
     pub use sdl2;
 
-    pub use crate::game::{app::*, draw::*, AnfFramework};
+    pub use crate::game::{app::*, draw::*};
 }

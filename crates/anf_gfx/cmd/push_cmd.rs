@@ -1,16 +1,16 @@
 use crate::{
     batcher::batch::SpriteBatch,
-    cmd::push::{DrawPolicy, QuadPush, Scaled, Texture2D},
+    cmd::push_params::{DrawPolicy, QuadPush, Scaled, Texture2D},
     geom2d::*,
 };
 
-/// Texture with region. Used by [`QuadPushBuilder`]
+/// Texture with size data and region. Used by [`QuadPushBuilder`]
 pub trait SubTexture2D: Texture2D {
     /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
     fn uv_rect(&self) -> [f32; 4];
 }
 
-/// Texture with region and other geometry data. Used by [`QuadPushBuilder`]
+/// Texture with size data, region and other geometry data. Used by [`QuadPushBuilder`]
 pub trait Sprite: SubTexture2D {
     /// Rotation in radian
     fn rot(&self) -> f32;

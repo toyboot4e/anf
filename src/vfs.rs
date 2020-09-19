@@ -1,4 +1,4 @@
-//! Virtual file system, the asset manager
+//! Virtual file system
 //!
 //! It just locates the root; it's not so much a file system (for now).
 
@@ -15,6 +15,8 @@ pub fn path(p: impl AsRef<Path>) -> PathBuf {
 }
 
 /// Path to the default shader file
+///
+/// TODO: consider using `include_bytes!` macro
 pub fn default_shader() -> PathBuf {
     self::path("FNAEffects/SpriteEffect.fxb")
 }

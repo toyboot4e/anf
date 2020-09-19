@@ -11,28 +11,20 @@ use crate::{
     geom2d::*,
 };
 
-/// Round or not
+/// Round or not. TODO: utilize it
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DrawPolicy {
     pub do_round: bool,
     // is_batching_disabled: bool,
 }
 
-/// Texture handle with size data. Used by [`QuadPush`]
+/// Texture with size data. Used by [`QuadPush`]
 pub trait Texture2D {
     fn raw_texture(&self) -> *mut fna3d::Texture;
     /// Pixel
     fn w(&self) -> f32;
     /// Pixel
     fn h(&self) -> f32;
-}
-
-#[derive(Debug, Clone, PartialEq, Default, Copy)]
-pub struct Rect2u {
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
 }
 
 #[derive(Debug)]
@@ -51,11 +43,9 @@ impl<T> Scaled<T> {
 }
 
 // --------------------------------------------------------------------------------
-// SpritePush
+// QuadPush
 
-/// Full-featured geometry parameter to push a sprite into [`SpriteBatch`]
-///
-/// `QuadPush` does not accumulate texture handle.
+/// Full-featured geometry parameters to push a sprite onto [`SpriteBatch`]
 #[derive(Debug)]
 pub struct QuadPush {
     // TODO: consider using two vectors per src/dest

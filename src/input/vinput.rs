@@ -9,17 +9,40 @@
 //! different way from enter key. Then you have to build your custom input system like UI commands,
 //! maybe on top of virtual input.
 
-use crate::input::Key;
+use crate::{game::AnfLifecycle, input::Key};
 
-pub struct VKey {
+/// Some value that is decided by a set of [`Key`]'s state
+pub struct KeyBundle {
     keys: Vec<Key>,
+    is_down: bool,
 }
 
+impl KeyBundle {
+    pub fn is_down(&self) -> bool {
+        //
+    }
+}
+
+enum State {
+    Up,
+    Down,
+    None,
+}
+
+/// Negative or positive in one direction
 pub struct AxisInput {
-    pos: VKey,
-    neg: VKey,
+    pos: KeyBundle,
+    neg: KeyBundle,
 }
 
+/// Positive, negative or neutral
+pub enum Sign {
+    Pos,
+    Neg,
+    Neutral,
+}
+
+/// Up, right, down or left
 pub enum Dir4 {
     Up,
     Right,
@@ -27,6 +50,7 @@ pub enum Dir4 {
     Left,
 }
 
+/// North north east, .., or north west
 pub enum Dir8 {
     N,
     NE,
@@ -38,12 +62,14 @@ pub enum Dir8 {
     NW,
 }
 
-pub struct EightDirInput {
+/// One of [`Dir4`]
+pub struct FourDirButton {
     x: AxisInput,
     y: AxisInput,
 }
 
-pub struct FourDirInput {
+/// One of [`Dir8`]
+pub struct EightDirButton {
     x: AxisInput,
     y: AxisInput,
 }

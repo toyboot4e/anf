@@ -1,3 +1,5 @@
+//! Utilities to make your own framework on top of ANF
+
 use std::time::Duration;
 
 /// Frame rate counter
@@ -9,7 +11,7 @@ pub struct FpsCounter {
 }
 
 impl FpsCounter {
-    /// Returns Some(fps) every frame
+    /// Returns Some(fps) every second
     pub fn update(&mut self, elapsed: Duration) -> Option<usize> {
         self.fps += 1;
         self.elapsed += elapsed;

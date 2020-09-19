@@ -1,32 +1,6 @@
-//! [`DrawContext`] and traits to push sprites
+//! Imperative draw APIs
 //!
-//! Draw calls are automatically batched.
-//!
-//! # Example
-//!
-//! [`DrawContext`] → [`BatchPass`] → [`SpritePushCommand`]s:
-//!
-//! [`BatchPass`]: BatchPass
-//! [`SpritePushCommand`]: SpritePushCommand
-//!
-//! ```no_run
-//! use anf::{game::{AnfGameState, Context}, prelude::*};
-//! use anf::gfx::TextureData2D;
-//! use fna3d::Color;
-//!
-//! struct SampleState {
-//!     tx: TextureData2D,
-//! }
-//!
-//! impl AnfGameState for SampleState {
-//!     fn update(&mut self, cx: &mut Context) {}
-//!     fn render(&mut self, cx: &mut Context) {
-//!         let mut pass = cx.dcx.pass(); // batch pass
-//!         pass.texture(&self.tx).dest_pos_px([100.0, 100.0]); // push texture
-//!         pass.texture(&self.tx).dest_pos_px([100.0, 400.0]);
-//!     }
-//! }
-//! ```
+//! [`DrawContext`] is the primary interface. Do `use anf::game::draw::*` to make use of it.
 
 use std::path::Path;
 
@@ -36,14 +10,29 @@ use anf_gfx::{
     cmd::{QuadPush, QuadPushBinding, SpritePushCommand},
     geom2d::*,
 };
+
 use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
-use crate::game::app::TimeStep;
+use crate::game::time::TimeStep;
 
-/// The ANF graphics API
+/// The imperative draw API
 ///
-/// Drops FNA3D device
+/// Batches draw calls automatically. Owns FNA3D device.
+///
+/// This type should be loved by users. If you don't.. please let me know!
+///
+/// # Example
+///
+/// ```
+/// use anf::{gfx::Texture2D, game::draw::*};
+///
+/// fn render(dcx: &mut DrawContext, tex: &Texture2D) {
+///     let mut pass = cx.dcx.pass(); // batch pass
+///     pass.texture(tex).dest_pos_px([100.0, 100.0]); // push texture
+///     pass.texture(tex).dest_pos_px([100.0, 400.0]);
+/// }
+/// ```
 #[derive(Debug)]
 pub struct DrawContext {
     // states
@@ -51,11 +40,11 @@ pub struct DrawContext {
     pipe: Pipeline,
     push: QuadPush,
     /// dependency
-    pub(crate) device: Device,
+    device: Device,
     /// dependency
-    pub(crate) params: fna3d::PresentationParameters,
+    params: fna3d::PresentationParameters,
     /// interface
-    pub(crate) time_step: TimeStep,
+    time_step: TimeStep,
 }
 
 impl DrawContext {
@@ -74,6 +63,15 @@ impl DrawContext {
             params,
             time_step: TimeStep::default(),
         }
+    }
+
+    pub fn raw_window(&self) -> *mut sdl2::sys::SDL_Window {
+        self.params.deviceWindowHandle as *mut _
+    }
+
+    /// TODO: remove this
+    pub fn set_time_step(&mut self, ts: TimeStep) {
+        self.time_step = ts;
     }
 }
 
@@ -107,6 +105,7 @@ impl DrawContext {
 /// Handle to push sprites
 ///
 /// Binds a set of state for rendering and flushes the [`SpriteBatch`] when it goes out of scope.
+///
 /// "Batch pass" is not a common word but I think it makes sence.
 ///
 /// Currently it doesn't handle those state such as render taret.
@@ -131,6 +130,7 @@ impl<'a> BatchPass<'a> {
         Self { dcx }
     }
 
+    /// Creates [`SpritePushCommand`] using [`SubTexture2D`] attributes
     pub fn texture<T: SubTexture2D>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
         self.dcx.push.reset_to_defaults();
         let quad = QuadPushBinding {
@@ -140,6 +140,7 @@ impl<'a> BatchPass<'a> {
         SpritePushCommand::from_sub_texture(quad, texture)
     }
 
+    /// Creates [`SpritePushCommand`] using [`Sprite`] attributes
     pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePushCommand<'_, T> {
         self.dcx.push.reset_to_defaults();
         let quad = QuadPushBinding {
