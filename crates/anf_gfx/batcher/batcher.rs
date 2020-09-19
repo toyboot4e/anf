@@ -61,8 +61,14 @@ impl Batcher {
         // viewport, scissors rect
 
         // pipe.shader.apply_uniforms();
-        pipe.apply_effect(device, 0); // `FNA3D_ApplyEffect`
-        self.upload_vertices(device); // `FNA3D_SetVertexBufferData`
+
+        // `FNA3D_ApplyEffect`
+        pipe.apply_effect(device, 0);
+
+        // `FNA3D_SetVertexBufferData`
+        self.upload_vertices(device);
+
+        // `FNA3D_DrawIndexedPrimitives`
         for call in self.batch.iter() {
             Self::make_draw_call(device, pipe, &mut self.bufs, call);
         }

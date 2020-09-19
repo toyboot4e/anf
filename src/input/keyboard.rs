@@ -180,6 +180,7 @@ pub enum Key {
     /// OEM Enlarge Window key.
     OemEnlW = 0xf4,
 }
+
 /// Full-feature keyboard state
 #[derive(Debug)]
 pub struct Keyboard {

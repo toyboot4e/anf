@@ -102,8 +102,14 @@ impl Default for WindowConfig {
 ///
 /// The window is dropped when this handle goes out of scope.
 pub struct WindowHandle {
-    sdl: sdl2::Sdl,
-    win: sdl2::video::Window,
+    pub sdl: sdl2::Sdl,
+    pub win: sdl2::video::Window,
+}
+
+impl AsRef<sdl2::video::Window> for WindowHandle {
+    fn as_ref(&self) -> &sdl2::video::Window {
+        &self.win
+    }
 }
 
 // TODOs:

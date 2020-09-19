@@ -1,6 +1,6 @@
 //! Data for drawing
 //!
-//! These structs implement draw API traits  in [`crate::game::draw`] so they can be pushed via
+//! These structs implement draw API traits in [`crate::game::draw`] so they can be pushed via
 //! [`crate::game::draw::DrawContext`].
 
 pub use anf_gfx::{
