@@ -1,3 +1,5 @@
+//! FIXME: is it bad practice to use `raw_device` field because it may drop earlier than Device
+
 use std::{mem::size_of, rc::Rc};
 
 use thiserror::Error;
@@ -6,6 +8,7 @@ use imgui::{
     im_str, internal::RawWrapper, BackendFlags, DrawCmd, DrawCmdParams, FontConfig, FontSource,
 };
 
+// TODO: extend and use this error
 #[derive(Debug, Error)]
 pub enum ImGuiRendererError {
     #[error("bad texture id")]
@@ -40,11 +43,11 @@ pub struct ImGuiRenderer {
 }
 
 impl ImGuiRenderer {
-    /// Creates the renderer with some configuration
+    /// Initializes the renderer with default configuration
     ///
     /// Based on: https://github.com/Gekkio/imgui-rs/blob/master/imgui-examples/examples/support/mod.rs
     pub fn quick_start(
-        mut device: impl AsMut<fna3d::Device>,
+        device: &mut fna3d::Device,
         display_size: [f32; 2],
         font_size: f32,
         hidpi_factor: f32,
@@ -65,7 +68,7 @@ impl ImGuiRenderer {
                     }),
                 },
                 FontSource::TtfData {
-                    data: include_bytes!("../mplus-1p-regular.ttf"),
+                    data: crate::JP_FONT,
                     size_pixels: font_size,
                     config: Some(FontConfig {
                         rasterizer_multiply: 1.75,
@@ -77,15 +80,13 @@ impl ImGuiRenderer {
             icx.io_mut().font_global_scale = (1.0 / hidpi_factor) as f32;
         }
 
-        let renderer = ImGuiRenderer::init(&mut icx, device.as_mut())?;
+        let renderer = ImGuiRenderer::init(&mut icx, device)?;
 
         Ok((icx, renderer))
     }
 
     /// Add font before loading
     pub fn init(icx: &mut imgui::Context, device: &mut fna3d::Device) -> Result<Self> {
-        let font_texture = Self::load_font_texture(device, icx.fonts())?;
-
         icx.set_renderer_name(Some(im_str!(
             "imgui-fna3d-renderer {}",
             env!("CARGO_PKG_VERSION")
@@ -95,6 +96,8 @@ impl ImGuiRenderer {
             .backend_flags
             .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
 
+        let font_texture = Self::load_font_texture(device, icx.fonts())?;
+
         Ok(ImGuiRenderer {
             textures: imgui::Textures::new(),
             font_texture,
@@ -102,43 +105,49 @@ impl ImGuiRenderer {
         })
     }
 
-    pub fn textures(&mut self) -> &mut imgui::Textures<RcTexture> {
-        &mut self.textures
-    }
-
     fn load_font_texture(
         device: &mut fna3d::Device,
         mut fonts: imgui::FontAtlasRefMut,
     ) -> Result<RcTexture> {
-        let imgui_texture = fonts.build_rgba32_texture();
+        let (pixels, w, h) = {
+            let atlas_texture = fonts.build_rgba32_texture();
+            (
+                atlas_texture.data,
+                atlas_texture.width,
+                atlas_texture.height,
+            )
+        };
+        log::info!("fna3d-imgui-rs font texture size: ({}, {})", w, h);
 
-        let (w, h) = (imgui_texture.width, imgui_texture.height);
+        // create GPU texture
         let raw = {
-            // Create FNA3D texture without mipmap. It's not a render target.
-            let raw = device.create_texture_2d(fna3d::SurfaceFormat::Color, w, h, 1, false);
-            device.set_texture_data_2d(
-                raw,
-                0, // offset x
-                0, // offset y
-                w,
-                h,
-                1, // mipmap level
-                imgui_texture.data as *const _ as *mut _,
-                imgui_texture.data.len() as u32,
-            );
-            raw
+            let fmt = fna3d::SurfaceFormat::Color;
+            let level = 0; // no mipmap
+            let gpu_texture = device.create_texture_2d(fmt, w, h, level, false);
+            device.set_texture_data_2d(gpu_texture, 0, 0, w, h, level, pixels);
+
+            gpu_texture
         };
 
         fonts.tex_id = imgui::TextureId::from(usize::MAX);
 
+        let font_texture = Texture2D {
+            raw,
+            raw_device: device.raw(),
+            w,
+            h,
+        };
         Ok(RcTexture {
-            texture: Rc::new(Texture2D {
-                raw,
-                raw_device: device.raw(),
-                w,
-                h,
-            }),
+            texture: Rc::new(font_texture),
         })
+    }
+
+    pub fn textures_mut(&mut self) -> &mut imgui::Textures<RcTexture> {
+        &mut self.textures
+    }
+
+    pub fn font_texture(&self) -> &Texture2D {
+        &self.font_texture.texture
     }
 
     fn matrix(draw_data: &imgui::DrawData) -> [f32; 16] {
@@ -227,22 +236,23 @@ impl ImGuiRenderer {
                             let texture = if texture_id.id() == usize::MAX {
                                 &self.font_texture
                             } else {
+                                log::trace!("texture id {:?}", texture_id);
                                 self.textures
                                     .get(texture_id)
                                     .ok_or_else(|| ImGuiRendererError::BadTexture(texture_id))?
                             };
 
                             let scissors_rect = fna3d::Rect {
-                                x: clip_rect[0] as i32,
-                                y: clip_rect[1] as i32,
-                                w: clip_rect[2] as i32,
-                                h: clip_rect[3] as i32,
+                                x: f32::max(0.0, clip_rect[0]).floor() as i32,
+                                y: f32::max(0.0, clip_rect[1]).floor() as i32,
+                                w: (clip_rect[2] - clip_rect[0]).abs().ceil() as i32,
+                                h: (clip_rect[3] - clip_rect[1]).abs().ceil() as i32,
                             };
 
                             self.batch.prepare_draw(
                                 device,
                                 &scissors_rect,
-                                texture,
+                                texture.texture.raw,
                                 vtx_offset as u32,
                             );
 
@@ -311,8 +321,7 @@ impl Batch {
         let ibuf = GpuIndexBuffer::new(device, 6 * N_QUADS);
 
         let (effect, effect_data) =
-            fna3d::mojo::load_shader_from_bytes(device, include_bytes!("../SpriteEffect.fxb"))
-                .unwrap();
+            fna3d::mojo::load_shader_from_bytes(device, crate::SHARDER).unwrap();
         fna3d::mojo::set_projection_matrix(effect_data, &fna3d::mojo::ORTHOGRAPHICAL_MATRIX);
 
         Self {
@@ -329,13 +338,13 @@ impl Batch {
         self.ibuf.upload_indices(&draw_list.idx_buffer(), device);
     }
 
-    /// Call it before making a draw call
+    /// Sets up rendering pipeline before making a draw call
     fn prepare_draw(
         &mut self,
         device: &mut fna3d::Device,
         scissors_rect: &fna3d::Rect,
-        texture: &RcTexture,
-        vtx_offet: u32,
+        texture: *mut fna3d::Texture,
+        vtx_offset: u32,
     ) {
         device.set_scissor_rect(&scissors_rect);
 
@@ -348,22 +357,23 @@ impl Batch {
             vertex_sampler_state_change_count: 0,
             vertex_sampler_state_changes: std::ptr::null(),
         };
-        device.apply_effect(self.effect, 0, &state_changes);
-
-        // vertices are already uploaded via `set_draw_list`
+        let pass = 0;
+        device.apply_effect(self.effect, pass, &state_changes);
 
         // set texture
         let sampler = fna3d::SamplerState::default();
-        device.verify_sampler(0, texture.texture.raw, &sampler);
+        let slot = 0;
+        device.verify_sampler(slot, texture, &sampler);
 
         // apply vertex buffer binding
         let bind = fna3d::VertexBufferBinding {
             vertexBuffer: self.vbuf.buf,
             vertexDeclaration: VERT_DECL,
-            vertexOffset: 0,
+            // FIXME:
+            vertexOffset: vtx_offset as i32,
             instanceFrequency: 0,
         };
-        device.apply_vertex_buffer_bindings(&[bind], true, vtx_offet);
+        device.apply_vertex_buffer_bindings(&[bind], true, vtx_offset);
     }
 }
 

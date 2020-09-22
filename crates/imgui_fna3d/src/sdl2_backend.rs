@@ -18,8 +18,8 @@ use sdl2::{
 /// Just holds both ImGUI context and backend/renderer of it
 pub struct Fna3dImgui {
     /// Call `io_mut` or `ui`
-    pub icx: imgui::Context,
-    pub part: Fna3dImguiPart,
+    icx: imgui::Context,
+    part: Fna3dImguiPart,
 }
 
 pub struct Fna3dImguiPart {
@@ -28,10 +28,6 @@ pub struct Fna3dImguiPart {
 }
 
 impl Fna3dImguiPart {
-    pub fn prepare_render(&mut self, ui: &imgui::Ui, window: &Window) {
-        self.backend.prepare_render(ui, window);
-    }
-
     pub fn render(
         &mut self,
         ui: imgui::Ui,
@@ -45,36 +41,47 @@ impl Fna3dImguiPart {
 
 impl Fna3dImgui {
     pub fn quick_start(
-        device: impl AsMut<fna3d::Device>,
-        window: impl AsRef<Window>,
+        device: &mut fna3d::Device,
+        window: &Window,
         display_size: [f32; 2],
         font_size: f32,
         hidpi_factor: f32,
     ) -> crate::Result<Self> {
         let (mut icx, renderer) =
             crate::ImGuiRenderer::quick_start(device, display_size, font_size, hidpi_factor)?;
-        let backend = ImguiSdl2::new(&mut icx, window.as_ref());
+        let backend = ImguiSdl2::new(&mut icx, window);
         Ok(Self {
             icx,
             part: Fna3dImguiPart { backend, renderer },
         })
     }
 
+    pub fn io_mut(&mut self) -> &mut imgui::Io {
+        self.icx.io_mut()
+    }
+
+    pub fn font_texture(&self) -> &crate::Texture2D {
+        self.part.renderer.font_texture()
+    }
+
+    pub fn textures(&mut self) -> &mut imgui::Textures<crate::RcTexture> {
+        self.part.renderer.textures_mut()
+    }
+
     pub fn handle_event(&mut self, ev: &Event) -> bool {
         self.part.backend.handle_event(&mut self.icx, ev)
     }
 
-    // User should set Io themselves (dt, frame size, scale, etc.)
-
-    /// Sets up input state
-    pub fn prepare_frame(&mut self, window: &impl AsRef<Window>) {
+    pub fn frame(&mut self, window: &impl AsRef<Window>) -> (imgui::Ui, &mut Fna3dImguiPart) {
+        // TODO: set Io (dt?, frame size, scale, etc.)
         self.part.backend.prepare_frame(self.icx.io_mut(), window);
-        // we should not return `self.icx.frame()` because it takes `&mut self`, not `&mut self.icx`
+        let ui = self.icx.frame();
+        (ui, &mut self.part)
     }
 }
 
 // --------------------------------------------------------------------------------
-// Internals
+// Backend
 
 struct ImguiSdl2 {
     mouse_press: [bool; 5],

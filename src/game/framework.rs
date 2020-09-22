@@ -23,7 +23,7 @@ pub trait AnfLifecycle {
     fn on_end_frame(&mut self) {}
 }
 
-/// Entry point of ANF game loop with [`DrawContext`]
+/// The entry point of the ANF game loop
 pub struct AnfFramework {
     cfg: WindowConfig,
     window: WindowHandle,
@@ -60,17 +60,18 @@ impl AnfFramework {
 
         let mut clock = GameClock::new();
         let mut state = user_data_constructor(window, &cfg, dcx);
-        self::run(&mut clock, &mut events, &mut state)
-    }
-}
 
-fn run(
-    clock: &mut GameClock,
-    events: &mut EventPump,
-    state: &mut impl AnfLifecycle,
-) -> AnfGameResult {
-    while tick_one_frame(clock, events, state) {}
-    Ok(())
+        Self::visit(&mut clock, &mut events, &mut state)
+    }
+
+    fn visit(
+        clock: &mut GameClock,
+        events: &mut EventPump,
+        state: &mut impl AnfLifecycle,
+    ) -> AnfGameResult {
+        while tick_one_frame(clock, events, state) {}
+        Ok(())
+    }
 }
 
 /// Returns `true` if we continue to the next frame

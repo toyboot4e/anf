@@ -93,14 +93,13 @@ impl SamplerSlots {
         };
 
         SamplerSlots {
-            samplers: vec![sampler.clone(); max_tx],
-            v_samplers: vec![sampler; max_v_tx],
+            samplers: vec![sampler.clone(); max_tx as usize],
+            v_samplers: vec![sampler; max_v_tx as usize],
         }
     }
 
     pub fn set_texture_raw(&mut self, device: &mut fna3d::Device, texture: *mut fna3d::Texture) {
         let slot = 0;
-        device.verify_sampler(slot as i32, texture, &self.samplers[slot]);
-        // device.verify_vertex_sampler(slot as i32, texture.raw(), &self.v_samplers[slot]);
+        device.verify_sampler(slot as u32, texture, &self.samplers[slot]);
     }
 }

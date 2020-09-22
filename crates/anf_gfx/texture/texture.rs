@@ -4,6 +4,7 @@ use std::{
     fs::File,
     io::{BufReader, Read, Seek},
     os::raw::c_void,
+    path::Path,
 };
 
 /// 2D texture handle
@@ -56,6 +57,10 @@ impl TextureData2D {
         self.raw
     }
 
+    pub fn from_raw(raw: *mut fna3d::Texture, w: u32, h: u32, fmt: fna3d::SurfaceFormat) -> Self {
+        Self { raw, w, h, fmt }
+    }
+
     pub fn empty() -> Self {
         Self {
             raw: std::ptr::null_mut(),
@@ -72,7 +77,7 @@ impl TextureData2D {
         fmt: fna3d::SurfaceFormat,
         kind: TextureKind,
     ) -> Self {
-        let level = 1;
+        let level = 0; // np mipmap
         let fmt = self::get_init_format(fmt, TextureKind::Texture);
         let raw = device.create_texture_2d(fmt, w, h, level, kind == TextureKind::RenderTarget);
 
@@ -147,12 +152,12 @@ impl TextureData2D {
     ) -> Self {
         let device = device.as_mut();
         let mut t = Self::with_size(device, w, h);
-        t.set_data(device, 0, None, pixels);
+        t.upload_pixels(device, 0, None, pixels);
         t
     }
 
-    /// Sets texture data on GPU memory
-    pub fn set_data(
+    /// Sets GPU texture data
+    pub fn upload_pixels(
         &mut self,
         device: &mut fna3d::Device,
         level: u32,
@@ -170,15 +175,10 @@ impl TextureData2D {
             )
         };
 
-        device.set_texture_data_2d(
-            self.raw,
-            x,
-            y,
-            w,
-            h,
-            level,
-            data as *const [u8] as *mut c_void,
-            data.len() as u32,
-        );
+        device.set_texture_data_2d(self.raw, x, y, w, h, level, data);
     }
+
+    // pub fn save_to_png(&self, device: &mut fna3d::Device, path: impl AsRef<Path>) {
+    //     device.get_texture_data_2d(texture, x, y, w, h, level, data)
+    // }
 }

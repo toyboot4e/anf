@@ -31,8 +31,9 @@ impl Context {
     pub fn init(win: WindowHandle, cfg: &WindowConfig, mut dcx: DrawContext) -> Self {
         let size = win.screen_size();
         let size = [size.0 as f32, size.1 as f32];
-        let dpi = 2.0; // TODO:
-        let imgui = Fna3dImgui::quick_start(&mut dcx, &win, size, 13.0, dpi).unwrap();
+        let font_size = 13.0;
+        let dpi = 1.0; // TODO:
+        let imgui = Fna3dImgui::quick_start(dcx.as_mut(), &win.win, size, font_size, dpi).unwrap();
 
         Self {
             win,
@@ -80,54 +81,16 @@ impl AnfLifecycle for Context {
 
 impl Context {
     fn debug_render(&mut self) {
-        let mut io = self.imgui.icx.io_mut();
+        let mut io = self.imgui.io_mut();
         io.display_size = [1280.0, 720.0];
         io.display_framebuffer_scale = [1.0, 1.0];
         io.delta_time = 0.016; // FIXME:
 
-        self.imgui.prepare_frame(&self.win);
-        let ui = self.imgui.icx.frame();
+        let (ui, fin) = self.imgui.frame(&self.win);
 
         ui.show_demo_window(&mut true);
 
-        // Window::new(im_str!("Hello world"))
-        //     .size([300.0, 600.0], Condition::FirstUseEver)
-        //     .position([100.0, 100.0], Condition::FirstUseEver)
-        //     .build(&ui, || {
-        //         ui.text(im_str!("Hello world!"));
-        //         ui.text(im_str!("こんにちは世界！"));
-        //         ui.text(im_str!("This...is...imgui-rs!"));
-        //         ui.separator();
-        //         let mouse_pos = ui.io().mouse_pos;
-        //         ui.text(im_str!(
-        //             "Mouse Position: ({:.1},{:.1})",
-        //             mouse_pos[0],
-        //             mouse_pos[1],
-        //         ));
-
-        //         if ui.small_button(im_str!("small button")) {
-        //             println!("Small button clicked");
-        //         }
-        //     });
-
-        // if let Some(tk) = ui.begin_menu_bar() {
-        //     if let Some(tk) = ui.begin_menu(im_str!("menu A"), true) {
-        //         log::trace!("MENU");
-        //         MenuItem::new(im_str!("menu item A")).build(&ui);
-
-        //         tk.end(&ui);
-        //     }
-        //     // ui.text("BBBB.");
-        //     // ui.text("text. これが世界！ help me..");
-        //     // ui.text("text. これが世界！ help me..");
-        //     // ui.text("text. これが世界！ help me..");
-
-        //     tk.end(&ui);
-        // }
-
-        self.imgui
-            .part
-            .render(ui, self.win.as_ref(), self.dcx.as_mut())
+        fin.render(ui, self.win.as_ref(), self.dcx.as_mut())
             .unwrap();
     }
 }
