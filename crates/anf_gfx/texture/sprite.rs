@@ -1,10 +1,10 @@
 use crate::{cmd::prelude::*, geom2d::*};
 
-pub use crate::texture::texture::{TextureData2D, TextureKind};
+pub use crate::texture::texture::{TextureData2d, TextureKind};
 
 /// Conversion
-impl TextureData2D {
-    pub fn trim_px(&self, rect: impl Into<[u32; 4]>) -> SubTextureData2D {
+impl TextureData2d {
+    pub fn trim_px(&self, rect: impl Into<[u32; 4]>) -> SubTextureData2d {
         let rect = rect.into();
         let uv_rect = [
             rect[0] as f32 / self.w as f32,
@@ -12,14 +12,14 @@ impl TextureData2D {
             rect[2] as f32 / self.w as f32,
             rect[3] as f32 / self.h as f32,
         ];
-        SubTextureData2D {
+        SubTextureData2d {
             texture: self.clone(),
             uv_rect,
         }
     }
 
-    pub fn trim_uv(&self, uv_rect: impl Into<Rect2f>) -> SubTextureData2D {
-        SubTextureData2D {
+    pub fn trim_uv(&self, uv_rect: impl Into<Rect2f>) -> SubTextureData2d {
+        SubTextureData2d {
             texture: self.clone(),
             // T -> Rect2f -> [f32; 4]
             //
@@ -30,19 +30,19 @@ impl TextureData2D {
     }
 }
 
-/// 2D texture handle with region (uv values)
+/// 2d texture handle with region (uv values)
 ///
 /// # Safety
 ///
 /// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
-pub struct SubTextureData2D {
-    pub(crate) texture: TextureData2D,
+pub struct SubTextureData2d {
+    pub(crate) texture: TextureData2d,
     pub(crate) uv_rect: [f32; 4],
 }
 
-impl SubTextureData2D {
-    pub fn new(texture: TextureData2D, uv_rect: impl Into<[f32; 4]>) -> Self {
+impl SubTextureData2d {
+    pub fn new(texture: TextureData2d, uv_rect: impl Into<[f32; 4]>) -> Self {
         Self {
             texture,
             uv_rect: uv_rect.into(),
@@ -60,20 +60,20 @@ impl SubTextureData2D {
     }
 }
 
-impl AsRef<TextureData2D> for SubTextureData2D {
-    fn as_ref(&self) -> &TextureData2D {
+impl AsRef<TextureData2d> for SubTextureData2d {
+    fn as_ref(&self) -> &TextureData2d {
         &self.texture
     }
 }
 
-/// Full-featured 2D texture handle
+/// Full-featured 2d texture handle
 ///
 /// # Safety
 ///
 /// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 #[derive(Debug, Clone)]
 pub struct SpriteData {
-    pub texture: TextureData2D,
+    pub texture: TextureData2d,
     pub uv_rect: Rect2f,
     /// [0.0, 0.0] is left-up (default0, [1.0, 1.0] is right-down
     pub origin: Vec2f,
@@ -83,8 +83,8 @@ pub struct SpriteData {
     pub flips: Flips,
 }
 
-impl AsRef<TextureData2D> for SpriteData {
-    fn as_ref(&self) -> &TextureData2D {
+impl AsRef<TextureData2d> for SpriteData {
+    fn as_ref(&self) -> &TextureData2d {
         &self.texture
     }
 }
@@ -92,7 +92,7 @@ impl AsRef<TextureData2D> for SpriteData {
 impl Default for SpriteData {
     fn default() -> Self {
         Self {
-            texture: TextureData2D::empty(),
+            texture: TextureData2d::empty(),
             uv_rect: Rect2f::unit(),
             origin: Vec2f::zero(),
             color: fna3d::Color::white(),
@@ -115,8 +115,8 @@ impl SpriteData {
 // --------------------------------------------------------------------------------
 // Sprite/texture trait impls
 
-// TextureData2D
-impl Texture2D for TextureData2D {
+// TextureData2d
+impl Texture2d for TextureData2d {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         self.raw()
     }
@@ -130,14 +130,14 @@ impl Texture2D for TextureData2D {
     }
 }
 
-impl SubTexture2D for TextureData2D {
+impl SubTexture2d for TextureData2d {
     fn uv_rect(&self) -> [f32; 4] {
         [0.0, 0.0, 1.0, 1.0]
     }
 }
 
-// SubTexuteData2D (delegated to `Texture2D`)
-impl Texture2D for SubTextureData2D {
+// SubTexuteData2d (delegated to `Texture2d`)
+impl Texture2d for SubTextureData2d {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         self.texture.raw()
     }
@@ -151,14 +151,14 @@ impl Texture2D for SubTextureData2D {
     }
 }
 
-impl SubTexture2D for SubTextureData2D {
+impl SubTexture2d for SubTextureData2d {
     fn uv_rect(&self) -> [f32; 4] {
         self.uv_rect
     }
 }
 
-// Sprite (delegated to `TextureData2D`)
-impl Texture2D for SpriteData {
+// Sprite (delegated to `TextureData2d`)
+impl Texture2d for SpriteData {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         self.texture.raw_texture()
     }
@@ -170,7 +170,7 @@ impl Texture2D for SpriteData {
     }
 }
 
-impl SubTexture2D for SpriteData {
+impl SubTexture2d for SpriteData {
     fn uv_rect(&self) -> [f32; 4] {
         self.uv_rect.clone().into()
     }
@@ -189,7 +189,7 @@ impl Sprite for SpriteData {
 }
 
 // implementations for reference types
-impl<T: Texture2D> Texture2D for &T {
+impl<T: Texture2d> Texture2d for &T {
     fn raw_texture(&self) -> *mut fna3d::Texture {
         (*self).raw_texture()
     }
@@ -201,7 +201,7 @@ impl<T: Texture2D> Texture2D for &T {
     }
 }
 
-impl<T: SubTexture2D> SubTexture2D for &T {
+impl<T: SubTexture2d> SubTexture2d for &T {
     fn uv_rect(&self) -> [f32; 4] {
         (*self).uv_rect()
     }

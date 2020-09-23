@@ -1,17 +1,17 @@
-//! [`TextureData2D`] & [`SpriteData`]
+//! [`TextureData2d`] & [`SpriteData`]
 
 use std::{
     fs::File,
     io::{BufReader, Read, Seek},
 };
 
-/// 2D texture handle
+/// 2d texture handle
 ///
 /// # Safety
 ///
 /// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
-pub struct TextureData2D {
+pub struct TextureData2d {
     raw: *mut fna3d::Texture,
     pub(crate) w: u32,
     pub(crate) h: u32,
@@ -50,7 +50,7 @@ fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::Surfa
     }
 }
 
-impl TextureData2D {
+impl TextureData2d {
     pub fn raw(&self) -> *mut fna3d::Texture {
         self.raw
     }
@@ -94,7 +94,7 @@ impl TextureData2D {
 }
 
 /// Accessors
-impl TextureData2D {
+impl TextureData2d {
     /// Size in `f32`
     ///
     /// `f32` is is reasonable in rendering context
@@ -110,7 +110,7 @@ impl TextureData2D {
 
 /// Texture loading methods
 /// ---
-impl TextureData2D {
+impl TextureData2d {
     pub fn from_path(
         device: &mut impl AsMut<fna3d::Device>,
         path: impl AsRef<std::path::Path>,

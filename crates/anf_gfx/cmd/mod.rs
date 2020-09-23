@@ -7,6 +7,6 @@ pub use push_cmd::{QuadPushBinding, SpritePushCommand};
 pub use push_params::QuadPush;
 
 pub mod prelude {
-    pub use super::push_cmd::{QuadPushBuilder, Sprite, SubTexture2D};
-    pub use super::push_params::{DrawPolicy, QuadPush, Texture2D};
+    pub use super::push_cmd::{QuadPushBuilder, Sprite, SubTexture2d};
+    pub use super::push_params::{DrawPolicy, QuadPush, Texture2d};
 }

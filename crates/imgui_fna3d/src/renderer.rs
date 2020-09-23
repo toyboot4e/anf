@@ -256,6 +256,7 @@ impl ImGuiRenderer {
                                     .ok_or_else(|| ImGuiRendererError::BadTexture(texture_id))?
                             };
 
+                            // FIXME:
                             let scissors_rect = fna3d::Rect {
                                 x: f32::max(0.0, clip_rect[0]).floor() as i32,
                                 y: f32::max(0.0, clip_rect[1]).floor() as i32,

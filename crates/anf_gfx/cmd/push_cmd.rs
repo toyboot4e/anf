@@ -1,17 +1,17 @@
 use crate::{
     batcher::batch::SpriteBatch,
-    cmd::push_params::{DrawPolicy, QuadPush, Scaled, Texture2D},
+    cmd::push_params::{DrawPolicy, QuadPush, Scaled, Texture2d},
     geom2d::*,
 };
 
 /// Texture with size data and region. Used by [`QuadPushBuilder`]
-pub trait SubTexture2D: Texture2D {
+pub trait SubTexture2d: Texture2d {
     /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
     fn uv_rect(&self) -> [f32; 4];
 }
 
 /// Texture with size data, region and other geometry data. Used by [`QuadPushBuilder`]
-pub trait Sprite: SubTexture2D {
+pub trait Sprite: SubTexture2d {
     /// Rotation in radian
     fn rot(&self) -> f32;
     fn scale(&self) -> [f32; 2];
@@ -115,7 +115,7 @@ impl<'a> QuadPushBuilder for QuadPushBinding<'a> {
 }
 
 impl<'a> QuadPushBinding<'a> {
-    fn on_set_sub_texture<T: SubTexture2D>(&'_ mut self, texture: &T) {
+    fn on_set_sub_texture<T: SubTexture2d>(&'_ mut self, texture: &T) {
         self.src_rect_uv(texture.uv_rect())
             .dest_size_px([texture.w(), texture.h()]);
     }
@@ -130,7 +130,7 @@ impl<'a> QuadPushBinding<'a> {
 }
 
 /// Primary interface to push sprite
-pub struct SpritePushCommand<'a, T: Texture2D> {
+pub struct SpritePushCommand<'a, T: Texture2d> {
     quad: QuadPushBinding<'a>,
     texture: T,
     policy: DrawPolicy,
@@ -138,13 +138,13 @@ pub struct SpritePushCommand<'a, T: Texture2D> {
 }
 
 /// Push sprite to batch data when it goes out of scope
-impl<'a, T: Texture2D> Drop for SpritePushCommand<'a, T> {
+impl<'a, T: Texture2d> Drop for SpritePushCommand<'a, T> {
     fn drop(&mut self) {
         self.run();
     }
 }
 
-impl<'a, T: Texture2D> SpritePushCommand<'a, T> {
+impl<'a, T: Texture2d> SpritePushCommand<'a, T> {
     pub fn new(quad: QuadPushBinding<'a>, texture: T) -> Self {
         Self {
             quad,
@@ -162,13 +162,13 @@ impl<'a, T: Texture2D> SpritePushCommand<'a, T> {
 }
 
 /// impl default builder methods
-impl<'a, T: Texture2D> QuadPushBuilder for SpritePushCommand<'a, T> {
+impl<'a, T: Texture2d> QuadPushBuilder for SpritePushCommand<'a, T> {
     fn data(&mut self) -> &mut QuadPush {
         &mut self.quad.push
     }
 }
 
-impl<'a, T: SubTexture2D> SpritePushCommand<'a, T> {
+impl<'a, T: SubTexture2d> SpritePushCommand<'a, T> {
     pub fn from_sub_texture(mut quad: QuadPushBinding<'a>, sub_texture: T) -> Self {
         quad.on_set_sub_texture(&sub_texture);
         Self::new(quad, sub_texture)
