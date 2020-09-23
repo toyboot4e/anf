@@ -136,7 +136,7 @@ struct Entity {
 
 /// Initializes the [`PongGameData`] with two paddles and one ball
 pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> PongGameData {
-    let atlas = TextureData2D::from_path(dcx, vfs::path("ikachan.png")).unwrap();
+    let atlas = TextureData2D::from_path(dcx, vfs::path("ika-chan.png")).unwrap();
     let atlas_size_px: Vec2f = atlas.size().into();
 
     // uv, I mean, normalized

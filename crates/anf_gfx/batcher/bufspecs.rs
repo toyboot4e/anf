@@ -95,7 +95,7 @@ impl ColoredVertexData {
 
     pub fn decl() -> fna3d::VertexDeclaration {
         fna3d::VertexDeclaration {
-            vertexStride: 24, // FIXME: is this right
+            vertexStride: 24,
             elementCount: 3,
             elements: Self::elems().as_ptr() as *mut _,
         }

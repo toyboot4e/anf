@@ -25,16 +25,22 @@ pub trait QuadPushBuilder {
     fn data(&mut self) -> &mut QuadPush;
 
     /// Set source rectangle in normalized coordinates
+    ///
+    /// Specify [x, y] and [w, h].
     fn src_rect_uv(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
         self.data().src_rect = Scaled::Normalized(rect.into());
         self
     }
 
+    /// Set source rectangle in normalized pixels
+    ///
+    /// Specify [x, y] and [w, h].
     fn src_rect_px(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
         self.data().src_rect = Scaled::Px(rect.into());
         self
     }
 
+    /// Sets origin position to the destination
     fn dest_pos_px(&mut self, xs: impl Into<[f32; 2]>) -> &mut Self {
         let xs = xs.into();
 
@@ -47,6 +53,7 @@ pub trait QuadPushBuilder {
         self
     }
 
+    /// Sets size to the destination
     fn dest_size_px(&mut self, ws: impl Into<[f32; 2]>) -> &mut Self {
         let ws = ws.into();
 
@@ -59,6 +66,7 @@ pub trait QuadPushBuilder {
         self
     }
 
+    /// Sets origin position and size to the destination
     fn dest_rect_px(&mut self, xs: impl Into<Rect2f>) -> &mut Self {
         let rect = xs.into();
 
@@ -68,6 +76,7 @@ pub trait QuadPushBuilder {
         self
     }
 
+    /// Sets origin where we specify coordinates / where the quad rotates
     fn origin(&mut self, origin: impl Into<Vec2f>) -> &mut Self {
         self.data().origin = origin.into();
         self

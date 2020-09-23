@@ -1,6 +1,7 @@
 //! ANF is a 2D framework powered by [SDL] & [FNA3D] ([Rust-SDL2] and [Rust-FNA3D])
 //!
-//! Note that ANF is unstable. ANF does not provide solutions in most areas.
+//! Note that ANF is unstable and experimental; ANF does not provide solutions in most areas -- you
+//! have to do it yourself.
 //!
 //! # Restrictions
 //!

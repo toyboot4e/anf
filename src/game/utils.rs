@@ -19,7 +19,7 @@ impl FpsCounter {
             let fps = self.fps;
             self.fps = 0;
             self.elapsed = Duration::new(0, 0);
-            Some(fps)
+            Some(fps - 1) // FIXME: over 1 sec so
         } else {
             None
         }

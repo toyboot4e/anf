@@ -328,6 +328,7 @@ impl Rect2f {
         self.y += v.y;
     }
 
+    /// Adjusts x value assuming `w < max - min` (be warned that this is stupid)
     pub fn clamp_x(&mut self, min: f32, max: f32) {
         if self.left() < min {
             self.set_left(min);
@@ -337,6 +338,7 @@ impl Rect2f {
         }
     }
 
+    /// Adjusts y value assuming `h < max - min` (be warned that this is stupid)
     pub fn clamp_y(&mut self, min: f32, max: f32) {
         if self.top() < min {
             self.set_up(min);

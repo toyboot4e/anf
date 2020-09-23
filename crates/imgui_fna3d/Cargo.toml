@@ -1,0 +1,21 @@
+[package]
+name = "imgui_fna3d"
+version = "0.1.0"
+authors = ["toyboot4e <toyboot4e@gmail.com>"]
+edition = "2018"
+
+[features]
+# `sdl2` feature is enabled by default
+default = ["sdl2_backend"]
+# If `sdl2_backend` feature is enabled, we use `sdl2` crate
+sdl2_backend = ["sdl2"]
+
+[dependencies]
+imgui = "0.4.0"
+fna3d = { path = "../rust-fna3d/fna3d" }
+
+# If `sdl2_backend` feature is enabled, `sdl2` crate is used
+sdl2 = { version = "0.34.3", optional = true }
+
+thiserror = "1.0.20"
+log = "0.4.11"
