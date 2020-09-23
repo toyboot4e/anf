@@ -237,6 +237,7 @@ impl ImGuiRenderer {
                             (clip_rect[3] - clip_off[1]) * clip_scale[1],
                         ];
 
+                        // FIXME:
                         if clip_rect[0] >= fb_width
                             || clip_rect[1] >= fb_height
                             || clip_rect[2] < 0.0
