@@ -9,10 +9,13 @@
 
 #[cfg(feature = "sdl2")]
 mod sdl2_backend;
+#[cfg(feature = "sdl2")]
+mod sdl2_helper;
 
 mod renderer;
 pub use renderer::{ImGuiRenderer, ImGuiRendererError, RcTexture, Result, Texture2D};
-pub use sdl2_backend::{Fna3dImgui, Fna3dImguiPart};
+pub use sdl2_backend::ImguiSdl2;
+pub use sdl2_helper::{Fna3dImgui, Fna3dImguiPart};
 
 // bundle binaries
 const SHARDER: &[u8] = include_bytes!("../SpriteEffect.fxb");

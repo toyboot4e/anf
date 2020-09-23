@@ -38,7 +38,9 @@ impl AnfFramework {
             let dcx = DrawContext::new(device, vfs::default_shader(), params);
             (window, dcx)
         };
+
         let events = window.event_pump().unwrap();
+
         Self {
             cfg,
             window,

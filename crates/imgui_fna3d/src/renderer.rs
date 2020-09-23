@@ -1,3 +1,7 @@
+//! ImGUI renderer implementation in FNA3D based on [the example]
+//!
+//! [the xample]: https://github.com/Gekkio/imgui-rs/blob/master/imgui-gfx-renderer/src/lib.rs
+//!
 //! FIXME: is it bad practice to use `raw_device` field because it may drop earlier than Device
 
 use std::{mem::size_of, rc::Rc};
@@ -105,18 +109,18 @@ impl ImGuiRenderer {
         })
     }
 
+    /// Be warned that the font texture is  non-premultiplied alpha
     fn load_font_texture(
         device: &mut fna3d::Device,
         mut fonts: imgui::FontAtlasRefMut,
     ) -> Result<RcTexture> {
-        let (pixels, w, h) = {
-            let atlas_texture = fonts.build_rgba32_texture();
-            (
-                atlas_texture.data,
-                atlas_texture.width,
-                atlas_texture.height,
-            )
-        };
+        let atlas_texture = fonts.build_rgba32_texture();
+        let (pixels, w, h) = (
+            atlas_texture.data,
+            atlas_texture.width,
+            atlas_texture.height,
+        );
+
         log::info!("fna3d-imgui-rs font texture size: ({}, {})", w, h);
 
         // create GPU texture
@@ -129,14 +133,16 @@ impl ImGuiRenderer {
             gpu_texture
         };
 
-        fonts.tex_id = imgui::TextureId::from(usize::MAX);
-
         let font_texture = Texture2D {
             raw,
             raw_device: device.raw(),
             w,
             h,
         };
+
+        // Note that we have to set the ID *AFTER* creating the font atlas texture
+        fonts.tex_id = imgui::TextureId::from(usize::MAX);
+
         Ok(RcTexture {
             texture: Rc::new(font_texture),
         })
@@ -146,31 +152,33 @@ impl ImGuiRenderer {
         &mut self.textures
     }
 
+    /// Be warned that the font texture is  non-premultiplied alpha
     pub fn font_texture(&self) -> &Texture2D {
         &self.font_texture.texture
     }
 
-    fn matrix(draw_data: &imgui::DrawData) -> [f32; 16] {
+    /// https://en.wikipedia.org/wiki/Orthographic_projection
+    fn ortho_matrix(draw_data: &imgui::DrawData) -> [f32; 16] {
         let left = draw_data.display_pos[0];
         let right = draw_data.display_pos[0] + draw_data.display_size[0];
         let top = draw_data.display_pos[1];
         let bottom = draw_data.display_pos[1] + draw_data.display_size[1];
 
-        // matrix (transpoed from the example)
+        // TODO: maybe use [[f32; 4]; 4]]
         [
             (2.0 / (right - left)),
             0.0,
             0.0,
-            (right + left) / (left - right),
+            -(right + left) / (right - left),
             //
             0.0,
-            (2.0 / (top - bottom)),
+            2.0 / (top - bottom),
             0.0,
-            (top + bottom) / (bottom - top),
+            -(top + bottom) / (top - bottom),
             //
             0.0,
             0.0,
-            -1.0,
+            -1.0, // FIXME: is this right? (far/near plane)
             0.0,
             //
             0.0,
@@ -193,10 +201,16 @@ impl ImGuiRenderer {
             return Ok(());
         }
 
+        // TODO: restore/restore previous state
+        device.set_blend_state(&fna3d::BlendState::non_premultiplied());
+        // SamplerState.LinearWrap;
+        // DepthStencilState.None;
+        // RasterizerState = RasterizerState.CullNone;
+
         log::trace!("fna3d-imgui-rs: start rendering");
 
-        // let matrix = Self::matrix(draw_data);
-        // fna3d::mojo::set_projection_matrix(self.batch.effect_data, &matrix);
+        let matrix = Self::ortho_matrix(draw_data);
+        fna3d::mojo::set_projection_matrix(self.batch.effect_data, &matrix);
 
         let clip_off = draw_data.display_pos;
         let clip_scale = draw_data.framebuffer_scale;
@@ -207,14 +221,13 @@ impl ImGuiRenderer {
             for cmd in draw_list.commands() {
                 match cmd {
                     DrawCmd::Elements {
-                        count,
+                        count, // this is actually `n_indices`
                         cmd_params:
                             DrawCmdParams {
                                 clip_rect,
                                 texture_id,
                                 vtx_offset,
                                 idx_offset,
-                                ..
                             },
                     } => {
                         let clip_rect = [
@@ -264,18 +277,20 @@ impl ImGuiRenderer {
                                 idx_offset
                             );
 
-                            let n_indices = count;
+                            // `count` is actually `n_indices`
+                            let n_primitives = count / 3;
                             device.draw_indexed_primitives(
                                 fna3d::PrimitiveType::TriangleList,
                                 vtx_offset as u32,
                                 idx_offset as u32,
-                                n_indices as u32,
+                                n_primitives as u32,
                                 self.batch.ibuf.buf,
                                 fna3d::IndexElementSize::Bits16,
                             );
                         }
                     }
                     DrawCmd::ResetRenderState => {
+                        log::info!("fna3d-imgui-rs: ResetRenderState not implemented");
                         // TODO: what?
                     }
                     DrawCmd::RawCallback { callback, raw_cmd } => unsafe {
@@ -317,8 +332,8 @@ impl Drop for Batch {
 impl Batch {
     fn new(device: &mut fna3d::Device) -> Self {
         const N_QUADS: usize = 2048; // buffers are pre-allocated for this number
-        let vbuf = GpuVertexBuffer::new(device, 4 * N_QUADS);
-        let ibuf = GpuIndexBuffer::new(device, 6 * N_QUADS);
+        let vbuf = GpuVertexBuffer::new(device, 4 * N_QUADS); // four vertices per quad
+        let ibuf = GpuIndexBuffer::new(device, 6 * N_QUADS); // six indices per quad
 
         let (effect, effect_data) =
             fna3d::mojo::load_shader_from_bytes(device, crate::SHARDER).unwrap();
@@ -361,7 +376,7 @@ impl Batch {
         device.apply_effect(self.effect, pass, &state_changes);
 
         // set texture
-        let sampler = fna3d::SamplerState::default();
+        let sampler = fna3d::SamplerState::linear_wrap();
         let slot = 0;
         device.verify_sampler(slot, texture, &sampler);
 
@@ -369,8 +384,7 @@ impl Batch {
         let bind = fna3d::VertexBufferBinding {
             vertexBuffer: self.vbuf.buf,
             vertexDeclaration: VERT_DECL,
-            // FIXME:
-            vertexOffset: vtx_offset as i32,
+            vertexOffset: 0, // FIXME:
             instanceFrequency: 0,
         };
         device.apply_vertex_buffer_bindings(&[bind], true, vtx_offset);
@@ -379,30 +393,32 @@ impl Batch {
 
 struct GpuVertexBuffer {
     buf: *mut fna3d::Buffer,
-    capacity: usize,
+    capacity_in_bytes: usize,
 }
 
 impl GpuVertexBuffer {
-    fn new(device: &mut fna3d::Device, byte_capacity: usize) -> Self {
-        let buf = device.gen_vertex_buffer(true, fna3d::BufferUsage::None, byte_capacity as u32);
+    fn new(device: &mut fna3d::Device, n_vertices: usize) -> Self {
+        let len = VERT_SIZE * n_vertices;
+        let buf = device.gen_vertex_buffer(true, fna3d::BufferUsage::None, len as u32);
 
         Self {
             buf,
-            capacity: byte_capacity,
+            capacity_in_bytes: len,
         }
     }
 
     fn upload_vertices<T>(&mut self, data: &[T], device: &mut fna3d::Device) {
         // re-allocate if necessary
-        let len = data.len() + size_of::<T>(); // byte length
-        if len > self.capacity {
-            log::trace!(
+        // each index takes 20 bytes
+        let len = VERT_SIZE * (data.len() + size_of::<T>()); // byte length
+        if len > self.capacity_in_bytes {
+            log::info!(
                 "fna3d-imgui-rs: reallocate vertex buffer with byte length {}",
                 len
             );
             device.add_dispose_vertex_buffer(self.buf);
             self.buf = device.gen_vertex_buffer(true, fna3d::BufferUsage::None, len as u32);
-            self.capacity = len;
+            self.capacity_in_bytes = len;
         }
 
         device.set_vertex_buffer_data(self.buf, 0, data, fna3d::SetDataOptions::None);
@@ -411,35 +427,43 @@ impl GpuVertexBuffer {
 
 struct GpuIndexBuffer {
     buf: *mut fna3d::Buffer,
-    capacity: usize,
+    capacity_in_bytes: usize,
 }
 
 impl GpuIndexBuffer {
-    fn new(device: &mut fna3d::Device, byte_capacity: usize) -> Self {
-        let buf = device.gen_index_buffer(true, fna3d::BufferUsage::None, byte_capacity as u32);
+    fn new(device: &mut fna3d::Device, n_indices: usize) -> Self {
+        let len = INDEX_SIZE * n_indices;
+        let buf = device.gen_index_buffer(true, fna3d::BufferUsage::None, len as u32);
 
         Self {
             buf,
-            capacity: byte_capacity,
+            capacity_in_bytes: len,
         }
     }
 
     fn upload_indices<T>(&mut self, data: &[T], device: &mut fna3d::Device) {
         // reallocate if necessary
-        let len = data.len() + size_of::<T>(); // byte length
-        if len > self.capacity {
-            log::trace!(
+        // each index takes 2 bytes (16 bits)
+        let len = INDEX_SIZE * (data.len() + size_of::<T>()); // byte length
+        if len > self.capacity_in_bytes {
+            log::info!(
                 "fna3d-imgui-rs: re-allocating index buffer with byte length {}",
                 len
             );
             device.add_dispose_index_buffer(self.buf);
             self.buf = device.gen_index_buffer(true, fna3d::BufferUsage::None, len as u32);
-            self.capacity = len;
+            self.capacity_in_bytes = len;
         }
 
         device.set_index_buffer_data(self.buf, 0, data, fna3d::SetDataOptions::None);
     }
 }
+
+/// Size of a vertex in byte
+const VERT_SIZE: usize = 20;
+
+/// Size of an index in byte
+const INDEX_SIZE: usize = 2;
 
 /// Attributes of [`imgui::DrawVert`]
 ///

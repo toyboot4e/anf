@@ -20,6 +20,10 @@ use sdl2::{
 };
 
 /// Returns `(window, device, params): (SdlWindowHandle, fna3d::Device, fna3d::PresentationParameters)`
+///
+/// The device is initialized with:
+///
+/// * pre-multiplied alpha `BlendState`
 pub fn init_app(
     cfg: &WindowConfig,
 ) -> (WindowHandle, fna3d::Device, fna3d::PresentationParameters) {
@@ -43,6 +47,7 @@ pub fn init_app(
         };
         let mut device = fna3d::Device::from_params(params, cfg.is_debug);
         init_device(&mut device, &params);
+
         (params, device)
     }
 
@@ -68,6 +73,7 @@ pub fn init_app(
         let rst = fna3d::RasterizerState::default();
         device.apply_rasterizer_state(&rst);
 
+        // multiplied alpha blend
         let bst = fna3d::BlendState::alpha_blend();
         device.set_blend_state(&bst);
     }

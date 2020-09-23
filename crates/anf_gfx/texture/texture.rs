@@ -3,8 +3,6 @@
 use std::{
     fs::File,
     io::{BufReader, Read, Seek},
-    os::raw::c_void,
-    path::Path,
 };
 
 /// 2D texture handle

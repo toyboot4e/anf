@@ -2,7 +2,6 @@
 //!
 //! Modify the [`Context`] for your own game. Then it becomes a specific framework for you!
 
-use imgui::*;
 use imgui_fna3d::Fna3dImgui;
 
 use anf::{
@@ -67,6 +66,9 @@ impl AnfLifecycle for Context {
         // FIXME: we should not be responsible for this actually
         self.dcx.set_time_step(time_step);
         anf::gfx::clear_frame(&mut self.dcx, Color::cornflower_blue());
+        // FIXME: we want to do this here
+        // state.render()
+        // self.debug_render()
     }
 
     fn on_end_frame(&mut self) {
