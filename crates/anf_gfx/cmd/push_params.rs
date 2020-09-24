@@ -19,7 +19,7 @@ pub struct DrawPolicy {
 }
 
 /// Texture with size data. Used by [`QuadPush`]
-pub trait Texture2D {
+pub trait Texture2d {
     fn raw_texture(&self) -> *mut fna3d::Texture;
     /// Pixel
     fn w(&self) -> f32;
@@ -96,7 +96,7 @@ impl QuadPush {
     pub fn run_texture2d(
         &self,
         batch: &mut SpriteBatch,
-        texture: &impl Texture2D,
+        texture: &impl Texture2d,
         policy: DrawPolicy,
         flips: Flips,
     ) {
@@ -125,7 +125,7 @@ impl QuadPush {
     fn geometry_normalized(
         &self,
         policy: DrawPolicy,
-        texture: &impl Texture2D,
+        texture: &impl Texture2d,
     ) -> (Rect2f, Rect2f) {
         let inv_tex_w = 1.0 / texture.w();
         let inv_tex_h = 1.0 / texture.h();
@@ -167,7 +167,7 @@ impl QuadPush {
 #[inline]
 fn push_texture2d(
     batch: &mut SpriteBatch,
-    texture: &impl Texture2D,
+    texture: &impl Texture2d,
     origin: Vec2f,
     src_rect: Rect2f,
     dest_rect: Rect2f,

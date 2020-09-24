@@ -1,14 +1,24 @@
 //! ANF requires user to offer state and context. This example uses
 
 mod context;
+mod framework;
 mod games;
+mod scene;
 
-use anf::game::{AnfGame, AnfGameResult};
+use anf::prelude::*;
 
-use context::Context;
-use games::pong::PongGameData;
+use self::{context::Context, framework::SampleFramework, scene::SceneBasedGameData};
 
-fn main() -> AnfGameResult {
+fn main() -> AnfResult<()> {
     env_logger::init();
-    AnfGame::run(games::pong::config(), Context::init, PongGameData::from_cx)
+    SampleFramework::run(self::config(), Context::init, SceneBasedGameData::init)
+}
+
+pub fn config() -> WindowConfig {
+    WindowConfig {
+        title: "ANF samples".to_string(),
+        w: 1280,
+        h: 720,
+        ..Default::default()
+    }
 }

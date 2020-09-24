@@ -1,6 +1,6 @@
 //! Imperative draw APIs
 //!
-//! [`DrawContext`] is the primary interface. Do `use anf::game::draw::*` to make use of it.
+//! [`DrawContext`] is the primary interface. `use anf::game::draw::*` is the recommended.
 
 use std::path::Path;
 
@@ -24,11 +24,11 @@ use crate::game::time::TimeStep;
 ///
 /// # Example
 ///
-/// ```
-/// use anf::{gfx::Texture2D, game::draw::*};
+/// ```no_run
+/// use anf::{gfx::TextureData2d, game::draw::*};
 ///
-/// fn render(dcx: &mut DrawContext, tex: &Texture2D) {
-///     let mut pass = cx.dcx.pass(); // batch pass
+/// fn render(dcx: &mut DrawContext, tex: &TextureData2d) {
+///     let mut pass = dcx.pass(); // batch pass
 ///     pass.texture(tex).dest_pos_px([100.0, 100.0]); // push texture
 ///     pass.texture(tex).dest_pos_px([100.0, 400.0]);
 /// }
@@ -130,8 +130,8 @@ impl<'a> BatchPass<'a> {
         Self { dcx }
     }
 
-    /// Creates [`SpritePushCommand`] using [`SubTexture2D`] attributes
-    pub fn texture<T: SubTexture2D>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
+    /// Creates [`SpritePushCommand`] using [`SubTexture2d`] attributes
+    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
         self.dcx.push.reset_to_defaults();
         let quad = QuadPushBinding {
             push: &mut self.dcx.push,

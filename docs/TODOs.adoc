@@ -2,16 +2,17 @@
 
 == Pong
 
-* [ ] paddle in (any) screen
-** [ ] query screen size. separate `Context` object?
-* [ ] add ball & detect collision. the game runs!
+* [x] paddle in (any) screen
+** [x] query screen size. separate `Context` object?
+* [x] add ball & detect collision. the game runs!
 * [ ] rotating ball with physics
 * [ ] write funny article and post it to Note and Rust-jp
 
 == Window
 
-* [ ] show FPS
+* [x] show FPS
 * [ ] variable FPS
+* [ ] set FPS
 * [ ] high DPI?
 * [ ] more window commands
 

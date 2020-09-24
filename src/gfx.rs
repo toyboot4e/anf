@@ -5,14 +5,14 @@
 
 pub use anf_gfx::{
     geom2d,
-    texture::{SpriteData, SubTextureData2D, TextureData2D},
+    texture::{SpriteData, SubTextureData2d, TextureData2d},
 };
 
 pub mod prelude {
     //! All of the graphics data types
     pub use anf_gfx::{
         geom2d::*,
-        texture::{SpriteData, SubTextureData2D, TextureData2D},
+        texture::{SpriteData, SubTextureData2d, TextureData2d},
     };
 }
 

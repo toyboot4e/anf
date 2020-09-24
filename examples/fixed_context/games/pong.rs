@@ -3,7 +3,7 @@
 //! Note that all the sprites have origin at (0, 0), i.e. top left. Or else, our `Rect2f` methods
 //! do not make sense.
 
-use anf::{game::AnfGameState, prelude::*};
+use anf::prelude::*;
 
 use anf::{
     gfx::prelude::*,
@@ -11,42 +11,31 @@ use anf::{
     vfs,
 };
 
-use crate::context::Context;
-
-pub fn config() -> WindowConfig {
-    WindowConfig {
-        title: "Pong".to_string(),
-        w: 1280,
-        h: 720,
-        ..Default::default()
-    }
-}
+use crate::{context::Context, framework::SampleUserDataLifecycle};
 
 pub struct PongGameData {
     entities: Vec<Entity>,
 }
 
-impl PongGameData {
-    pub fn from_cx(cx: &mut Context) -> Self {
-        new_game(&cx.win, &mut cx.dcx)
-    }
-}
-
-impl AnfGameState<Context> for PongGameData {
-    fn update(&mut self, cx: &mut Context) {
+impl SampleUserDataLifecycle<Context> for PongGameData {
+    fn update(&mut self, cx: &mut Context) -> AnfResult<()> {
         let dt = cx.dcx.dt_secs_f32();
         let size = cx.dcx.screen().size();
 
         self.handle_input(&cx.kbd);
         self.handle_physics(dt);
         self.post_physics(dt, size);
+
+        Ok(())
     }
 
-    fn render(&mut self, cx: &mut Context) {
+    fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
         let mut pass = cx.dcx.pass();
         for e in &self.entities {
             pass.sprite(&e.sprite).dest_pos_px(e.rect.left_up());
         }
+
+        Ok(())
     }
 }
 
@@ -136,7 +125,7 @@ struct Entity {
 
 /// Initializes the [`PongGameData`] with two paddles and one ball
 pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> PongGameData {
-    let atlas = TextureData2D::from_path(dcx, vfs::path("ika-chan.png")).unwrap();
+    let atlas = TextureData2d::from_path(dcx.as_mut(), vfs::path("ika-chan.png")).unwrap();
     let atlas_size_px: Vec2f = atlas.size().into();
 
     // uv, I mean, normalized
@@ -169,7 +158,7 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> PongGameData {
     };
 
     let right = Entity {
-        rect: ([1100.0, 100.0], paddle_size_px).into(),
+        rect: ([1100.0, 250.0], paddle_size_px).into(),
         vel: Vec2f::zero(),
         sprite: paddle_sprite.clone(),
     };

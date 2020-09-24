@@ -6,7 +6,7 @@
 //!
 //! Handling input:
 //!
-//! ```
+//! ```no_run
 //! use anf::input::{Key, Keyboard};
 //!
 //! fn handle_input(kbd: &Keyboard) {
@@ -23,7 +23,7 @@
 //!
 //! Call the lifecycle methods of input objects:
 //!
-//! ```
+//! ```no_run
 //! use anf::prelude::*;
 //! use anf::input::Keyboard;
 //! use sdl2::event::Event;
@@ -32,9 +32,9 @@
 //!      kbd: Keyboard,
 //! }
 //!
-//! impl AnfAppLifecycle for SampleState {
+//! impl AnfLifecycle for SampleState {
 //!     fn event(&mut self, ev: &Event) {
-//!         self.kbd.listen_sdl_event(ev);
+//!         self.kbd.event(ev);
 //!     }
 //!     fn on_end_frame(&mut self) {
 //!         self.kbd.on_end_frame();

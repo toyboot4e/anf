@@ -11,7 +11,7 @@ default = ["sdl2_backend"]
 sdl2_backend = ["sdl2"]
 
 [dependencies]
-imgui = "0.4.0"
+imgui = "0.5.0"
 fna3d = { path = "../rust-fna3d/fna3d" }
 
 # If `sdl2_backend` feature is enabled, `sdl2` crate is used

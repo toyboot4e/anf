@@ -1,17 +1,17 @@
-//! [`TextureData2D`] & [`SpriteData`]
+//! [`TextureData2d`] & [`SpriteData`]
 
 use std::{
     fs::File,
     io::{BufReader, Read, Seek},
 };
 
-/// 2D texture handle
+/// 2d texture handle
 ///
 /// # Safety
 ///
 /// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
 #[derive(Debug, PartialEq, Clone)]
-pub struct TextureData2D {
+pub struct TextureData2d {
     raw: *mut fna3d::Texture,
     pub(crate) w: u32,
     pub(crate) h: u32,
@@ -50,7 +50,7 @@ fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::Surfa
     }
 }
 
-impl TextureData2D {
+impl TextureData2d {
     pub fn raw(&self) -> *mut fna3d::Texture {
         self.raw
     }
@@ -94,7 +94,7 @@ impl TextureData2D {
 }
 
 /// Accessors
-impl TextureData2D {
+impl TextureData2d {
     /// Size in `f32`
     ///
     /// `f32` is is reasonable in rendering context
@@ -110,9 +110,9 @@ impl TextureData2D {
 
 /// Texture loading methods
 /// ---
-impl TextureData2D {
+impl TextureData2d {
     pub fn from_path(
-        device: &mut impl AsMut<fna3d::Device>,
+        device: &mut fna3d::Device,
         path: impl AsRef<std::path::Path>,
     ) -> Option<Self> {
         let path = path.as_ref();
@@ -123,10 +123,7 @@ impl TextureData2D {
         Self::from_reader(device, reader)
     }
 
-    pub fn from_reader<R: Read + Seek>(
-        device: &mut impl AsMut<fna3d::Device>,
-        reader: R,
-    ) -> Option<Self> {
+    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, reader: R) -> Option<Self> {
         let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
 
         if pixels_ptr == std::ptr::null_mut() {
@@ -142,13 +139,7 @@ impl TextureData2D {
         return Some(texture);
     }
 
-    pub fn from_pixels(
-        device: &mut impl AsMut<fna3d::Device>,
-        pixels: &[u8],
-        w: u32,
-        h: u32,
-    ) -> Self {
-        let device = device.as_mut();
+    pub fn from_pixels(device: &mut fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
         let mut t = Self::with_size(device, w, h);
         t.upload_pixels(device, 0, None, pixels);
         t

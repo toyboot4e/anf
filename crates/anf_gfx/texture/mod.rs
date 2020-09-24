@@ -5,5 +5,5 @@
 mod sprite;
 mod texture;
 
-pub use sprite::{SpriteData, SubTextureData2D};
-pub use texture::{TextureData2D, TextureKind};
+pub use sprite::{SpriteData, SubTextureData2d};
+pub use texture::{TextureData2d, TextureKind};

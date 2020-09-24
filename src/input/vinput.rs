@@ -9,7 +9,7 @@
 //! different way from enter key. Then you have to build your custom input system like UI commands,
 //! maybe on top of virtual input.
 
-use crate::{game::AnfLifecycle, input::Key};
+use crate::{game::lifecycle::AnfLifecycle, input::Key};
 
 /// Some value that is decided by a set of [`Key`]'s state
 pub struct KeyBundle {

@@ -13,7 +13,7 @@ mod sdl2_backend;
 mod sdl2_helper;
 
 mod renderer;
-pub use renderer::{ImGuiRenderer, ImGuiRendererError, RcTexture, Result, Texture2D};
+pub use renderer::{ImGuiRenderer, ImGuiRendererError, RcTexture2d, Result, Texture2d};
 pub use sdl2_backend::ImguiSdl2;
 pub use sdl2_helper::{Fna3dImgui, Fna3dImguiPart};
 

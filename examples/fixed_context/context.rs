@@ -1,16 +1,15 @@
-//! Framework bulilt on top FNA for sample games
-//!
 //! Modify the [`Context`] for your own game. Then it becomes a specific framework for you!
 
+use imgui::im_str;
 use imgui_fna3d::Fna3dImgui;
 
-use anf::{
-    game::{app::*, draw::*, time::TimeStep, utils::FpsCounter, AnfLifecycle},
-    input::Keyboard,
-};
+use anf::prelude::*;
+use anf::{game::utils::FpsCounter, gfx::TextureData2d, input::Keyboard, vfs};
 
 use fna3d::Color;
 use sdl2::event::Event;
+
+use crate::framework::SampleContextLifecycle;
 
 /// Set of fundamental global objects
 ///
@@ -23,7 +22,7 @@ pub struct Context {
     pub kbd: Keyboard,
     // debug
     win_title: String,
-    imgui: Fna3dImgui,
+    pub imgui: Fna3dImgui,
 }
 
 impl Context {
@@ -32,7 +31,17 @@ impl Context {
         let size = [size.0 as f32, size.1 as f32];
         let font_size = 13.0;
         let dpi = 1.0; // TODO:
-        let imgui = Fna3dImgui::quick_start(dcx.as_mut(), &win.win, size, font_size, dpi).unwrap();
+
+        let mut imgui =
+            Fna3dImgui::quick_start(dcx.as_mut(), &win.win, size, font_size, dpi).unwrap();
+        let textures = imgui.textures_mut();
+        let ika = TextureData2d::from_path(dcx.as_mut(), vfs::path("ika-chan.png")).unwrap();
+        let _id = textures.insert(imgui_fna3d::RcTexture2d::new(
+            ika.raw(),
+            dcx.as_mut().raw(),
+            ika.w() as u32,
+            ika.h() as u32,
+        ));
 
         Self {
             win,
@@ -46,53 +55,42 @@ impl Context {
     }
 }
 
-impl AnfLifecycle for Context {
-    fn event(&mut self, ev: &Event) {
+impl SampleContextLifecycle for Context {
+    fn event(&mut self, ev: &Event) -> AnfResult<()> {
         if self.imgui.handle_event(ev) {
-            return;
+            return Ok(());
         }
-        self.kbd.event(ev);
+        self.kbd.event(ev)?;
+
+        Ok(())
     }
 
-    fn update(&mut self, time_step: TimeStep) {
+    fn update(&mut self, time_step: TimeStep) -> AnfResult<()> {
         // TODO: should it be called on render, too?
         if let Some(fps) = self.fps.update(time_step.elapsed()) {
             let title = format!("{} - {} FPS", self.win_title, fps);
             self.win.set_title(&title).unwrap();
         }
+
+        Ok(())
     }
 
-    fn render(&mut self, time_step: TimeStep) {
+    fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
         // FIXME: we should not be responsible for this actually
         self.dcx.set_time_step(time_step);
         anf::gfx::clear_frame(&mut self.dcx, Color::cornflower_blue());
-        // FIXME: we want to do this here
-        // state.render()
-        // self.debug_render()
+
+        Ok(())
     }
 
-    fn on_end_frame(&mut self) {
-        self.debug_render();
-
+    fn on_end_frame(&mut self) -> AnfResult<()> {
         let win = self.dcx.raw_window();
         self.dcx.as_mut().swap_buffers(None, None, win as *mut _);
 
-        self.kbd.on_end_frame();
+        self.kbd.on_end_frame()?;
+
+        Ok(())
     }
-}
 
-impl Context {
-    fn debug_render(&mut self) {
-        let mut io = self.imgui.io_mut();
-        io.display_size = [1280.0, 720.0];
-        io.display_framebuffer_scale = [1.0, 1.0];
-        io.delta_time = 0.016; // FIXME:
-
-        let (ui, fin) = self.imgui.frame(&self.win);
-
-        ui.show_demo_window(&mut true);
-
-        fin.render(ui, self.win.as_ref(), self.dcx.as_mut())
-            .unwrap();
-    }
+    fn debug_render(&mut self) {}
 }
