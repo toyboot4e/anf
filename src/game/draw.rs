@@ -1,6 +1,6 @@
 //! Imperative draw APIs
 //!
-//! [`DrawContext`] is the primary interface. Do `use anf::game::draw::*` to make use of it.
+//! [`DrawContext`] is the primary interface. `use anf::game::draw::*` is the recommended.
 
 use std::path::Path;
 

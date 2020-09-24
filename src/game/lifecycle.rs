@@ -1,4 +1,6 @@
-//! Thin layer of game loop with `DrawContext`
+//! Event/update/render lifecycle
+//!
+//! User it to provide their own framework lifecycle on top of it.
 
 // The internals need refactoring
 

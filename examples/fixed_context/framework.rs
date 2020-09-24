@@ -58,7 +58,7 @@ pub trait SampleUserDataLifecycle<T> {
     }
 }
 
-/// Creates sample context/user-data lifecycle
+/// Creates sample context/user-data lifecycle on top of [`AnfLifecycle`]
 pub struct SampleFramework<T: SampleContextLifecycle, U: SampleUserDataLifecycle<T>> {
     cx: T,
     user: U,
@@ -97,12 +97,12 @@ impl<T: SampleContextLifecycle, U: SampleUserDataLifecycle<T>> AnfLifecycle
         self.cx.render(time_step)?;
         self.user.render(&mut self.cx)?;
         self.cx.debug_render();
+        self.user.debug_render(&mut self.cx)?;
         Ok(())
     }
 
     fn on_end_frame(&mut self) -> AnfResult<()> {
         self.cx.on_end_frame()?;
-        self.user.debug_render(&mut self.cx)?;
         Ok(())
     }
 }

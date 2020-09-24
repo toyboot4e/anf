@@ -71,6 +71,7 @@ impl Fna3dImgui {
         io.delta_time = dt;
 
         self.part.backend.prepare_frame(self.icx.io_mut(), window);
+
         let ui = self.icx.frame();
         (ui, &mut self.part)
     }

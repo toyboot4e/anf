@@ -1,4 +1,4 @@
-//! Utilities to make your own framework on top of ANF
+//! Framework utilities provided to user
 
 use std::time::Duration;
 

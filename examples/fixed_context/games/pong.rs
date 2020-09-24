@@ -17,12 +17,6 @@ pub struct PongGameData {
     entities: Vec<Entity>,
 }
 
-impl PongGameData {
-    pub fn from_cx(cx: &mut Context) -> Self {
-        new_game(&cx.win, &mut cx.dcx)
-    }
-}
-
 impl SampleUserDataLifecycle<Context> for PongGameData {
     fn update(&mut self, cx: &mut Context) -> AnfResult<()> {
         let dt = cx.dcx.dt_secs_f32();
@@ -164,7 +158,7 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> PongGameData {
     };
 
     let right = Entity {
-        rect: ([1100.0, 100.0], paddle_size_px).into(),
+        rect: ([1100.0, 250.0], paddle_size_px).into(),
         vel: Vec2f::zero(),
         sprite: paddle_sprite.clone(),
     };

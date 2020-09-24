@@ -3,14 +3,15 @@
 mod context;
 mod framework;
 mod games;
+mod scene;
 
 use anf::prelude::*;
 
-use self::{context::Context, framework::SampleFramework, games::pong::PongGameData};
+use self::{context::Context, framework::SampleFramework, scene::SceneBasedGameData};
 
 fn main() -> AnfResult<()> {
     env_logger::init();
-    SampleFramework::run(self::config(), Context::init, PongGameData::from_cx)
+    SampleFramework::run(self::config(), Context::init, SceneBasedGameData::init)
 }
 
 pub fn config() -> WindowConfig {

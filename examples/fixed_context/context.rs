@@ -22,7 +22,7 @@ pub struct Context {
     pub kbd: Keyboard,
     // debug
     win_title: String,
-    imgui: Fna3dImgui,
+    pub imgui: Fna3dImgui,
 }
 
 impl Context {
@@ -92,19 +92,5 @@ impl SampleContextLifecycle for Context {
         Ok(())
     }
 
-    fn debug_render(&mut self) {
-        let (ui, fin) = {
-            let size = self.win.screen_size();
-            let size = [size.0 as f32, size.1 as f32];
-            let scale = [1.0, 1.0];
-            // FIXME:
-            let dt = 0.016;
-            self.imgui.frame(&self.win, size, scale, dt)
-        };
-
-        ui.show_demo_window(&mut true);
-
-        fin.render(ui, self.win.as_ref(), self.dcx.as_mut())
-            .unwrap();
-    }
+    fn debug_render(&mut self) {}
 }
