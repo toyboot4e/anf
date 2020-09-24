@@ -6,7 +6,7 @@ use imgui::im_str;
 use imgui_fna3d::Fna3dImgui;
 
 use anf::{
-    game::{app::*, draw::*, time::TimeStep, utils::FpsCounter, AnfLifecycle},
+    game::{app::*, draw::*, lifecycle::AnfLifecycle, time::TimeStep, utils::FpsCounter},
     gfx::TextureData2d,
     input::Keyboard,
     vfs,
@@ -14,6 +14,10 @@ use anf::{
 
 use fna3d::Color;
 use sdl2::event::Event;
+
+pub trait DebugLifecycle: AnfLifecycle {
+    fn debug_render(&mut self, cx: &mut Context);
+}
 
 /// Set of fundamental global objects
 ///
@@ -96,33 +100,15 @@ impl AnfLifecycle for Context {
 
 impl Context {
     fn debug_render(&mut self) {
-        let textures = self.imgui.textures_mut();
-        let ika = textures.get(imgui::TextureId::from(0)).unwrap();
-
-        let mut io = self.imgui.io_mut();
-        io.display_size = [1280.0, 720.0];
-        io.display_framebuffer_scale = [1.0, 1.0];
-        io.delta_time = 0.016; // FIXME:
-
-        let (ui, fin) = self.imgui.frame(&self.win);
+        let (ui, fin) = {
+            let size = self.win.screen_size();
+            let size = [size.0 as f32, size.1 as f32];
+            let scale = [1.0, 1.0];
+            let dt = 0.016; // FIXME:
+            self.imgui.frame(&self.win, size, scale, dt)
+        };
 
         ui.show_demo_window(&mut true);
-
-        imgui::Window::new(im_str!("Ika-chan"))
-            .size([320.0, 180.0], imgui::Condition::FirstUseEver)
-            .build(&ui, || {
-                ui.text(im_str!("こんにちは世界！"));
-                // imgui::
-                ui.columns(2, im_str!("cols"), false);
-                imgui::Image::new(imgui::TextureId::from(0), [284.0 / 3.0, 384.0 / 4.0])
-                    .uv1([1.0 / 3.0, 1.0 / 4.0])
-                    .build(&ui);
-                ui.next_column();
-                ui.new_line();
-                ui.new_line();
-                ui.text(im_str!("タス...ケテ......"));
-                ui.text(im_str!("タス...ケテ......"));
-            });
 
         fin.render(ui, self.win.as_ref(), self.dcx.as_mut())
             .unwrap();

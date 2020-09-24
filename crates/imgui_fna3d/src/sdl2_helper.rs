@@ -58,8 +58,18 @@ impl Fna3dImgui {
         self.part.backend.handle_event(&mut self.icx, ev)
     }
 
-    pub fn frame(&mut self, window: &impl AsRef<Window>) -> (imgui::Ui, &mut Fna3dImguiPart) {
-        // TODO: set Io (dt?, frame size, scale, etc.)
+    pub fn frame(
+        &mut self,
+        window: &impl AsRef<Window>,
+        size: [f32; 2],
+        scale: [f32; 2],
+        dt: f32,
+    ) -> (imgui::Ui, &mut Fna3dImguiPart) {
+        let mut io = self.icx.io_mut();
+        io.display_size = size;
+        io.display_framebuffer_scale = scale;
+        io.delta_time = dt;
+
         self.part.backend.prepare_frame(self.icx.io_mut(), window);
         let ui = self.icx.frame();
         (ui, &mut self.part)

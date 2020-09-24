@@ -12,7 +12,10 @@ use crate::{
 /// Return type of ANF game
 pub type AnfGameResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
-/// Where we manage user framework context
+/// Lifecycle provided by [`AnfFramework`]
+///
+/// Users are encouraged to extend this lifecycle to provide more specific situations such as
+/// `debug_render`.
 pub trait AnfLifecycle {
     #[allow(unused_variables)]
     fn event(&mut self, ev: &Event) {}

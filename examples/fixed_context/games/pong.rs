@@ -3,7 +3,7 @@
 //! Note that all the sprites have origin at (0, 0), i.e. top left. Or else, our `Rect2f` methods
 //! do not make sense.
 
-use anf::{game::AnfGameState, prelude::*};
+use anf::prelude::*;
 
 use anf::{
     gfx::prelude::*,
@@ -11,16 +11,10 @@ use anf::{
     vfs,
 };
 
-use crate::context::Context;
-
-pub fn config() -> WindowConfig {
-    WindowConfig {
-        title: "Pong".to_string(),
-        w: 1280,
-        h: 720,
-        ..Default::default()
-    }
-}
+use crate::{
+    context::Context,
+    framework::{SampleGame, SampleGameState},
+};
 
 pub struct PongGameData {
     entities: Vec<Entity>,
@@ -32,7 +26,7 @@ impl PongGameData {
     }
 }
 
-impl AnfGameState<Context> for PongGameData {
+impl SampleGameState<Context> for PongGameData {
     fn update(&mut self, cx: &mut Context) {
         let dt = cx.dcx.dt_secs_f32();
         let size = cx.dcx.screen().size();

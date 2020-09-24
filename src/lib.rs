@@ -31,5 +31,5 @@ pub mod prelude {
     pub use fna3d;
     pub use sdl2;
 
-    pub use crate::game::{app::*, draw::*};
+    pub use crate::game::{app::*, draw::*, lifecycle::*, time::TimeStep};
 }
