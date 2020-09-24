@@ -2,11 +2,14 @@
 //!
 //! Modify the [`Context`] for your own game. Then it becomes a specific framework for you!
 
+use imgui::im_str;
 use imgui_fna3d::Fna3dImgui;
 
 use anf::{
     game::{app::*, draw::*, time::TimeStep, utils::FpsCounter, AnfLifecycle},
+    gfx::TextureData2d,
     input::Keyboard,
+    vfs,
 };
 
 use fna3d::Color;
@@ -32,7 +35,17 @@ impl Context {
         let size = [size.0 as f32, size.1 as f32];
         let font_size = 13.0;
         let dpi = 1.0; // TODO:
-        let imgui = Fna3dImgui::quick_start(dcx.as_mut(), &win.win, size, font_size, dpi).unwrap();
+
+        let mut imgui =
+            Fna3dImgui::quick_start(dcx.as_mut(), &win.win, size, font_size, dpi).unwrap();
+        let textures = imgui.textures_mut();
+        let ika = TextureData2d::from_path(dcx.as_mut(), vfs::path("ika-chan.png")).unwrap();
+        let _id = textures.insert(imgui_fna3d::RcTexture2d::new(
+            ika.raw(),
+            dcx.as_mut().raw(),
+            ika.w() as u32,
+            ika.h() as u32,
+        ));
 
         Self {
             win,
@@ -83,6 +96,9 @@ impl AnfLifecycle for Context {
 
 impl Context {
     fn debug_render(&mut self) {
+        let textures = self.imgui.textures_mut();
+        let ika = textures.get(imgui::TextureId::from(0)).unwrap();
+
         let mut io = self.imgui.io_mut();
         io.display_size = [1280.0, 720.0];
         io.display_framebuffer_scale = [1.0, 1.0];
@@ -91,6 +107,22 @@ impl Context {
         let (ui, fin) = self.imgui.frame(&self.win);
 
         ui.show_demo_window(&mut true);
+
+        imgui::Window::new(im_str!("Ika-chan"))
+            .size([320.0, 180.0], imgui::Condition::FirstUseEver)
+            .build(&ui, || {
+                ui.text(im_str!("こんにちは世界！"));
+                // imgui::
+                ui.columns(2, im_str!("cols"), false);
+                imgui::Image::new(imgui::TextureId::from(0), [284.0 / 3.0, 384.0 / 4.0])
+                    .uv1([1.0 / 3.0, 1.0 / 4.0])
+                    .build(&ui);
+                ui.next_column();
+                ui.new_line();
+                ui.new_line();
+                ui.text(im_str!("タス...ケテ......"));
+                ui.text(im_str!("タス...ケテ......"));
+            });
 
         fin.render(ui, self.win.as_ref(), self.dcx.as_mut())
             .unwrap();

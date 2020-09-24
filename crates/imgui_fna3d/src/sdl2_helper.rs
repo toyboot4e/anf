@@ -46,11 +46,11 @@ impl Fna3dImgui {
         self.icx.io_mut()
     }
 
-    pub fn font_texture(&self) -> &crate::Texture2D {
+    pub fn font_texture(&self) -> &crate::Texture2d {
         self.part.renderer.font_texture()
     }
 
-    pub fn textures(&mut self) -> &mut imgui::Textures<crate::RcTexture> {
+    pub fn textures_mut(&mut self) -> &mut imgui::Textures<crate::RcTexture2d> {
         self.part.renderer.textures_mut()
     }
 

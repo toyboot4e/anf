@@ -21,28 +21,46 @@ pub enum ImGuiRendererError {
 
 pub type Result<T> = std::result::Result<T, ImGuiRendererError>;
 
-pub struct Texture2D {
+pub struct Texture2d {
     pub raw: *mut fna3d::Texture,
     raw_device: *mut fna3d::sys::FNA3D_Device,
     pub w: u32,
     pub h: u32,
 }
 
-impl Drop for Texture2D {
+impl Drop for Texture2d {
     fn drop(&mut self) {
         let device = unsafe { &mut *(self.raw_device as *mut fna3d::Device) };
         device.add_dispose_texture(self.raw);
     }
 }
 
-pub struct RcTexture {
-    pub texture: Rc<Texture2D>,
+pub struct RcTexture2d {
+    pub texture: Rc<Texture2d>,
+}
+
+impl RcTexture2d {
+    pub fn new(
+        raw: *mut fna3d::Texture,
+        raw_device: *mut fna3d::sys::FNA3D_Device,
+        w: u32,
+        h: u32,
+    ) -> Self {
+        Self {
+            texture: Rc::new(Texture2d {
+                raw,
+                raw_device,
+                w,
+                h,
+            }),
+        }
+    }
 }
 
 /// FNA3D ImGUI renderer
 pub struct ImGuiRenderer {
-    textures: imgui::Textures<RcTexture>,
-    font_texture: RcTexture,
+    textures: imgui::Textures<RcTexture2d>,
+    font_texture: RcTexture2d,
     batch: Batch,
 }
 
@@ -113,7 +131,7 @@ impl ImGuiRenderer {
     fn load_font_texture(
         device: &mut fna3d::Device,
         mut fonts: imgui::FontAtlasRefMut,
-    ) -> Result<RcTexture> {
+    ) -> Result<RcTexture2d> {
         let atlas_texture = fonts.build_rgba32_texture();
         let (pixels, w, h) = (
             atlas_texture.data,
@@ -133,7 +151,7 @@ impl ImGuiRenderer {
             gpu_texture
         };
 
-        let font_texture = Texture2D {
+        let font_texture = Texture2d {
             raw,
             raw_device: device.raw(),
             w,
@@ -143,17 +161,17 @@ impl ImGuiRenderer {
         // Note that we have to set the ID *AFTER* creating the font atlas texture
         fonts.tex_id = imgui::TextureId::from(usize::MAX);
 
-        Ok(RcTexture {
+        Ok(RcTexture2d {
             texture: Rc::new(font_texture),
         })
     }
 
-    pub fn textures_mut(&mut self) -> &mut imgui::Textures<RcTexture> {
+    pub fn textures_mut(&mut self) -> &mut imgui::Textures<RcTexture2d> {
         &mut self.textures
     }
 
     /// Be warned that the font texture is  non-premultiplied alpha
-    pub fn font_texture(&self) -> &Texture2D {
+    pub fn font_texture(&self) -> &Texture2d {
         &self.font_texture.texture
     }
 

@@ -15,9 +15,9 @@ use std::path::Path;
 /// * sampler count (MSAA), sampling masks
 #[derive(Debug)]
 pub struct Pipeline {
-    v_binds: GpuVertexAttributes,
+    vtx_attrs: GpuVertexAttributes,
     shader: Shader,
-    state: SamplerSlots,
+    sampler: SamplerSlots,
 }
 
 impl Pipeline {
@@ -27,8 +27,8 @@ impl Pipeline {
         shader_path: impl AsRef<Path>,
     ) -> Self {
         let mut s = Self {
-            v_binds: GpuVertexAttributes::new(decl),
-            state: SamplerSlots::from_device(device),
+            vtx_attrs: GpuVertexAttributes::new(decl),
+            sampler: SamplerSlots::from_device(device),
             shader: Shader::from_file(device, shader_path).expect("faild to create a shader"),
         };
         s.shader.apply_uniforms(); // set shader uniforms
@@ -39,26 +39,26 @@ impl Pipeline {
 /// Rendering pipeline methods
 /// ---
 impl Pipeline {
-    /// `FNA3D_ApplyEffect`
+    /// * `FNA3D_ApplyEffect`
     pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
         self.shader.apply_effect(device, pass);
     }
 
     /// * `FNA3D_VerifySamplerState`
     pub fn set_texture_raw(&mut self, device: &mut fna3d::Device, texture: *mut fna3d::Texture) {
-        self.state.set_texture_raw(device, texture);
+        self.sampler.set_texture_raw(device, texture);
     }
 
     /// Copies vertex buffer attributes
     pub fn reset_vertex_attributes(&mut self, vbuf: &mut GpuVertexBuffer, offset: u32) {
-        self.v_binds.reset_vertex_attributes(vbuf, offset);
+        self.vtx_attrs.reset_vertex_attributes(vbuf, offset);
     }
 
     /// * `FNA3D_ApplyVertexBufferBindings`
     ///
     /// "The very last thing to call when making a draw call".
     pub fn upload_vertex_attributes(&mut self, device: &mut fna3d::Device, base_vertex: u32) {
-        self.v_binds.upload_vertex_attributes(device, base_vertex);
+        self.vtx_attrs.upload_vertex_attributes(device, base_vertex);
     }
 }
 
