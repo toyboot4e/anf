@@ -11,7 +11,7 @@ use anf::{
     vfs,
 };
 
-use crate::{context::Context, framework::SampleGameState};
+use crate::{context::Context, framework::SampleUserDataLifecycle};
 
 pub struct PongGameData {
     entities: Vec<Entity>,
@@ -23,7 +23,7 @@ impl PongGameData {
     }
 }
 
-impl SampleGameState<Context> for PongGameData {
+impl SampleUserDataLifecycle<Context> for PongGameData {
     fn update(&mut self, cx: &mut Context) -> AnfResult<()> {
         let dt = cx.dcx.dt_secs_f32();
         let size = cx.dcx.screen().size();

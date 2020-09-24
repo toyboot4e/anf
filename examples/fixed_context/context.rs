@@ -1,5 +1,3 @@
-//! Framework bulilt on top FNA for sample games
-//!
 //! Modify the [`Context`] for your own game. Then it becomes a specific framework for you!
 
 use imgui::im_str;
@@ -11,9 +9,7 @@ use anf::{game::utils::FpsCounter, gfx::TextureData2d, input::Keyboard, vfs};
 use fna3d::Color;
 use sdl2::event::Event;
 
-pub trait DebugLifecycle: AnfLifecycle {
-    fn debug_render(&mut self, cx: &mut Context);
-}
+use crate::framework::SampleContextLifecycle;
 
 /// Set of fundamental global objects
 ///
@@ -59,12 +55,12 @@ impl Context {
     }
 }
 
-impl AnfLifecycle for Context {
+impl SampleContextLifecycle for Context {
     fn event(&mut self, ev: &Event) -> AnfResult<()> {
         if self.imgui.handle_event(ev) {
             return Ok(());
         }
-        self.kbd.event(ev);
+        self.kbd.event(ev)?;
 
         Ok(())
     }
@@ -88,9 +84,6 @@ impl AnfLifecycle for Context {
     }
 
     fn on_end_frame(&mut self) -> AnfResult<()> {
-        // TODO: extend lifecycle
-        self.debug_render();
-
         let win = self.dcx.raw_window();
         self.dcx.as_mut().swap_buffers(None, None, win as *mut _);
 
@@ -98,9 +91,7 @@ impl AnfLifecycle for Context {
 
         Ok(())
     }
-}
 
-impl Context {
     fn debug_render(&mut self) {
         let (ui, fin) = {
             let size = self.win.screen_size();

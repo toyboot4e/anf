@@ -1,3 +1,9 @@
+//! A 2D framework built on top of ANF
+//!
+//! User provide concrete _context_ and _user data_.
+//!
+//! This framework should be modified by user's needs.
+
 use sdl2::event::Event;
 
 use anf::game::{
@@ -7,19 +13,62 @@ use anf::game::{
     time::TimeStep,
 };
 
-/// Entry point of an ANF game
-///
-/// The context/user_data pattern where context is also provided by user.
-pub struct SampleGame<T: SampleGameState<U>, U: AnfLifecycle> {
-    user: T,
-    cx: U,
+pub trait SampleContextLifecycle {
+    #[allow(unused_variables)]
+    fn event(&mut self, ev: &Event) -> AnfResult<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn update(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        Ok(())
+    }
+
+    fn on_end_frame(&mut self) -> AnfResult<()> {
+        Ok(())
+    }
+
+    fn debug_render(&mut self) {}
 }
 
-impl<T: SampleGameState<U>, U: AnfLifecycle> SampleGame<T, U> {
+pub trait SampleUserDataLifecycle<T> {
+    #[allow(unused_variables)]
+    fn event(&mut self, cx: &mut T, ev: &Event) -> AnfResult<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn update(&mut self, cx: &mut T) -> AnfResult<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn render(&mut self, cx: &mut T) -> AnfResult<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn debug_render(&mut self, cx: &mut T) -> AnfResult<()> {
+        Ok(())
+    }
+}
+
+/// Creates sample context/user-data lifecycle
+pub struct SampleFramework<T: SampleContextLifecycle, U: SampleUserDataLifecycle<T>> {
+    cx: T,
+    user: U,
+}
+
+impl<T: SampleContextLifecycle, U: SampleUserDataLifecycle<T>> SampleFramework<T, U> {
     pub fn run(
         cfg: WindowConfig,
-        cx: impl FnOnce(WindowHandle, &WindowConfig, DrawContext) -> U,
-        state: impl FnOnce(&mut U) -> T,
+        cx: impl FnOnce(WindowHandle, &WindowConfig, DrawContext) -> T,
+        state: impl FnOnce(&mut T) -> U,
     ) -> AnfResult<()> {
         AnfFramework::from_cfg(cfg).run(|win, cfg, dcx| {
             let mut cx = cx(win, cfg, dcx);
@@ -29,7 +78,10 @@ impl<T: SampleGameState<U>, U: AnfLifecycle> SampleGame<T, U> {
     }
 }
 
-impl<T: SampleGameState<U>, U: AnfLifecycle> AnfLifecycle for SampleGame<T, U> {
+/// Sample context/user-data lifecycle implementation built on top of [`AnfLifecycle`]
+impl<T: SampleContextLifecycle, U: SampleUserDataLifecycle<T>> AnfLifecycle
+    for SampleFramework<T, U>
+{
     fn event(&mut self, ev: &Event) -> AnfResult<()> {
         self.cx.event(ev)?;
         Ok(())
@@ -44,17 +96,13 @@ impl<T: SampleGameState<U>, U: AnfLifecycle> AnfLifecycle for SampleGame<T, U> {
     fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
         self.cx.render(time_step)?;
         self.user.render(&mut self.cx)?;
+        self.cx.debug_render();
         Ok(())
     }
 
     fn on_end_frame(&mut self) -> AnfResult<()> {
         self.cx.on_end_frame()?;
+        self.user.debug_render(&mut self.cx)?;
         Ok(())
     }
-}
-
-/// Where we manage user game data
-pub trait SampleGameState<T: AnfLifecycle> {
-    fn update(&mut self, cx: &mut T) -> AnfResult<()>;
-    fn render(&mut self, cx: &mut T) -> AnfResult<()>;
 }

@@ -6,11 +6,11 @@ mod games;
 
 use anf::prelude::*;
 
-use self::{context::Context, framework::SampleGame, games::pong::PongGameData};
+use self::{context::Context, framework::SampleFramework, games::pong::PongGameData};
 
 fn main() -> AnfResult<()> {
     env_logger::init();
-    SampleGame::run(self::config(), Context::init, PongGameData::from_cx)
+    SampleFramework::run(self::config(), Context::init, PongGameData::from_cx)
 }
 
 pub fn config() -> WindowConfig {
