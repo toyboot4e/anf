@@ -16,6 +16,7 @@ anf_gfx = { path = "crates/anf_gfx" }
 
 log = "0.4.11"
 num_enum = "0.5.1"
+anyhow = "1.0.32"
 
 [dev-dependencies]
 imgui = "0.5.0"

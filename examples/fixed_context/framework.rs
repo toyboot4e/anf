@@ -3,7 +3,7 @@ use sdl2::event::Event;
 use anf::game::{
     app::{WindowConfig, WindowHandle},
     draw::*,
-    lifecycle::{AnfFramework, AnfGameResult, AnfLifecycle},
+    lifecycle::{AnfFramework, AnfLifecycle, AnfResult},
     time::TimeStep,
 };
 
@@ -20,34 +20,41 @@ impl<T: SampleGameState<U>, U: AnfLifecycle> SampleGame<T, U> {
         cfg: WindowConfig,
         cx: impl FnOnce(WindowHandle, &WindowConfig, DrawContext) -> U,
         state: impl FnOnce(&mut U) -> T,
-    ) -> AnfGameResult {
+    ) -> AnfResult<()> {
         AnfFramework::from_cfg(cfg).run(|win, cfg, dcx| {
             let mut cx = cx(win, cfg, dcx);
             let user = state(&mut cx);
-            Self { user, cx: cx }
+            Self { user, cx }
         })
     }
 }
 
 impl<T: SampleGameState<U>, U: AnfLifecycle> AnfLifecycle for SampleGame<T, U> {
-    fn event(&mut self, ev: &Event) {
-        self.cx.event(ev);
+    fn event(&mut self, ev: &Event) -> AnfResult<()> {
+        self.cx.event(ev)?;
+        Ok(())
     }
-    fn update(&mut self, time_step: TimeStep) {
-        self.cx.update(time_step);
-        self.user.update(&mut self.cx);
+
+    fn update(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        self.cx.update(time_step)?;
+        self.user.update(&mut self.cx)?;
+        Ok(())
     }
-    fn render(&mut self, time_step: TimeStep) {
-        self.cx.render(time_step);
-        self.user.render(&mut self.cx);
+
+    fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        self.cx.render(time_step)?;
+        self.user.render(&mut self.cx)?;
+        Ok(())
     }
-    fn on_end_frame(&mut self) {
-        self.cx.on_end_frame();
+
+    fn on_end_frame(&mut self) -> AnfResult<()> {
+        self.cx.on_end_frame()?;
+        Ok(())
     }
 }
 
 /// Where we manage user game data
 pub trait SampleGameState<T: AnfLifecycle> {
-    fn update(&mut self, cx: &mut T);
-    fn render(&mut self, cx: &mut T);
+    fn update(&mut self, cx: &mut T) -> AnfResult<()>;
+    fn render(&mut self, cx: &mut T) -> AnfResult<()>;
 }

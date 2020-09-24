@@ -4,8 +4,8 @@
 //!
 //! Making SDL window with FNA3D device:
 //!
-//! ```
-//! use anf::app::{init_app, WindowConfig};
+//! ```no_run
+//! use anf::game::app::{init_app, WindowConfig};
 //!
 //! let cfg = WindowConfig::default();
 //! let (win, device, params) = init_app(&cfg);

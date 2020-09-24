@@ -11,10 +11,7 @@ use anf::{
     vfs,
 };
 
-use crate::{
-    context::Context,
-    framework::{SampleGame, SampleGameState},
-};
+use crate::{context::Context, framework::SampleGameState};
 
 pub struct PongGameData {
     entities: Vec<Entity>,
@@ -27,20 +24,24 @@ impl PongGameData {
 }
 
 impl SampleGameState<Context> for PongGameData {
-    fn update(&mut self, cx: &mut Context) {
+    fn update(&mut self, cx: &mut Context) -> AnfResult<()> {
         let dt = cx.dcx.dt_secs_f32();
         let size = cx.dcx.screen().size();
 
         self.handle_input(&cx.kbd);
         self.handle_physics(dt);
         self.post_physics(dt, size);
+
+        Ok(())
     }
 
-    fn render(&mut self, cx: &mut Context) {
+    fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
         let mut pass = cx.dcx.pass();
         for e in &self.entities {
             pass.sprite(&e.sprite).dest_pos_px(e.rect.left_up());
         }
+
+        Ok(())
     }
 }
 

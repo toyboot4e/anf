@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Return type of ANF game
-pub type AnfGameResult = std::result::Result<(), Box<dyn std::error::Error>>;
+pub type AnfResult<T> = anyhow::Result<T>;
 
 /// Lifecycle provided by [`AnfFramework`]
 ///
@@ -18,12 +18,23 @@ pub type AnfGameResult = std::result::Result<(), Box<dyn std::error::Error>>;
 /// `debug_render`.
 pub trait AnfLifecycle {
     #[allow(unused_variables)]
-    fn event(&mut self, ev: &Event) {}
+    fn event(&mut self, ev: &Event) -> AnfResult<()> {
+        Ok(())
+    }
+
     #[allow(unused_variables)]
-    fn update(&mut self, time_step: TimeStep) {}
+    fn update(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        Ok(())
+    }
+
     #[allow(unused_variables)]
-    fn render(&mut self, time_step: TimeStep) {}
-    fn on_end_frame(&mut self) {}
+    fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        Ok(())
+    }
+
+    fn on_end_frame(&mut self) -> AnfResult<()> {
+        Ok(())
+    }
 }
 
 /// The entry point of the ANF game loop
@@ -55,7 +66,7 @@ impl AnfFramework {
     pub fn run<T: AnfLifecycle>(
         self,
         user_data_constructor: impl FnOnce(WindowHandle, &WindowConfig, DrawContext) -> T,
-    ) -> AnfGameResult {
+    ) -> AnfResult<()> {
         let AnfFramework {
             cfg,
             window,
@@ -66,17 +77,17 @@ impl AnfFramework {
         let mut clock = GameClock::new();
         let mut state = user_data_constructor(window, &cfg, dcx);
 
-        Self::visit(&mut clock, &mut events, &mut state)
+        self::visit_lifecycle(&mut clock, &mut events, &mut state)
     }
+}
 
-    fn visit(
-        clock: &mut GameClock,
-        events: &mut EventPump,
-        state: &mut impl AnfLifecycle,
-    ) -> AnfGameResult {
-        while tick_one_frame(clock, events, state) {}
-        Ok(())
-    }
+fn visit_lifecycle(
+    clock: &mut GameClock,
+    events: &mut EventPump,
+    state: &mut impl AnfLifecycle,
+) -> AnfResult<()> {
+    while tick_one_frame(clock, events, state)? {}
+    Ok(())
 }
 
 /// Returns `true` if we continue to the next frame
@@ -84,32 +95,31 @@ fn tick_one_frame(
     clock: &mut GameClock,
     events: &mut EventPump,
     state: &mut impl AnfLifecycle,
-) -> bool {
-    if !self::pump_events(state, events) {
-        return false;
+) -> AnfResult<bool> {
+    if !self::pump_events(state, events)? {
+        return Ok(false);
     }
 
-    // FIXME: provide handle of game clock (so that FPS can be changed)
     for time_step in clock.tick() {
-        state.update(time_step);
+        state.update(time_step)?;
     }
 
     let time_step = clock.timestep();
-    state.render(time_step);
+    state.render(time_step)?;
 
-    state.on_end_frame();
+    state.on_end_frame()?;
 
-    true
+    Ok(true)
 }
 
-fn pump_events(state: &mut impl AnfLifecycle, events: &mut EventPump) -> bool {
+fn pump_events(state: &mut impl AnfLifecycle, events: &mut EventPump) -> AnfResult<bool> {
     for ev in events.poll_iter() {
         match ev {
-            Event::Quit { .. } => return false,
+            Event::Quit { .. } => return Ok(false),
             ev => {
-                state.event(&ev);
+                state.event(&ev)?;
             }
         }
     }
-    true
+    Ok(true)
 }

@@ -9,7 +9,7 @@ pub use sdl2::{
     keyboard::{Keycode, Mod, Scancode},
 };
 
-use crate::game::lifecycle::AnfLifecycle;
+use crate::game::lifecycle::{AnfLifecycle, AnfResult};
 
 /// ANF key code
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
@@ -236,7 +236,7 @@ impl Keyboard {
 }
 
 impl AnfLifecycle for Keyboard {
-    fn event(&mut self, ev: &Event) {
+    fn event(&mut self, ev: &Event) -> AnfResult<()> {
         match ev {
             Event::KeyDown {
                 keycode: Some(sdl_key),
@@ -252,11 +252,15 @@ impl AnfLifecycle for Keyboard {
             }
             _ => {}
         }
+
+        Ok(())
     }
 
     /// Prepare for next frame
-    fn on_end_frame(&mut self) {
+    fn on_end_frame(&mut self) -> AnfResult<()> {
         self.kbd.b.bits = self.kbd.a.bits;
+
+        Ok(())
     }
 }
 

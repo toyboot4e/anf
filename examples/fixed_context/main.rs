@@ -8,7 +8,7 @@ use anf::prelude::*;
 
 use self::{context::Context, framework::SampleGame, games::pong::PongGameData};
 
-fn main() -> AnfGameResult {
+fn main() -> AnfResult<()> {
     env_logger::init();
     SampleGame::run(self::config(), Context::init, PongGameData::from_cx)
 }

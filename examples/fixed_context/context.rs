@@ -5,12 +5,8 @@
 use imgui::im_str;
 use imgui_fna3d::Fna3dImgui;
 
-use anf::{
-    game::{app::*, draw::*, lifecycle::AnfLifecycle, time::TimeStep, utils::FpsCounter},
-    gfx::TextureData2d,
-    input::Keyboard,
-    vfs,
-};
+use anf::prelude::*;
+use anf::{game::utils::FpsCounter, gfx::TextureData2d, input::Keyboard, vfs};
 
 use fna3d::Color;
 use sdl2::event::Event;
@@ -64,37 +60,43 @@ impl Context {
 }
 
 impl AnfLifecycle for Context {
-    fn event(&mut self, ev: &Event) {
+    fn event(&mut self, ev: &Event) -> AnfResult<()> {
         if self.imgui.handle_event(ev) {
-            return;
+            return Ok(());
         }
         self.kbd.event(ev);
+
+        Ok(())
     }
 
-    fn update(&mut self, time_step: TimeStep) {
+    fn update(&mut self, time_step: TimeStep) -> AnfResult<()> {
         // TODO: should it be called on render, too?
         if let Some(fps) = self.fps.update(time_step.elapsed()) {
             let title = format!("{} - {} FPS", self.win_title, fps);
             self.win.set_title(&title).unwrap();
         }
+
+        Ok(())
     }
 
-    fn render(&mut self, time_step: TimeStep) {
+    fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
         // FIXME: we should not be responsible for this actually
         self.dcx.set_time_step(time_step);
         anf::gfx::clear_frame(&mut self.dcx, Color::cornflower_blue());
-        // FIXME: we want to do this here
-        // state.render()
-        // self.debug_render()
+
+        Ok(())
     }
 
-    fn on_end_frame(&mut self) {
+    fn on_end_frame(&mut self) -> AnfResult<()> {
+        // TODO: extend lifecycle
         self.debug_render();
 
         let win = self.dcx.raw_window();
         self.dcx.as_mut().swap_buffers(None, None, win as *mut _);
 
-        self.kbd.on_end_frame();
+        self.kbd.on_end_frame()?;
+
+        Ok(())
     }
 }
 
@@ -104,7 +106,8 @@ impl Context {
             let size = self.win.screen_size();
             let size = [size.0 as f32, size.1 as f32];
             let scale = [1.0, 1.0];
-            let dt = 0.016; // FIXME:
+            // FIXME:
+            let dt = 0.016;
             self.imgui.frame(&self.win, size, scale, dt)
         };
 
