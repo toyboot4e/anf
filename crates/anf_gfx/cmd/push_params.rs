@@ -130,6 +130,7 @@ impl QuadPush {
         let inv_tex_w = 1.0 / texture.w();
         let inv_tex_h = 1.0 / texture.h();
 
+        // in uvs
         let src_rect = match &self.src_rect {
             Scaled::Normalized(uvs) => uvs.clone(),
             Scaled::Px(rect) => Rect2f {
@@ -140,6 +141,7 @@ impl QuadPush {
             },
         };
 
+        // in pixel
         let dest_rect = match &self.dest_rect {
             Scaled::Normalized(rect) => Rect2f {
                 x: rect.x * texture.w(),
@@ -150,9 +152,8 @@ impl QuadPush {
             Scaled::Px(rect) => Rect2f {
                 x: rect.x,
                 y: rect.y,
-                // TODO: does this work well with sub textures
-                w: rect.w * src_rect.w,
-                h: rect.h * src_rect.h,
+                w: rect.w,
+                h: rect.h,
             },
         };
 

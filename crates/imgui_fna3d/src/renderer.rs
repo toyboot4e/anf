@@ -139,8 +139,6 @@ impl ImGuiRenderer {
             atlas_texture.height,
         );
 
-        log::info!("fna3d-imgui-rs font texture size: ({}, {})", w, h);
-
         // create GPU texture
         let raw = {
             let fmt = fna3d::SurfaceFormat::Color;
@@ -225,8 +223,6 @@ impl ImGuiRenderer {
         // DepthStencilState.None;
         // RasterizerState = RasterizerState.CullNone;
 
-        log::trace!("fna3d-imgui-rs: start rendering");
-
         let matrix = Self::ortho_matrix(draw_data);
         fna3d::mojo::set_projection_matrix(self.batch.effect_data, &matrix);
 
@@ -268,7 +264,6 @@ impl ImGuiRenderer {
                             let texture = if texture_id.id() == usize::MAX {
                                 &self.font_texture
                             } else {
-                                log::trace!("texture id {:?}", texture_id);
                                 self.textures
                                     .get(texture_id)
                                     .ok_or_else(|| ImGuiRendererError::BadTexture(texture_id))?
@@ -287,14 +282,6 @@ impl ImGuiRenderer {
                                 &scissors_rect,
                                 texture.texture.raw,
                                 vtx_offset as u32,
-                            );
-
-                            // TODO: what is that count. indices?
-                            log::trace!(
-                                "draw (count: {}, vtx_offset: {}, idx_offset: {})",
-                                count,
-                                vtx_offset,
-                                idx_offset
                             );
 
                             // `count` is actually `n_indices`
@@ -319,8 +306,6 @@ impl ImGuiRenderer {
                 }
             }
         }
-
-        log::trace!("fna3d-imgui-rs: finish rendering");
 
         Ok(())
     }

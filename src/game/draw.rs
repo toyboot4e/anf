@@ -75,6 +75,12 @@ impl DrawContext {
     }
 }
 
+impl AsRef<fna3d::Device> for DrawContext {
+    fn as_ref(&self) -> &fna3d::Device {
+        &self.device
+    }
+}
+
 impl AsMut<fna3d::Device> for DrawContext {
     fn as_mut(&mut self) -> &mut fna3d::Device {
         &mut self.device

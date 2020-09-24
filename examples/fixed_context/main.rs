@@ -1,13 +1,12 @@
 //! ANF requires user to offer state and context. This example uses
 
-mod context;
-mod framework;
+mod base;
 mod games;
-mod scene;
+mod grid2d;
 
 use anf::prelude::*;
 
-use self::{context::Context, framework::SampleFramework, scene::SceneBasedGameData};
+use base::{context::Context, framework::SampleFramework, scene::SceneBasedGameData};
 
 fn main() -> AnfResult<()> {
     env_logger::init();

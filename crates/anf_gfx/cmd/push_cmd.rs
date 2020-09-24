@@ -32,7 +32,7 @@ pub trait QuadPushBuilder {
         self
     }
 
-    /// Set source rectangle in normalized pixels
+    /// Set the source rectangle in normalized pixels
     ///
     /// Specify [x, y] and [w, h].
     fn src_rect_px(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
@@ -40,7 +40,7 @@ pub trait QuadPushBuilder {
         self
     }
 
-    /// Sets origin position to the destination
+    /// Sets the origin position to the destination
     fn dest_pos_px(&mut self, xs: impl Into<[f32; 2]>) -> &mut Self {
         let xs = xs.into();
 
@@ -53,7 +53,7 @@ pub trait QuadPushBuilder {
         self
     }
 
-    /// Sets size to the destination
+    /// Sets the size to the destination
     fn dest_size_px(&mut self, ws: impl Into<[f32; 2]>) -> &mut Self {
         let ws = ws.into();
 

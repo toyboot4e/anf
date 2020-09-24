@@ -3,7 +3,10 @@ use anf::prelude::*;
 use imgui::{im_str, ImString};
 use sdl2::event::Event;
 
-use crate::{context::Context, framework::SampleUserDataLifecycle, games};
+use crate::{
+    base::{context::Context, framework::SampleUserDataLifecycle},
+    games,
+};
 
 pub struct SceneBasedGameData {
     scenes: Vec<Box<dyn SampleUserDataLifecycle<Context>>>,
@@ -15,7 +18,7 @@ impl SceneBasedGameData {
         Self {
             scenes: vec![
                 Box::new(games::pong::new_game(&cx.win, &mut cx.dcx)),
-                Box::new(games::tiled::new_game(&cx.win, &mut cx.dcx)),
+                Box::new(games::tiles::new_game(&cx.win, &mut cx.dcx)),
             ],
             current: 0,
         }

@@ -24,3 +24,4 @@ imgui_fna3d = { path = "crates/imgui_fna3d" }
 
 env_logger = "0.7.1"
 rand = "0.7.3"
+tiled = "0.9.3"

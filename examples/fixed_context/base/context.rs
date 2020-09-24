@@ -9,7 +9,7 @@ use anf::{game::utils::FpsCounter, gfx::TextureData2d, input::Keyboard, vfs};
 use fna3d::Color;
 use sdl2::event::Event;
 
-use crate::framework::SampleContextLifecycle;
+use crate::base::framework::SampleContextLifecycle;
 
 /// Set of fundamental global objects
 ///

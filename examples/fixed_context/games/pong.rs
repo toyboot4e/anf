@@ -11,7 +11,7 @@ use anf::{
     vfs,
 };
 
-use crate::{context::Context, framework::SampleUserDataLifecycle};
+use crate::base::{context::Context, framework::SampleUserDataLifecycle};
 
 pub struct PongGameData {
     entities: Vec<Entity>,

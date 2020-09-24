@@ -104,9 +104,22 @@ impl Default for SpriteData {
 }
 
 impl SpriteData {
-    pub fn size(&self) -> Vec2f {
+    pub fn texture_w(&self) -> u32 {
+        self.texture.w
+    }
+
+    pub fn texture_y(&self) -> u32 {
+        self.texture.w
+    }
+
+    pub fn texture_size_px(&self) -> [u32; 2] {
+        [self.texture.w, self.texture.h]
+    }
+
+    pub fn size_px(&self) -> Vec2f {
         self.uv_rect.size() * Vec2f::new(self.texture.w as f32, self.texture.h as f32)
     }
+
     pub fn size_uv(&self) -> Vec2f {
         self.uv_rect.size()
     }
@@ -163,10 +176,10 @@ impl Texture2d for SpriteData {
         self.texture.raw_texture()
     }
     fn w(&self) -> f32 {
-        self.texture.w()
+        self.texture.w() * self.uv_rect.w
     }
     fn h(&self) -> f32 {
-        self.texture.h()
+        self.texture.h() * self.uv_rect.h
     }
 }
 
