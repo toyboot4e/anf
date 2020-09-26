@@ -1,6 +1,6 @@
-//! Imperative draw APIs
+//! Object-oriented draw APIs
 //!
-//! [`DrawContext`] is the primary interface. `use anf::game::draw::*` is the recommended.
+//! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is the recommended.
 
 use std::path::Path;
 
@@ -14,7 +14,7 @@ use anf_gfx::{
 use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
-use crate::game::time::TimeStep;
+use crate::engine::time::TimeStep;
 
 /// The imperative draw API
 ///
@@ -25,7 +25,7 @@ use crate::game::time::TimeStep;
 /// # Example
 ///
 /// ```no_run
-/// use anf::{gfx::TextureData2d, game::draw::*};
+/// use anf::{gfx::TextureData2d, engine::draw::*};
 ///
 /// fn render(dcx: &mut DrawContext, tex: &TextureData2d) {
 ///     let mut pass = dcx.pass(); // batch pass

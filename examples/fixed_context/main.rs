@@ -1,10 +1,14 @@
-//! ANF requires user to offer state and context. This example uses
+//! ANF sample games
 
+// framework
 mod base;
-mod games;
 mod grid2d;
+mod render;
 
-use anf::prelude::*;
+// specific games
+mod games;
+
+use anf::engine::prelude::*;
 
 use base::{context::Context, framework::SampleFramework, scene::SceneBasedGameData};
 

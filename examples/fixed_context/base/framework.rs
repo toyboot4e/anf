@@ -6,7 +6,7 @@
 
 use sdl2::event::Event;
 
-use anf::game::{
+use anf::engine::{
     app::{WindowConfig, WindowHandle},
     draw::*,
     lifecycle::{AnfFramework, AnfLifecycle, AnfResult},

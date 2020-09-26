@@ -2,14 +2,21 @@
 //!
 //! # Example
 //!
-//! Making SDL window with FNA3D device:
+//! Making an SDL window ([`WindowHandle`]) with an FNA3D device ([`fna3d::Device`]):
 //!
 //! ```no_run
-//! use anf::game::app::{init_app, WindowConfig};
+//! use anf::engine::app::{init_app, WindowConfig};
 //!
 //! let cfg = WindowConfig::default();
 //! let (win, device, params) = init_app(&cfg);
 //! ```
+//!
+//! The `device` is initialized with:
+//!
+//! * pre-multiplied alpha `BlendState`
+//! * viewport with size of screen
+//!
+//! TODO: note about the presentation parameters
 
 use std::ffi::NulError;
 
@@ -20,10 +27,6 @@ use sdl2::{
 };
 
 /// Returns `(window, device, params): (SdlWindowHandle, fna3d::Device, fna3d::PresentationParameters)`
-///
-/// The device is initialized with:
-///
-/// * pre-multiplied alpha `BlendState`
 pub fn init_app(
     cfg: &WindowConfig,
 ) -> (WindowHandle, fna3d::Device, fna3d::PresentationParameters) {

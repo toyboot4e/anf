@@ -24,7 +24,7 @@
 //! Call the lifecycle methods of input objects:
 //!
 //! ```no_run
-//! use anf::prelude::*;
+//! use anf::engine::prelude::*;
 //! use anf::input::Keyboard;
 //! use sdl2::event::Event;
 //!
@@ -33,11 +33,13 @@
 //! }
 //!
 //! impl AnfLifecycle for SampleState {
-//!     fn event(&mut self, ev: &Event) {
+//!     fn event(&mut self, ev: &Event) -> AnfResult<()> {
 //!         self.kbd.event(ev);
+//!         Ok(())
 //!     }
-//!     fn on_end_frame(&mut self) {
+//!     fn on_end_frame(&mut self) -> AnfResult<()> {
 //!         self.kbd.on_end_frame();
+//!         Ok(())
 //!     }
 //! }
 //! ```

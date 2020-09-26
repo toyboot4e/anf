@@ -3,7 +3,7 @@
 //! Note that all the sprites have origin at (0, 0), i.e. top left. Or else, our `Rect2f` methods
 //! do not make sense.
 
-use anf::prelude::*;
+use anf::engine::prelude::*;
 
 use anf::{
     gfx::prelude::*,

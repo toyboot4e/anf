@@ -9,7 +9,7 @@ pub use sdl2::{
     keyboard::{Keycode, Mod, Scancode},
 };
 
-use crate::game::lifecycle::{AnfLifecycle, AnfResult};
+use crate::engine::lifecycle::{AnfLifecycle, AnfResult};
 
 /// ANF key code
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]

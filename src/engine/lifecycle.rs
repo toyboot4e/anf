@@ -7,7 +7,7 @@
 use sdl2::{event::Event, EventPump};
 
 use crate::{
-    game::{app::*, draw::*, time::*},
+    engine::{app::*, draw::*, time::*},
     vfs,
 };
 

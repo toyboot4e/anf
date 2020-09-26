@@ -1,7 +1,9 @@
 //! Data for drawing
 //!
-//! These structs implement draw API traits in [`crate::game::draw`] so they can be pushed via
-//! [`crate::game::draw::DrawContext`].
+//! These structs implement draw API traits in [`crate::engine::draw`] so they can be pushed via
+//! [`DrawContext`].
+//!
+//! [`DrawContext`]: crate::engine::draw::DrawContext
 
 pub use anf_gfx::{
     geom2d,

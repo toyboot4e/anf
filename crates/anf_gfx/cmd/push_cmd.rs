@@ -82,6 +82,7 @@ pub trait QuadPushBuilder {
         self
     }
 
+    /// Alpha value is considered here, too
     fn color(&mut self, color: fna3d::Color) -> &mut Self {
         self.data().color = color;
         self

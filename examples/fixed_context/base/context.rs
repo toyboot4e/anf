@@ -1,10 +1,9 @@
 //! Modify the [`Context`] for your own game. Then it becomes a specific framework for you!
 
-use imgui::im_str;
 use imgui_fna3d::Fna3dImgui;
 
-use anf::prelude::*;
-use anf::{game::utils::FpsCounter, gfx::TextureData2d, input::Keyboard, vfs};
+use anf::engine::prelude::*;
+use anf::{engine::utils::FpsCounter, gfx::TextureData2d, input::Keyboard, vfs};
 
 use fna3d::Color;
 use sdl2::event::Event;
