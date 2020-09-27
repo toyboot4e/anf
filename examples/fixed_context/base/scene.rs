@@ -40,6 +40,7 @@ impl SampleUserDataLifecycle<Context> for SceneBasedGameData {
 
     #[allow(unused_variables)]
     fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
+        // cx.dcx.as_mut().set_render_targets(render_targets, num_render_targets, depth_stencil_buffer, depth_format, preserve_target_contents)
         self.scenes[self.current].render(cx)?;
         Ok(())
     }

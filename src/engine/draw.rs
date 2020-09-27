@@ -25,7 +25,8 @@ use crate::engine::time::TimeStep;
 /// # Example
 ///
 /// ```no_run
-/// use anf::{gfx::TextureData2d, engine::draw::*};
+/// use anf::engine::draw::*;
+/// use anf::gfx::TextureData2d;
 ///
 /// fn render(dcx: &mut DrawContext, tex: &TextureData2d) {
 ///     let mut pass = dcx.pass(); // batch pass

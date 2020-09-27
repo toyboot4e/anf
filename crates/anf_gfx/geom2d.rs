@@ -498,7 +498,7 @@ impl Rot2f {
     }
 }
 
-/// Represents the right-handed 3x3 floating point matrix, which can store translation, scale and rotation information.
+/// Right-handed 3x3 `f32` matrix, which can store translation, scale and rotation information.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Mat2f {
     // mIJ (I: row, J: column)
@@ -563,6 +563,8 @@ impl Mat2f {
     }
 }
 
+// Mat2f, Mat2f
+
 impl_op_ex!(+ |lhs: &Mat2f, rhs: &Mat2f| -> Mat2f {
     Mat2f::new(
         lhs.m11 + rhs.m11,
@@ -596,6 +598,8 @@ impl_op_ex!(*|lhs: &Mat2f, rhs: &Mat2f| -> Mat2f {
     )
 });
 
+// Mat2f, f32
+
 impl_op_ex!(*|lhs: &Mat2f, rhs: &f32| -> Mat2f {
     Mat2f::new(
         lhs.m11 * rhs,
@@ -617,6 +621,31 @@ impl_op_ex!(/|lhs: &Mat2f, rhs: &f32| -> Mat2f {
         lhs.m32 / rhs,
     )
 });
+
+// assignments
+
+impl_op_ex!(+= |lhs: &mut Mat2f, rhs: &Mat2f| {
+    lhs.m11 += rhs.m11;
+    lhs.m12 += rhs.m12;
+    lhs.m21 += rhs.m21;
+    lhs.m22 += rhs.m22;
+    lhs.m31 += rhs.m31;
+    lhs.m32 += rhs.m32;
+});
+
+impl_op_ex!(-=|lhs: &mut Mat2f, rhs: &Mat2f| {
+    lhs.m11 -= rhs.m11;
+    lhs.m12 -= rhs.m12;
+    lhs.m21 -= rhs.m21;
+    lhs.m22 -= rhs.m22;
+    lhs.m31 -= rhs.m31;
+    lhs.m32 -= rhs.m32;
+});
+
+// FIXME:
+// impl_op_ex!(*=|lhs: &mut Mat2f, rhs: &Mat2f| {
+//     lhs = lhs * rhs;
+// });
 
 // TODO: should I implement `/` operator?
 

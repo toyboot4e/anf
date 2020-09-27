@@ -8,6 +8,10 @@
 //! * One-window, single-threaded
 //! * Pre-defined game loop
 //!
+//! # Note
+//!
+//! * right-handed coordinate system
+//!
 //! [SDL]: https://www.sdl.com/
 //! [FNA3D]: https://github.com/FNA-XNA/FNA3D
 //! [Rust-SDL2]: https://github.com/Rust-SDL2/rust-sdl2
