@@ -1,5 +1,7 @@
 //! Modify the [`Context`] for your own game. Then it becomes a specific framework for you!
 
+use std::time::Duration;
+
 use imgui_fna3d::Fna3dImgui;
 
 use anf::engine::prelude::*;
@@ -19,6 +21,7 @@ pub struct Context {
     pub dcx: DrawContext,
     pub fps: FpsCounter,
     pub kbd: Keyboard,
+    time_step: Duration,
     // debug
     win_title: String,
     pub imgui: Fna3dImgui,
@@ -47,10 +50,15 @@ impl Context {
             dcx,
             fps: FpsCounter::default(),
             kbd: Keyboard::new(),
+            time_step: Duration::new(0, 0),
             // debug
             win_title: cfg.title.clone(),
             imgui,
         }
+    }
+
+    pub fn time_step(&self) -> Duration {
+        self.time_step
     }
 }
 
@@ -65,6 +73,8 @@ impl SampleContextLifecycle for Context {
     }
 
     fn update(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        self.time_step = time_step.elapsed();
+
         // TODO: should it be called on render, too?
         if let Some(fps) = self.fps.update(time_step.elapsed()) {
             let title = format!("{} - {} FPS", self.win_title, fps);
@@ -75,6 +85,8 @@ impl SampleContextLifecycle for Context {
     }
 
     fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
+        self.time_step = time_step.elapsed();
+
         // FIXME: we should not be responsible for this actually
         self.dcx.set_time_step(time_step);
         anf::gfx::clear_frame(&mut self.dcx, Color::cornflower_blue());

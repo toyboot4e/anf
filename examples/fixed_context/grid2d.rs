@@ -3,19 +3,75 @@
 // https://docs.rs/auto_ops/
 use auto_ops::*;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Dir4 {
+    N,
+    E,
+    S,
+    W,
+}
+
+impl Dir4 {
+    pub fn x_sign(&self) -> i32 {
+        match self {
+            Dir4::N | Dir4::S => 0,
+            Dir4::W => -1,
+            Dir4::E => 1,
+        }
+    }
+
+    pub fn y_sign(&self) -> i32 {
+        match self {
+            Dir4::W | Dir4::E => 0,
+            Dir4::N => -1,
+            Dir4::S => 1,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Dir8 {
+    N,
+    NE,
+    E,
+    SE,
+    S,
+    SW,
+    W,
+    NW,
+}
+
+impl Dir8 {
+    pub fn x_sign(&self) -> i32 {
+        match self {
+            Dir8::N | Dir8::S => 0,
+            Dir8::W | Dir8::NW | Dir8::SW => -1,
+            Dir8::E | Dir8::NE | Dir8::SE => 1,
+        }
+    }
+
+    pub fn y_sign(&self) -> i32 {
+        match self {
+            Dir8::W | Dir8::E => 0,
+            Dir8::N | Dir8::NW | Dir8::NE => -1,
+            Dir8::S | Dir8::SW | Dir8::SE => 1,
+        }
+    }
+}
+
 /// Screen bounds in pixels
-#[derive(Debug, Clone, PartialEq, Default, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Rect2i {
     pos: Vec2i,
     size: Vec2u,
 }
 
 impl Rect2i {
-    pub fn new(xs: impl Into<[u32; 2]>, ws: impl Into<[u32; 2]>) -> Self {
+    pub fn new(xs: impl Into<[i32; 2]>, ws: impl Into<[u32; 2]>) -> Self {
         let xs = xs.into();
         let ws = ws.into();
         Self {
-            pos: Vec2i::new(xs[0] as i32, xs[1] as i32),
+            pos: Vec2i::new(xs[0], xs[1]),
             size: Vec2u::new(ws[0], ws[1]),
         }
     }
@@ -45,7 +101,7 @@ impl Rect2i {
 }
 
 /// Size/point in pixels
-#[derive(Debug, Clone, Copy, PartialEq, Default, Hash)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Vec2i {
     pub x: i32,
     pub y: i32,
@@ -75,7 +131,7 @@ impl Vec2i {
 }
 
 /// Point in pixels
-#[derive(Debug, Clone, Copy, PartialEq, Default, Hash)]
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Vec2u {
     pub x: u32,
     pub y: u32,

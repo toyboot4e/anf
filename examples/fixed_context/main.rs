@@ -4,6 +4,7 @@
 mod base;
 
 // utilities
+mod anim;
 mod grid2d;
 mod render;
 
