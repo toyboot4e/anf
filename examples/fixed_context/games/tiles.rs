@@ -4,7 +4,6 @@ use std::fs;
 
 use anf::{engine::prelude::*, gfx::prelude::*, input::Key, vfs};
 use sdl2::event::Event;
-
 pub use tiled::{Image, Layer, Map, Tile, Tileset};
 
 use crate::{
@@ -37,6 +36,19 @@ impl SampleUserDataLifecycle<Context> for TiledGameData {
             self.world.camera.pos.y += v * dt;
         }
 
+        if cx.kbd.is_key_pressed(Key::Left) {
+            self.world.player.pos.x -= 1;
+        }
+        if cx.kbd.is_key_pressed(Key::Right) {
+            self.world.player.pos.x += 1;
+        }
+        if cx.kbd.is_key_pressed(Key::Up) {
+            self.world.player.pos.y -= 1;
+        }
+        if cx.kbd.is_key_pressed(Key::Down) {
+            self.world.player.pos.y += 1;
+        }
+
         Ok(())
     }
 
@@ -47,6 +59,14 @@ impl SampleUserDataLifecycle<Context> for TiledGameData {
             &self.texture,
             (self.world.camera.pos, [1280.0, 720.0]),
         );
+
+        let mut pass = cx.dcx.pass();
+
+        let pos = self.world.player.pos * 32;
+        let pos = Vec2f::new(pos.x as f32, pos.y as f32) + Vec2f::new(16.0, 16.0);
+        let pos = pos - self.world.camera.pos;
+        pass.sprite(&self.world.player.sprite).dest_pos_px(pos);
+
         Ok(())
     }
 }
@@ -79,6 +99,7 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> TiledGameData {
     let sprite = SpriteData {
         texture: atlas,
         uv_rect: [(2.0 / 3.0, 0.0), (1.0 / 3.0, 1.0 / 4.0)].into(),
+        origin: [0.5, 0.5].into(),
         ..Default::default()
     };
 

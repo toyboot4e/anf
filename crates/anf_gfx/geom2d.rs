@@ -63,10 +63,13 @@ impl_op_ex!(-|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x - rhs.x, lhs
 impl_op_ex!(*|lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x * rhs.x, lhs.y * rhs.y) });
 impl_op_ex!(/ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x / rhs.x, lhs.y / rhs.y) });
 
+// assginments
 impl_op_ex!(+= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x += rhs.x; lhs.y += rhs.y; });
 impl_op_ex!(-= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x -= rhs.x; lhs.y -= rhs.y; });
 impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x *= rhs.x; lhs.y *= rhs.y; });
 impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x /= rhs.x; lhs.y /= rhs.y; });
+
+// TODO: assignment with impl Into<Vec2f>
 
 impl From<[f32; 2]> for Vec2f {
     fn from(xs: [f32; 2]) -> Self {

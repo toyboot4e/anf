@@ -46,8 +46,6 @@ pub fn render_tiled(
         pos
     };
 
-    log::info!("{:?}, {:?}", left_up, right_down);
-
     let tile_size = Vec2u::new(map.tile_width, map.tile_height);
 
     let mut pass = dcx.pass();
