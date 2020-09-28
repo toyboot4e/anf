@@ -5,7 +5,7 @@ use anf::{engine::prelude::*, gfx::prelude::*};
 use tiled::LayerData;
 pub use tiled::{Image, Layer, Map, Tile, Tileset};
 
-use crate::grid2d::{Rect2i, Vec2i, Vec2u};
+use crate::utils::grid2d::{Rect2i, Vec2i, Vec2u};
 
 /// World coordinates to tile coordinates rounding up remaning pixels (this is visually correct)
 pub fn w2t_round_up(w: impl Into<Vec2f>, map: &Map) -> Vec2i {

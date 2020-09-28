@@ -4,7 +4,7 @@ ANF is a 2D framework in Rust.  See the https://docs.rs/anf[API documentation] t
 
 == Feedback
 
-Feel free to contact with me! Via issues, email or maybe https://bit.ly/rust-community[Rust Community Discord].
+Feel free to contact with me! Via issues, email or maybe on Discord.
 
 == Credits / Acknowledgements
 
@@ -20,8 +20,12 @@ FNA3D is a graphics library for http://fna-xna.github.io/[FNA] written in C99.
 
 === Special thanks
 
-// is this appropreate way to say thank you to FNA?
+// is this an appropreate way to say thank you?
 
 * http://fna-xna.github.io/[FNA]
 +
 FNA is an XNA4 reimplementation.
+
+* https://github.com/prime31/Nez[Nez]
++
+Nez is a feature-rich 2D framework.

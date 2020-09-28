@@ -7,10 +7,12 @@ use sdl2::event::Event;
 pub use tiled::{Image, Layer, Map, Tile, Tileset};
 
 use crate::{
-    anim::{LoopMode, SpriteAnimPattern, SpriteAnimState},
     base::{context::Context, framework::SampleUserDataLifecycle},
-    grid2d::{Dir4, Dir8, Rect2i, Vec2i},
     render::tiled_render,
+    utils::{
+        anim::{LoopMode, SpriteAnimPattern, SpriteAnimState},
+        grid2d::{Dir4, Dir8, Rect2i, Vec2i},
+    },
 };
 
 pub struct TiledGameData {

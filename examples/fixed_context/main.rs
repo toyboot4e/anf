@@ -1,15 +1,13 @@
 //! ANF sample games
 
 // framework
-mod base;
+pub mod base;
 
-// utilities
-mod anim;
-mod grid2d;
-mod render;
+pub mod render;
+pub mod utils;
 
 // specific games
-mod games;
+pub mod games;
 
 use anf::engine::prelude::*;
 
