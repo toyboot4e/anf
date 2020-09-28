@@ -19,6 +19,7 @@ pub type AnfResult<T> = anyhow::Result<T>;
 /// Users are encouraged to extend this lifecycle to provide more specific situations such as
 /// `debug_render`.
 pub trait AnfLifecycle {
+    // TODO: lifecycle with `EventPump` with window?
     #[allow(unused_variables)]
     fn event(&mut self, ev: &Event) -> AnfResult<()> {
         Ok(())

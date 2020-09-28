@@ -19,6 +19,7 @@ impl SceneBasedGameData {
             scenes: vec![
                 Box::new(games::pong::new_game(&cx.win, &mut cx.dcx)),
                 Box::new(games::tiles::new_game(&cx.win, &mut cx.dcx)),
+                Box::new(games::input::new_game(&cx.win, &mut cx.dcx)),
             ],
             current: 0,
         }
@@ -76,4 +77,4 @@ impl SampleUserDataLifecycle<Context> for SceneBasedGameData {
     }
 }
 
-const LIST: &[&str] = &["Pong", "Tiled"];
+const LIST: &[&str] = &["Pong", "Tiled", "Input"];

@@ -89,7 +89,6 @@ impl SampleContextLifecycle for Context {
 
         // FIXME: we should not be responsible for this actually
         self.dcx.set_time_step(time_step);
-        anf::gfx::clear_frame(&mut self.dcx, Color::cornflower_blue());
 
         Ok(())
     }

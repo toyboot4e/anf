@@ -69,6 +69,8 @@ impl SampleUserDataLifecycle<Context> for TiledGameData {
     }
 
     fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
+        anf::gfx::clear_frame(&mut cx.dcx, fna3d::Color::rgb(21, 164, 185));
+
         self.rlmap
             .render(&mut cx.dcx, (self.camera.pos, [1280.0, 720.0]));
 

@@ -44,6 +44,26 @@
 //! }
 //! ```
 
-mod keyboard;
 pub mod vinput;
+
+mod keyboard;
+mod mouse;
+
 pub use keyboard::{Key, Keyboard};
+
+#[derive(Debug)]
+struct Double<T> {
+    /// Last
+    a: T,
+    /// Current
+    b: T,
+}
+
+impl<T: Default> Default for Double<T> {
+    fn default() -> Self {
+        Self {
+            a: T::default(),
+            b: T::default(),
+        }
+    }
+}

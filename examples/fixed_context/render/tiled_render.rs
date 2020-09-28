@@ -93,6 +93,7 @@ pub fn render_layer(
             let id = tile.gid - tileset.first_gid;
 
             // TODO: detect from which image (or tile?) we're drawing
+            // get uv rect (another approach is to calculate them when loading tiled maps)
             let n_cols = tileset.images[0].width as u32 / tileset.tile_width;
             let src_x = id % n_cols;
             let src_y = id / n_cols;

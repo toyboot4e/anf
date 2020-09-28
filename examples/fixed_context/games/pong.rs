@@ -30,6 +30,8 @@ impl SampleUserDataLifecycle<Context> for PongGameData {
     }
 
     fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
+        anf::gfx::clear_frame(&mut cx.dcx, fna3d::Color::cornflower_blue());
+
         let mut pass = cx.dcx.pass();
         for e in &self.entities {
             pass.sprite(&e.sprite).dest_pos_px(e.rect.left_up());

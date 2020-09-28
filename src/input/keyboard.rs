@@ -9,6 +9,7 @@ pub use sdl2::{
     keyboard::{Keycode, Mod, Scancode},
 };
 
+use super::Double;
 use crate::engine::lifecycle::{AnfLifecycle, AnfResult};
 
 /// ANF key code
@@ -279,21 +280,6 @@ impl Keyboard {
             None => return,
         };
         self.kbd.a.on_key_up(anf_key);
-    }
-}
-
-#[derive(Debug)]
-pub struct Double<T> {
-    a: T,
-    b: T,
-}
-
-impl<T: Default> Default for Double<T> {
-    fn default() -> Self {
-        Self {
-            a: T::default(),
-            b: T::default(),
-        }
     }
 }
 

@@ -11,7 +11,12 @@
 
 use crate::{engine::lifecycle::AnfLifecycle, input::Key};
 
+pub struct InputBundle {
+    key: KeyBundle,
+}
+
 /// Some value that is decided by a set of [`Key`]'s state
+#[derive(Debug, Clone)]
 pub struct KeyBundle {
     keys: Vec<Key>,
     is_down: bool,
@@ -23,6 +28,7 @@ impl KeyBundle {
     // }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum State {
     Up,
     Down,
@@ -30,19 +36,21 @@ enum State {
 }
 
 /// Negative or positive in one direction
+#[derive(Debug, Clone)]
 pub struct AxisInput {
     pos: KeyBundle,
     neg: KeyBundle,
 }
 
 /// Positive, negative or neutral
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Sign {
     Pos,
     Neg,
     Neutral,
 }
 
-/// Up, right, down or left
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dir4 {
     Up,
     Right,
@@ -51,6 +59,7 @@ pub enum Dir4 {
 }
 
 /// North north east, .., or north west
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dir8 {
     N,
     NE,
@@ -63,12 +72,14 @@ pub enum Dir8 {
 }
 
 /// One of [`Dir4`]
+#[derive(Debug, Clone)]
 pub struct FourDirButton {
     x: AxisInput,
     y: AxisInput,
 }
 
 /// One of [`Dir8`]
+#[derive(Debug, Clone)]
 pub struct EightDirButton {
     x: AxisInput,
     y: AxisInput,
