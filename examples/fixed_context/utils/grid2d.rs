@@ -60,7 +60,7 @@ impl Dir8 {
 }
 
 /// Screen bounds in pixels
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Rect2i {
     pos: Vec2i,
     size: Vec2u,
@@ -130,6 +130,30 @@ impl Vec2i {
     }
 }
 
+impl Into<[i32; 2]> for Vec2i {
+    fn into(self) -> [i32; 2] {
+        [self.x, self.y]
+    }
+}
+
+impl Into<[i32; 2]> for &Vec2i {
+    fn into(self) -> [i32; 2] {
+        [self.x, self.y]
+    }
+}
+
+impl From<[i32; 2]> for Vec2i {
+    fn from(xs: [i32; 2]) -> Self {
+        Self::new(xs[0], xs[1])
+    }
+}
+
+impl From<&[i32; 2]> for Vec2i {
+    fn from(xs: &[i32; 2]) -> Self {
+        Self::new(xs[0], xs[1])
+    }
+}
+
 /// Point in pixels
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Vec2u {
@@ -157,3 +181,27 @@ impl_op_ex!(*|lhs: &Vec2u, rhs: &u32| -> Vec2u { Vec2u::new(lhs.x * rhs, lhs.y *
 impl_op_ex!(/|lhs: &Vec2u, rhs: &u32| -> Vec2u { Vec2u::new(lhs.x / rhs, lhs.y / rhs) });
 impl_op_ex!(*= |lhs: &mut Vec2u, rhs: &u32| { lhs.x *= rhs; lhs.y *= rhs; });
 impl_op_ex!(/= |lhs: &mut Vec2u, rhs: &u32| { lhs.x /= rhs; lhs.y /= rhs; });
+
+impl Into<[u32; 2]> for Vec2u {
+    fn into(self) -> [u32; 2] {
+        [self.x, self.y]
+    }
+}
+
+impl Into<[u32; 2]> for &Vec2u {
+    fn into(self) -> [u32; 2] {
+        [self.x, self.y]
+    }
+}
+
+impl From<[u32; 2]> for Vec2u {
+    fn from(xs: [u32; 2]) -> Self {
+        Self::new(xs[0], xs[1])
+    }
+}
+
+impl From<&[u32; 2]> for Vec2u {
+    fn from(xs: &[u32; 2]) -> Self {
+        Self::new(xs[0], xs[1])
+    }
+}

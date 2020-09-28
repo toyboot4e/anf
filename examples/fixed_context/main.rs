@@ -4,6 +4,7 @@
 pub mod base;
 
 pub mod render;
+pub mod rl;
 pub mod utils;
 
 // specific games

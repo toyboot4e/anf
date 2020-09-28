@@ -62,7 +62,6 @@ impl SpriteAnimPattern {
 
     pub fn frame(&self, past: Duration) -> &SpriteData {
         let ix = self.frame_ix(past);
-        log::trace!("{}", ix);
         &self.frames[self.frame_ix(past)]
     }
 
@@ -134,7 +133,6 @@ impl<T: Eq + std::hash::Hash> SpriteAnimState<T> {
 
     pub fn tick(&mut self, past: Duration) {
         if matches!(self.state, LoopState::Stopped | LoopState::Stopped) {
-            log::info!("FIN");
             return;
         }
 
