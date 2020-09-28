@@ -1,29 +1,30 @@
+//! Tiled map rendering
+
 use std::cmp;
 
 use anf::{engine::prelude::*, gfx::prelude::*};
 
 use tiled::LayerData;
-pub use tiled::{Image, Layer, LayerTile, Map, Tile, Tileset};
 
 use crate::utils::grid2d::{Rect2i, Vec2i, Vec2u};
 
 /// World coordinates to tile coordinates rounding up remaning pixels (this is visually correct)
-pub fn w2t_round_up(w: impl Into<Vec2f>, map: &Map) -> Vec2i {
+pub fn w2t_round_up(w: impl Into<Vec2f>, tiled: &tiled::Map) -> Vec2i {
     let w = w.into();
-    let x = (w.x as u32 + map.tile_width - 1) / map.tile_width;
-    let y = (w.y as u32 + map.tile_width - 1) / map.tile_height;
+    let x = (w.x as u32 + tiled.tile_width - 1) / tiled.tile_width;
+    let y = (w.y as u32 + tiled.tile_width - 1) / tiled.tile_height;
     Vec2i::new(x as i32, y as i32)
 }
 
 /// World coordinates to tile coordinates flooring remaning pixels
-pub fn w2t_floor(w: impl Into<Vec2f>, map: &Map) -> Vec2i {
+pub fn w2t_floor(w: impl Into<Vec2f>, tiled: &tiled::Map) -> Vec2i {
     let w = w.into();
-    let x = w.x as u32 / map.tile_width;
-    let y = w.y as u32 / map.tile_height;
+    let x = w.x as u32 / tiled.tile_width;
+    let y = w.y as u32 / tiled.tile_height;
     Vec2i::new(x as i32, y as i32)
 }
 
-fn grid_bounds_from_pixel_bounds(map: &Map, bounds: impl Into<Rect2f>) -> Rect2i {
+fn grid_bounds_from_pixel_bounds(map: &tiled::Map, bounds: impl Into<Rect2f>) -> Rect2i {
     let bounds = bounds.into();
 
     let left_up = {
@@ -51,23 +52,23 @@ fn grid_bounds_from_pixel_bounds(map: &Map, bounds: impl Into<Rect2f>) -> Rect2i
 /// Renders a tiled map in a bounds in world coordinates
 pub fn render_tiled(
     dcx: &mut DrawContext,
-    map: &Map,
+    tiled: &tiled::Map,
     texture: &TextureData2d,
     px_bounds: impl Into<Rect2f>,
 ) {
     let px_bounds = px_bounds.into();
-    let grid_bounds = self::grid_bounds_from_pixel_bounds(map, px_bounds.clone());
+    let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
 
     let mut pass = dcx.pass();
-    for layer in map.layers.iter().filter(|l| l.visible) {
-        render_layer(&mut pass, map, layer, texture, &px_bounds, &grid_bounds);
+    for layer in tiled.layers.iter().filter(|l| l.visible) {
+        render_layer(&mut pass, tiled, layer, texture, &px_bounds, &grid_bounds);
     }
 }
 
 pub fn render_layer(
     pass: &mut BatchPass<'_>,
-    map: &Map,
-    layer: &Layer,
+    tiled: &tiled::Map,
+    layer: &tiled::Layer,
     texture: &TextureData2d,
     px_bounds: &Rect2f,
     grid_bounds: &Rect2i,
@@ -75,7 +76,7 @@ pub fn render_layer(
     let left_up = grid_bounds.left_up();
     let right_down = grid_bounds.right_down();
 
-    let tile_size = Vec2u::new(map.tile_width, map.tile_height);
+    let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
     let tiles = match layer.tiles {
         LayerData::Finite(ref f) => f,
         LayerData::Infinite(_) => unimplemented!("tiled map infinite layer"),
@@ -88,7 +89,7 @@ pub fn render_layer(
                 continue;
             }
 
-            let tileset = map.get_tileset_by_gid(tile.gid).unwrap();
+            let tileset = tiled.get_tileset_by_gid(tile.gid).unwrap();
             let id = tile.gid - tileset.first_gid;
 
             // TODO: detect from which image (or tile?) we're drawing
@@ -116,8 +117,8 @@ pub fn render_layer(
 
 pub fn render_grid(
     dcx: &mut DrawContext,
-    map: &Map,
-    layer: &Layer,
+    tiled: &tiled::Map,
+    layer: &tiled::Layer,
     texture: &TextureData2d,
     px_bounds: &Rect2f,
     grid_bounds: &Rect2i,
@@ -125,7 +126,7 @@ pub fn render_grid(
     let left_up = grid_bounds.left_up();
     let right_down = grid_bounds.right_down();
 
-    let tile_size = Vec2u::new(map.tile_width, map.tile_height);
+    let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
     let tiles = match layer.tiles {
         LayerData::Finite(ref f) => f,
         LayerData::Infinite(_) => unimplemented!("tiled map infinite layer"),

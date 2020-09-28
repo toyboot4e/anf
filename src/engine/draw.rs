@@ -70,6 +70,10 @@ impl DrawContext {
         self.params.deviceWindowHandle as *mut _
     }
 
+    pub fn device_mut(&mut self) -> &mut Device {
+        &mut self.device
+    }
+
     /// TODO: remove this
     pub fn set_time_step(&mut self, ts: TimeStep) {
         self.time_step = ts;
