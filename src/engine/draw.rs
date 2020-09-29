@@ -2,9 +2,10 @@
 //!
 //! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is the recommended.
 
+pub use anf_gfx::cmd::prelude::*;
+
 use std::path::Path;
 
-pub use anf_gfx::cmd::prelude::*;
 use anf_gfx::{
     batcher::{bufspecs::ColoredVertexData, Batcher},
     cmd::{QuadPush, QuadPushBinding, SpritePushCommand},

@@ -6,14 +6,14 @@
 //! * accept a variety of input types using `From` and `Into` traits:
 //!
 //! ```
-//! use anf_gfx::geom::*;
+//! use anf_gfx::geom2d::*;
 //!
 //! let a: Rect2f = [0.0, 0.0, 128.0, 72.0].into();
 //! let b: Rect2f = [(0.0, 0.0), (128.0, 72.0)].into();
 //! let c: [f32; 4] = a.into();
 //!
 //! let size: Vec2f = [200.0, 300.0].into();
-//! let d: Rect2f = [(0.0, 0.0).into(), size]; // from [T, T] where T: Into<Vec2f>
+//! let d: Rect2f = [(0.0, 0.0).into(), size].into(); // from [T, T] where T: Into<Vec2f>
 //! let e: Rect2f = ([0.0, 0.0], size).into(); // from (T, U) where T: Into<Vec2f>, U: Into<Vec2f>
 //! ```
 //!
@@ -46,6 +46,15 @@ impl Vec2f {
         self.x = self.x.round();
         self.y = self.y.round();
     }
+
+    pub fn scale(&self, scale: impl Into<Vec2f>) -> Self {
+        let scale = scale.into();
+
+        Self {
+            x: self.x * scale.x,
+            y: self.y * scale.y,
+        }
+    }
 }
 
 // Vec2f, f32
@@ -66,8 +75,8 @@ impl_op_ex!(/ |lhs: &Vec2f, rhs: &Vec2f| -> Vec2f { Vec2f::new(lhs.x / rhs.x, lh
 // assginments
 impl_op_ex!(+= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x += rhs.x; lhs.y += rhs.y; });
 impl_op_ex!(-= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x -= rhs.x; lhs.y -= rhs.y; });
-impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x *= rhs.x; lhs.y *= rhs.y; });
-impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x /= rhs.x; lhs.y /= rhs.y; });
+// impl_op_ex!(*= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x *= rhs.x; lhs.y *= rhs.y; });
+// impl_op_ex!(/= |lhs: &mut Vec2f, rhs: &Vec2f| { lhs.x /= rhs.x; lhs.y /= rhs.y; });
 
 // TODO: assignment with impl Into<Vec2f>
 
@@ -118,44 +127,6 @@ impl Into<(f32, f32)> for &Vec2f {
         (self.x, self.y)
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct Vec3f {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-impl Vec3f {
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Self { x, y, z }
-    }
-}
-
-impl_op_ex!(-|me: &Vec3f| -> Vec3f { Vec3f::new(-me.x, -me.y, -me.z) });
-
-// Vec3f, f32
-impl_op_ex!(*|lhs: &Vec3f, rhs: &f32| -> Vec3f {
-    Vec3f::new(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs)
-});
-impl_op_ex!(/|lhs: &Vec3f, rhs: &f32| -> Vec3f { Vec3f::new( lhs.x / rhs, lhs.y / rhs, lhs.z / rhs) });
-impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &f32| { lhs.x *= rhs; lhs.y *= rhs; lhs.z *= rhs; });
-impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &f32| { lhs.x /= rhs; lhs.y /= rhs; lhs.z /= rhs; });
-
-// Vec3f, Vec3f
-impl_op_ex!(+ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f { Vec3f::new( lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z) });
-impl_op_ex!(-|lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
-    Vec3f::new(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z)
-});
-impl_op_ex!(*|lhs: &Vec3f, rhs: &Vec3f| -> Vec3f {
-    Vec3f::new(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z)
-});
-impl_op_ex!(/ |lhs: &Vec3f, rhs: &Vec3f| -> Vec3f { Vec3f::new( lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z) });
-
-impl_op_ex!(+= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x += rhs.x; lhs.y += rhs.y; lhs.z += rhs.z; });
-impl_op_ex!(-= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x -= rhs.x; lhs.y -= rhs.y; lhs.z -= rhs.z; });
-impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x *= rhs.x; lhs.y *= rhs.y; lhs.z *= rhs.z; });
-impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x /= rhs.x; lhs.y /= rhs.y; lhs.z /= rhs.z; });
 
 /// 2D rectangle
 ///
@@ -302,7 +273,7 @@ impl Rect2f {
 
     /// Origin in pixels from origin in normalized coordinates
     pub fn origin_px(&self, origin: impl Into<Vec2f>) -> Vec2f {
-        self.left_up() + self.size() * origin.into()
+        self.left_up() + self.size().scale(origin.into())
     }
 
     /// Sets the position of the center
@@ -501,7 +472,7 @@ impl Rot2f {
     }
 }
 
-/// Right-handed 3x3 `f32` matrix, which can store translation, scale and rotation information.
+/// Two-dimensional matrix that stores translation, scale and rotation information.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Mat2f {
     // mIJ (I: row, J: column)

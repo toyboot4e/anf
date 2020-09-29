@@ -16,7 +16,7 @@ use std::path::Path;
 #[derive(Debug)]
 pub struct Pipeline {
     vtx_attrs: GpuVertexAttributes,
-    shader: Shader,
+    pub shader: Shader,
     sampler: SamplerSlots,
 }
 
@@ -31,7 +31,8 @@ impl Pipeline {
             sampler: SamplerSlots::from_device(device),
             shader: Shader::from_file(device, shader_path).expect("faild to create a shader"),
         };
-        s.shader.apply_uniforms(); // set shader uniforms
+        s.shader
+            .set_projection_matrix(&fna3d::mojo::ORTHOGRAPHICAL_MATRIX);
         s
     }
 }
@@ -39,6 +40,8 @@ impl Pipeline {
 /// Rendering pipeline methods
 /// ---
 impl Pipeline {
+    // pub fn set_projection_matrix(&mut self, mat: &Mat4) {}
+
     /// * `FNA3D_ApplyEffect`
     pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
         self.shader.apply_effect(device, pass);

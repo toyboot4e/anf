@@ -1,10 +1,14 @@
 //! Re-exported to super module
 
-use crate::batcher::{
-    batch::{SpriteBatch, SpriteDrawCall},
-    bufspecs::GpuViBuffer,
-};
 use fna3d_hie::{buffers::GpuIndexBuffer, Pipeline};
+
+use crate::{
+    batcher::{
+        batch::{SpriteBatch, SpriteDrawCall},
+        bufspecs::GpuViBuffer,
+    },
+    geom3d::Mat3f,
+};
 
 /// [`SpriteBatch`] with GPU vertex/index buffer handle
 #[derive(Debug)]
@@ -12,6 +16,9 @@ pub struct Batcher {
     pub batch: SpriteBatch,
     bufs: GpuViBuffer,
     is_begin_called: bool,
+    proj_matrix: Mat3f,
+    transform_matrix: Mat3f,
+    shader_matrix: Mat3f,
 }
 
 impl Batcher {
@@ -20,6 +27,9 @@ impl Batcher {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
             is_begin_called: false,
+            proj_matrix: Mat3f::orthographic(1.0, 1.0, 1.0, 0.0),
+            transform_matrix: Mat3f::identity(),
+            shader_matrix: Mat3f::default(),
         }
     }
 }
@@ -60,7 +70,15 @@ impl Batcher {
         // Material (blend, sampler, depth/stencil, rasterizer)
         // viewport, scissors rect
 
-        // pipe.shader.apply_uniforms();
+        // update shader matrix
+        // TODO: get viewport
+        // TODO: use inlined orthographic matrix for efficiency
+        self.proj_matrix = Mat3f::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
+        self.shader_matrix = Mat3f::multiply(&self.transform_matrix, &self.proj_matrix);
+        unsafe {
+            let name = std::ffi::CString::new("MatrixTransform").unwrap();
+            pipe.shader.set_param(&name, &self.shader_matrix);
+        }
 
         // `FNA3D_ApplyEffect`
         pipe.apply_effect(device, 0);

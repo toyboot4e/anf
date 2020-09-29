@@ -6,7 +6,7 @@
 //! [`DrawContext`]: crate::engine::draw::DrawContext
 
 pub use anf_gfx::{
-    geom2d,
+    geom2d, geom3d,
     texture::{SpriteData, SubTextureData2d, TextureData2d},
 };
 

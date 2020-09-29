@@ -1,6 +1,9 @@
 //! Re-exported to super module
 
-use std::path::Path;
+use std::{
+    ffi::{c_void, CStr},
+    path::Path,
+};
 
 /// Shader data loaded on memory
 ///
@@ -50,8 +53,16 @@ impl Shader {
         device.apply_effect(self.effect, pass, &state_changes);
     }
 
-    /// * TODO: enable custom projection matrix
-    pub fn apply_uniforms(&mut self) {
-        fna3d::mojo::set_projection_matrix(self.data, &fna3d::mojo::ORTHOGRAPHICAL_MATRIX);
+    /// Sets uniforms of vertex shader (i.e. projection matrix)
+    pub fn set_projection_matrix(&mut self, mat: &[f32; 16]) {
+        fna3d::mojo::set_projection_matrix(self.data, mat);
+    }
+
+    pub fn param(&self, name: &CStr) -> Option<*mut c_void> {
+        fna3d::mojo::find_param(self.data, name)
+    }
+
+    pub unsafe fn set_param<T>(&self, name: &CStr, value: &T) {
+        fna3d::mojo::set_param(self.data, name, value);
     }
 }
