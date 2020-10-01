@@ -20,7 +20,7 @@ impl RlMap {
     pub fn is_blocked(&self, pos: impl Into<Vec2i>) -> bool {
         let pos = pos.into();
         if !self.contains(pos) {
-            return false;
+            return true;
         }
 
         let ix = pos.x + self.size[0] as i32 * pos.y;

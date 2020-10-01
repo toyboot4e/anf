@@ -63,9 +63,10 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
         }
 
         if pos != self.player.pos && !self.map.rlmap.is_blocked(pos) {
-            self.player.anim.set_pattern(dir, false);
             self.player.pos = pos;
         }
+        self.player.dir = dir;
+        self.player.anim.set_pattern(dir, false);
 
         Ok(())
     }
