@@ -472,7 +472,9 @@ impl Rot2f {
     }
 }
 
-/// Two-dimensional matrix that stores translation, scale and rotation information.
+/// Two-dimensional matrix that stores translation, scale and rotation information
+///
+/// For efficiency, it is a 3x2 matrix.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Mat2f {
     // mIJ (I: row, J: column)

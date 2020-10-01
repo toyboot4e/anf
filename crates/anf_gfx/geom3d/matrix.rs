@@ -2,18 +2,25 @@ use auto_ops::*;
 
 use crate::geom3d::{Plane3f, Quaternion, Vec3f};
 
-/// 4D matrix M_{row, col} for 3D world
+/// 4x4 matrix for 3D world
 ///
-/// Right-handed 4x4 floating point matrix, which can store translation, scale and rotation information
+/// ANF thinks **position vectors are row vectors**. So most matrices in mathmatical textbooks are
+/// transposed.
+///
+/// # System
+///
+/// * Right-handed coordinate system
+/// * Row-major matrix notation (position vectors are row vectors)
+/// * Row-major memory layout (m_11, m_12, m_13, ..)
 ///
 /// # Warning
 ///
-/// This type very likely has bugs especially in 3D
+/// This is very likely buggy. TODO: debug
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Mat3f {
-    /// First row, fist column
+    /// First row, first column
     pub m11: f32,
-    /// First row, second column
+    /// Second row, second column
     pub m12: f32,
     pub m13: f32,
     pub m14: f32,
@@ -374,7 +381,7 @@ impl Mat3f {
         }
     }
 
-    /// Creates a new <see cref="Matrix"/> which contains the rotation moment around specified axis.
+    /// Creates a new matrix which contains the rotation moment around specified axis
     pub fn from_axis_angle(axis: &Vec3f, rad: f32) -> Self {
         let Vec3f { x, y, z } = axis;
         let num2 = rad.sin();
@@ -406,7 +413,7 @@ impl Mat3f {
         }
     }
 
-    /// Creates a new rotation matrix from a <see cref="Quaternion"/>.
+    /// Creates a new rotation matrix from a [Quaternion]
     pub fn from_quaternion(q: &Quaternion) -> Self {
         let num9 = q.x * q.x;
         let num8 = q.y * q.y;
@@ -438,7 +445,7 @@ impl Mat3f {
         }
     }
 
-    // /// Creates a new rotation <see cref="Matrix"/> from the specified yaw, pitch and roll values.
+    // /// Creates a new rotation matrix from the specified yaw, pitch and roll values
     // pub fn from_yaw_pitch_roll(yaw: f32, pitch: f32, roll: f32) -> Self {
     //     let q = Quaternion::from_yaw_pitch_roll(yaw, pitch, roll);
     //     Self::from_quaternion(&q)
@@ -480,22 +487,31 @@ impl Mat3f {
         near: f32,
         far: f32,
     ) -> Self {
-        // FIXME: the order of h and 0.0
         Self::orthographic_off_center(0.0, w, h, 0.0, near, far)
     }
 
-    /// Creates a new [orthogonal projection] matrix for a viewport
+    /// Creates a new  matrix for a viewport
     ///
-    /// # Row-first index
+    /// # Row-major and transpose
     ///
-    /// A remarkable difference from FNA is that this matrix indexed as M_{row, col}.
+    /// The [wiki]'s orthographic matrix is **transposed** in ANF world. This is because NAF is
+    /// row-major where position vectors are row vectors.
     ///
-    /// # Right-handed coordinate system
+    /// # Parameters
     ///
-    /// We're using right-handed coordinate system. x axis is goes right, y axis goes down, and z
-    /// axis goes from your monitor to you. So `near` > `far`.
+    /// See the implementation of [`Mat3f::orthographic`] to get the picture.
     ///
-    /// [orthogonal projection]: https://en.wikipedia.org/wiki/Orthographic_projection
+    /// * `top` < `bottom`
+    ///
+    /// (left, bottom) points to left-down corner of the screen while (right, top) points to the
+    /// right-up corner of the screen. Our y axis goes from up to down so `top` < `bottom`.
+    ///
+    /// * `near` > `far`
+    ///
+    /// We're using right-handed coordinate system. In 2D, x axis is goes right, y axis goes down,
+    /// and z axis goes from your monitor to you. So `near` > `far`.
+    ///
+    /// [wiki]: https://en.wikipedia.org/wiki/Orthographic_projection
     pub fn orthographic_off_center(
         left: f32,
         right: f32,
@@ -508,27 +524,23 @@ impl Mat3f {
             m11: (2.0 / (right as f64 - left as f64)) as f32,
             m12: 0.0,
             m13: 0.0,
-            m14: (-(left as f64 + right as f64) / (right as f64 - left as f64)) as f32,
+            m14: 0.0,
             m21: 0.0,
             m22: (2.0 / (top as f64 - bottom as f64)) as f32,
             m23: 0.0,
-            m24: (-(top as f64 + bottom as f64) / (top as f64 - bottom as f64)) as f32,
+            m24: 0.0,
             m31: 0.0,
             m32: 0.0,
-            // FNA
-            // m33: (1.0 / (near as f64 - far as f64)) as f32,
-            // m34: (near as f64 / (near as f64 - far as f64)) as f32,
-            // Wiki
-            m33: (-2.0 / (far as f64 - near as f64)) as f32,
-            m34: (-(far + near) as f64 / (far as f64 - near as f64)) as f32,
-            m41: 0.0, // 0.0 (FNA) -1.0 (gist)
-            m42: 0.0, // 0.0 (FNA) 1.0 (gist)
-            m43: 0.0,
+            m33: (1.0 / (near as f64 - far as f64)) as f32,
+            m34: 0.0,
+            m41: ((left as f64 + right as f64) / (left as f64 - right as f64)) as f32,
+            m42: ((top as f64 + bottom as f64) / (bottom as f64 - top as f64)) as f32,
+            m43: (near as f64 / (near as f64 - far as f64)) as f32,
             m44: 1.0,
         }
     }
 
-    /// Creates a new projection <see cref="Matrix"/> for perspective view.
+    /// Creates a new projection matrix for perspective view.
     pub fn perspective(w: f32, h: f32, near_plane_distance: f32, far_plane_distance: f32) -> Self {
         assert!(near_plane_distance > 0.0, "near_plane_distance <= 0");
         assert!(far_plane_distance > 0.0, "far_plane_distance <= 0");
@@ -576,7 +588,7 @@ impl Mat3f {
         }
     }
 
-    /// Creates a new projection <see cref="Matrix"/> for customized perspective view.
+    /// Creates a new projection matrix for customized perspective view.
     pub fn perspective_off_center(
         left: f32,
         right: f32,
@@ -605,7 +617,8 @@ impl Mat3f {
         }
     }
 
-    pub fn new_rot_x(rad: f32) -> Self {
+    /// Rotation around x axis
+    pub fn from_rot_x(rad: f32) -> Self {
         let mut res = Self::identity();
         let val1 = rad.cos();
         let val2 = rad.sin();
@@ -616,7 +629,8 @@ impl Mat3f {
         res
     }
 
-    pub fn new_rot_y(rad: f32) -> Self {
+    /// Rotation around y axis
+    pub fn from_rot_y(rad: f32) -> Self {
         let mut res = Self::identity();
         let val1 = rad.cos();
         let val2 = rad.sin();
@@ -627,7 +641,8 @@ impl Mat3f {
         res
     }
 
-    pub fn new_rot_z(rad: f32) -> Self {
+    /// Rotation around z axis
+    pub fn from_rot_z(rad: f32) -> Self {
         let mut res = Self::identity();
         let val1 = rad.cos();
         let val2 = rad.sin();
@@ -638,7 +653,7 @@ impl Mat3f {
         res
     }
 
-    pub fn new_scale(x: f32, y: f32, z: f32) -> Self {
+    pub fn from_scale(x: f32, y: f32, z: f32) -> Self {
         Self {
             m11: x,
             m22: y,
@@ -648,8 +663,8 @@ impl Mat3f {
         }
     }
 
-    /// Creates a new natruxsee cref="Plane"/> as if casting a shadow from a specified light source.
-    pub fn new_shadow(light_direction: Vec3f, plane: Plane3f) -> Self {
+    /// Creates a new palne as if casting a shadow from a specified light source.
+    pub fn from_shadow(light_direction: Vec3f, plane: Plane3f) -> Self {
         let dot = plane.normal.x * light_direction.x
             + plane.normal.y * light_direction.y
             + plane.normal.z * light_direction.z;
@@ -678,7 +693,7 @@ impl Mat3f {
         }
     }
 
-    pub fn new_translation(v: Vec3f) -> Self {
+    pub fn from_translation(v: Vec3f) -> Self {
         Self {
             m11: 1.0,
             m22: 1.0,
@@ -691,7 +706,7 @@ impl Mat3f {
         }
     }
 
-    pub fn new_reflection(value: Plane3f) -> Self {
+    pub fn from_reflection(value: Plane3f) -> Self {
         let mut plane = value;
         plane.normalize_mut();
 
@@ -720,7 +735,7 @@ impl Mat3f {
         }
     }
 
-    pub fn new_world(pos: Vec3f, forward: Vec3f, up: Vec3f) -> Self {
+    pub fn from_world(pos: Vec3f, forward: Vec3f, up: Vec3f) -> Self {
         let mut z = forward.normalize();
 
         let mut x = forward.cross(&up);
@@ -864,7 +879,7 @@ impl Mat3f {
         self.m44 = self.m44 + ((other.m44 - self.m44) * amount);
     }
 
-    /// Creates a new <see cref="Matrix"/> that contains linear interpolation of the values in specified matrixes.
+    /// Creates a new matrix that contains linear interpolation of the values in specified matrixes.
     pub fn lerp(&self, mat: &Self, amount: f32) -> Self {
         let mut m = self.clone();
         m.lerp_mut(mat, amount);
@@ -874,7 +889,9 @@ impl Mat3f {
 
 /// Arithmatic operators
 impl Mat3f {
-    /// Creates a new <see cref="Matrix"/> that contains a multiplication of two matrix.
+    /// Creates a new matrix that contains a multiplication of two matrix.
+    ///
+    /// c_{i,j} = a_{i, k} b_{k, j}
     pub fn multiply(matrix1: &Self, matrix2: &Self) -> Self {
         Self {
             m11: matrix1.m11 * matrix2.m11
@@ -1071,36 +1088,51 @@ impl_op_ex!(-= |lhs: &mut Mat3f, rhs: &Mat3f| {
     lhs.m44 -= lhs.m44;
 });
 
-/// Operations
+impl_op_ex!(*|me: &Mat3f, scale: f32| -> Mat3f {
+    Mat3f {
+        m11: me.m11 * scale,
+        m12: me.m12 * scale,
+        m13: me.m13 * scale,
+        m14: me.m14 * scale,
+        m21: me.m21 * scale,
+        m22: me.m22 * scale,
+        m23: me.m23 * scale,
+        m24: me.m24 * scale,
+        m31: me.m31 * scale,
+        m32: me.m32 * scale,
+        m33: me.m33 * scale,
+        m34: me.m34 * scale,
+        m41: me.m41 * scale,
+        m42: me.m42 * scale,
+        m43: me.m43 * scale,
+        m44: me.m44 * scale,
+    }
+});
+
+impl_op_ex!(*= |me: &mut Mat3f, scale: f32| {
+    me.m11 *= scale;
+    me.m12 *= scale;
+    me.m13 *= scale;
+    me.m14 *= scale;
+    me.m21 *= scale;
+    me.m22 *= scale;
+    me.m23 *= scale;
+    me.m24 *= scale;
+    me.m31 *= scale;
+    me.m32 *= scale;
+    me.m33 *= scale;
+    me.m34 *= scale;
+    me.m41 *= scale;
+    me.m42 *= scale;
+    me.m43 *= scale;
+    me.m44 *= scale;
+});
+
 impl Mat3f {
-    pub fn scale_mut(&mut self, scale: f32) {
-        self.m11 *= scale;
-        self.m12 *= scale;
-        self.m13 *= scale;
-        self.m14 *= scale;
-        self.m21 *= scale;
-        self.m22 *= scale;
-        self.m23 *= scale;
-        self.m24 *= scale;
-        self.m31 *= scale;
-        self.m32 *= scale;
-        self.m33 *= scale;
-        self.m34 *= scale;
-        self.m41 *= scale;
-        self.m42 *= scale;
-        self.m43 *= scale;
-        self.m44 *= scale;
-    }
-
-    pub fn scale(&self, scale: f32) -> Self {
-        let mut m = self.clone();
-        m.scale_mut(scale);
-        m
-    }
-
     /// Swap the matrix rows and columns
     pub fn transpose(&mut self) -> Self {
         let mut m = Mat3f::default();
+
         m.m11 = self.m11;
         m.m12 = self.m21;
         m.m13 = self.m31;

@@ -122,3 +122,15 @@ impl_op_ex!(+= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x += rhs.x; lhs.y += rhs.y; 
 impl_op_ex!(-= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x -= rhs.x; lhs.y -= rhs.y; lhs.z -= rhs.z; });
 impl_op_ex!(*= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x *= rhs.x; lhs.y *= rhs.y; lhs.z *= rhs.z; });
 impl_op_ex!(/= |lhs: &mut Vec3f, rhs: &Vec3f| { lhs.x /= rhs.x; lhs.y /= rhs.y; lhs.z /= rhs.z; });
+
+impl From<[f32; 3]> for Vec3f {
+    fn from(xs: [f32; 3]) -> Self {
+        Self::new(xs[0], xs[1], xs[2])
+    }
+}
+
+impl From<&[f32; 3]> for Vec3f {
+    fn from(xs: &[f32; 3]) -> Self {
+        Self::new(xs[0], xs[1], xs[2])
+    }
+}

@@ -7,7 +7,7 @@ use crate::{
         batch::{SpriteBatch, SpriteDrawCall},
         bufspecs::GpuViBuffer,
     },
-    geom3d::Mat3f,
+    geom3d::{Mat3f, Vec3f},
 };
 
 /// [`SpriteBatch`] with GPU vertex/index buffer handle
@@ -16,9 +16,14 @@ pub struct Batcher {
     pub batch: SpriteBatch,
     bufs: GpuViBuffer,
     is_begin_called: bool,
-    proj_matrix: Mat3f,
-    transform_matrix: Mat3f,
-    shader_matrix: Mat3f,
+    /// The projection matrix (orthographic matrix)
+    proj_mat: Mat3f,
+    /// The transformation matrix
+    transform_mat: Mat3f,
+    /// The view projection matrix used by vertex shader
+    ///
+    /// M_v = M_t M_p
+    view_proj_mat: Mat3f,
 }
 
 impl Batcher {
@@ -27,9 +32,9 @@ impl Batcher {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
             is_begin_called: false,
-            proj_matrix: Mat3f::orthographic(1.0, 1.0, 1.0, 0.0),
-            transform_matrix: Mat3f::identity(),
-            shader_matrix: Mat3f::default(),
+            proj_mat: Mat3f::orthographic(1.0, 1.0, 1.0, 0.0),
+            transform_mat: Mat3f::identity(),
+            view_proj_mat: Mat3f::default(),
         }
     }
 }
@@ -71,13 +76,16 @@ impl Batcher {
         // viewport, scissors rect
 
         // update shader matrix
-        // TODO: get viewport
-        // TODO: use inlined orthographic matrix for efficiency
-        self.proj_matrix = Mat3f::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
-        self.shader_matrix = Mat3f::multiply(&self.transform_matrix, &self.proj_matrix);
+        // FIXME: get viewport
+        self.proj_mat = Mat3f::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
+
         unsafe {
             let name = std::ffi::CString::new("MatrixTransform").unwrap();
-            pipe.shader.set_param(&name, &self.shader_matrix);
+            self.view_proj_mat = Mat3f::multiply(&self.transform_mat, &self.proj_mat);
+            // internally, MojoShader uses column-major matrices so we transpose it
+            pipe.shader
+                .set_param(&name, &self.view_proj_mat.transpose());
+            // TODO: use inlined transposed orthographic matrix for efficiency
         }
 
         // `FNA3D_ApplyEffect`
