@@ -15,7 +15,9 @@ use anf_gfx::{
 use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
-use crate::engine::time::TimeStep;
+use crate::{engine::time::TimeStep, gfx::TextureData2d};
+
+const WHITE_PIXEL: &[u8] = include_bytes!("white_dot.png");
 
 /// The imperative draw API
 ///
@@ -41,6 +43,8 @@ pub struct DrawContext {
     batcher: Batcher,
     pipe: Pipeline,
     push: QuadPush,
+    // builtin
+    white_dot: TextureData2d,
     /// dependency
     device: Device,
     /// dependency
@@ -57,10 +61,12 @@ impl DrawContext {
     ) -> Self {
         let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader);
         let batcher = Batcher::from_device(&mut device);
+        let white_dot = TextureData2d::from_pixels(&mut device, WHITE_PIXEL, 1, 1);
         Self {
             device,
             batcher,
             pipe,
+            white_dot,
             push: QuadPush::default(),
             params,
             time_step: TimeStep::default(),
@@ -160,5 +166,10 @@ impl<'a> BatchPass<'a> {
             batch: &mut self.dcx.batcher.batch,
         };
         SpritePushCommand::from_sprite(quad, sprite)
+    }
+
+    // TODO: add wrapper of primitive renderer
+    pub fn white_dot(&mut self) -> SpritePushCommand<'_, TextureData2d> {
+        self.texture(self.dcx.white_dot.clone())
     }
 }

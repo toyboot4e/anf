@@ -152,18 +152,24 @@ pub fn render_block_cells(
     px_bounds: &Rect2f,
     grid_bounds: &Rect2i,
 ) {
+    let tiled_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
+    self::tiled_render_with(tiled_size, px_bounds, grid_bounds, |x, y| {
+        //
+    });
+}
+
+fn tiled_render_with(
+    tiled_size: Vec2u,
+    px_bounds: &Rect2f,
+    grid_bounds: &Rect2i,
+    mut f: impl FnMut(usize, usize),
+) {
     let left_up = grid_bounds.left_up();
     let right_down = grid_bounds.right_down();
 
-    let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
-
     for y in (left_up.y as usize)..(right_down.y as usize) {
         for x in (left_up.x as usize)..(right_down.x as usize) {
-            let ix = x as usize + y as usize * tile_size.x as usize;
-            if !blocks[ix] {
-                continue;
-            }
-            // TODO: draw X
+            f(x, y);
         }
     }
 }

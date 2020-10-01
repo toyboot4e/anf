@@ -20,6 +20,10 @@ pub struct RlGameData {
 
 impl SampleUserDataLifecycle<Context> for RlGameData {
     fn update(&mut self, cx: &mut Context) -> AnfResult<()> {
+        if cx.kbd.is_key_pressed(Key::R) {
+            self::gen_cave(&mut self.map.tiled, &mut self.map.rlmap.blocks);
+        }
+
         // update animation stat
         self.player.anim.tick(cx.time_step());
 
@@ -121,7 +125,7 @@ fn clear_tiled(tiled: &mut tiled::Map) {
 
 fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
     let size = [tiled.width as usize, tiled.height as usize];
-    let cave = crate::rl::dungeon::gen_cave(size, 45, 5);
+    let cave = crate::rl::dungeon::gen_cave(size, 45, 10);
 
     let tile_layer = &mut tiled.layers[0];
     let tiles = {
@@ -146,7 +150,6 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
     let path = vfs::path("map/tmx/1.tmx");
     let rlmap = {
         let mut map = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
-        self::clear_tiled(&mut map.tiled);
         self::gen_cave(&mut map.tiled, &mut map.rlmap.blocks);
         map
     };
@@ -154,7 +157,10 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
     let ika_atlas = TextureData2d::from_path(dcx.as_mut(), vfs::path("ika-chan.png")).unwrap();
     let ika_anim = {
         let origin = [0.5, 0.8].into();
-        let patterns = rl::view::gen_anim4_with(&ika_atlas, 4.0, |s| s.origin = origin);
+        let patterns = rl::view::gen_anim4_with(&ika_atlas, 4.0, |s| {
+            s.origin = origin;
+            s.color = fna3d::Color::rgb(255, 100, 100)
+        });
         SpriteAnimState::new(patterns, Dir8::S)
     };
 

@@ -17,6 +17,7 @@ pub trait Sprite: SubTexture2d {
     fn scale(&self) -> [f32; 2];
     /// Normalized origin
     fn origin(&self) -> [f32; 2];
+    fn color(&self) -> fna3d::Color;
 }
 
 /// Comes with default implementation
@@ -126,7 +127,8 @@ impl<'a> QuadPushBinding<'a> {
         self.src_rect_uv(sprite.uv_rect())
             .dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]])
             .origin(sprite.origin())
-            .rot(sprite.rot());
+            .rot(sprite.rot())
+            .color(sprite.color());
     }
 }
 

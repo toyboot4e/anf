@@ -1,6 +1,7 @@
-use crate::{cmd::prelude::*, geom2d::*};
+use fna3d::Color;
 
 pub use crate::texture::texture::{TextureData2d, TextureKind};
+use crate::{cmd::prelude::*, geom2d::*};
 
 /// Conversion
 impl TextureData2d {
@@ -77,7 +78,7 @@ pub struct SpriteData {
     pub uv_rect: Rect2f,
     /// [0.0, 0.0] is left-up (default0, [1.0, 1.0] is right-down
     pub origin: Vec2f,
-    pub color: fna3d::Color,
+    pub color: Color,
     pub scale: Vec2f,
     pub rot: f32,
     pub flips: Flips,
@@ -199,6 +200,9 @@ impl Sprite for SpriteData {
     fn origin(&self) -> [f32; 2] {
         self.origin.into()
     }
+    fn color(&self) -> Color {
+        self.color
+    }
 }
 
 // implementations for reference types
@@ -229,5 +233,8 @@ impl<T: Sprite> Sprite for &T {
     }
     fn origin(&self) -> [f32; 2] {
         (*self).origin()
+    }
+    fn color(&self) -> Color {
+        (*self).color()
     }
 }
