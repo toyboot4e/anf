@@ -6,7 +6,6 @@
 //!
 //! * [`framework`]: provides context/user data pattern lifecycle
 //! * [`context`]: specific context for the sample games
-//! * [`scene`]: specific user data for the sample games
 //!
 //! [`AnfLifecycle`]: anf::engine::lifecycle::AnfLifecycle
 
@@ -15,6 +14,3 @@ pub mod framework;
 
 // context for the sample games
 pub mod context;
-
-// user data for the sample games
-pub mod scene;

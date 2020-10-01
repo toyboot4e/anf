@@ -1,4 +1,4 @@
-//! Example tiled game
+//! Roguelike game example
 
 use anf::{engine::prelude::*, gfx::prelude::*, input::Key, vfs};
 pub use tiled::{Image, Layer, Map, Tile, Tileset};
@@ -12,13 +12,13 @@ use crate::{
     },
 };
 
-pub struct TiledGameData {
-    rlmap: TiledRlMap,
+pub struct RlGameData {
+    map: TiledRlMap,
     camera: Camera,
     player: Player,
 }
 
-impl SampleUserDataLifecycle<Context> for TiledGameData {
+impl SampleUserDataLifecycle<Context> for RlGameData {
     fn update(&mut self, cx: &mut Context) -> AnfResult<()> {
         // update animation stat
         self.player.anim.tick(cx.time_step());
@@ -26,6 +26,7 @@ impl SampleUserDataLifecycle<Context> for TiledGameData {
         // update physics
         let dt = cx.dcx.dt_secs_f32();
 
+        // scroll
         let v = 640.0;
         if cx.kbd.is_key_down(Key::A) {
             self.camera.pos.x -= v * dt;
@@ -40,34 +41,39 @@ impl SampleUserDataLifecycle<Context> for TiledGameData {
             self.camera.pos.y += v * dt;
         }
 
+        // walk
+        let mut pos = self.player.pos;
+        let mut dir = self.player.dir;
+
         if cx.kbd.is_key_pressed(Key::Left) {
-            self.player.dir = Dir8::W;
-            self.player.anim.set_pattern(Dir8::W, false);
-            self.player.pos.x -= 1;
+            dir = Dir8::W;
+            pos.x -= 1;
         }
         if cx.kbd.is_key_pressed(Key::Right) {
-            self.player.dir = Dir8::E;
-            self.player.anim.set_pattern(Dir8::E, false);
-            self.player.pos.x += 1;
+            dir = Dir8::E;
+            pos.x += 1;
         }
         if cx.kbd.is_key_pressed(Key::Up) {
-            self.player.dir = Dir8::N;
-            self.player.anim.set_pattern(Dir8::N, false);
-            self.player.pos.y -= 1;
+            dir = Dir8::N;
+            pos.y -= 1;
         }
         if cx.kbd.is_key_pressed(Key::Down) {
-            self.player.dir = Dir8::S;
-            self.player.anim.set_pattern(Dir8::S, false);
-            self.player.pos.y += 1;
+            dir = Dir8::S;
+            pos.y += 1;
+        }
+
+        if pos != self.player.pos && !self.map.rlmap.is_blocked(pos) {
+            self.player.anim.set_pattern(dir, false);
+            self.player.pos = pos;
         }
 
         Ok(())
     }
 
     fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
-        anf::gfx::clear_frame(&mut cx.dcx, fna3d::Color::rgb(21, 164, 185));
+        anf::gfx::clear_frame(&mut cx.dcx, fna3d::Color::rgb(210, 70, 70));
 
-        self.rlmap
+        self.map
             .render(&mut cx.dcx, (self.camera.pos, [1280.0, 720.0]));
 
         let mut pass = cx.dcx.pass();
@@ -97,18 +103,62 @@ pub struct Player {
     dir: Dir8,
 }
 
-pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> TiledGameData {
+fn clear_tiled(tiled: &mut tiled::Map) {
+    for layer in &mut tiled.layers {
+        let tiles = match &mut layer.tiles {
+            tiled::LayerData::Finite(tiles) => tiles,
+            tiled::LayerData::Infinite(_) => unimplemented!(),
+        };
+
+        for y in 0..tiled.height {
+            for x in 0..tiled.width {
+                tiles[y as usize][x as usize].gid = 0;
+            }
+        }
+    }
+}
+
+fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
+    let size = [tiled.width as usize, tiled.height as usize];
+    let cave = crate::rl::dungeon::gen_cave(size, 45, 5);
+
+    let tile_layer = &mut tiled.layers[0];
+    let tiles = {
+        match &mut tile_layer.tiles {
+            tiled::LayerData::Finite(tiles) => tiles,
+            tiled::LayerData::Infinite(_) => unimplemented!(),
+        }
+    };
+
+    for y in 0..size[1] {
+        for x in 0..size[0] {
+            let ix = x + y * size[0];
+            let gid = if cave[ix] { 2 } else { 18 };
+
+            tiles[y][x] = tiled::LayerTile::new(gid);
+            blocks[ix] = !cave[ix];
+        }
+    }
+}
+
+pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
     let path = vfs::path("map/tmx/1.tmx");
-    let rlmap = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
+    let rlmap = {
+        let mut map = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
+        self::clear_tiled(&mut map.tiled);
+        self::gen_cave(&mut map.tiled, &mut map.rlmap.blocks);
+        map
+    };
 
     let ika_atlas = TextureData2d::from_path(dcx.as_mut(), vfs::path("ika-chan.png")).unwrap();
     let ika_anim = {
-        let patterns = rl::view::gen_anim4(&ika_atlas, 4.0);
+        let origin = [0.5, 0.8].into();
+        let patterns = rl::view::gen_anim4_with(&ika_atlas, 4.0, |s| s.origin = origin);
         SpriteAnimState::new(patterns, Dir8::S)
     };
 
-    TiledGameData {
-        rlmap,
+    RlGameData {
+        map: rlmap,
         camera: Camera::default(),
         player: Player {
             anim: ika_anim,

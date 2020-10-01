@@ -11,7 +11,7 @@ pub use anf_gfx::{
 };
 
 pub mod prelude {
-    //! All of the graphics data types
+    //! All of the 2D graphics data types (not 3D)
     pub use anf_gfx::{
         geom2d::*,
         texture::{SpriteData, SubTextureData2d, TextureData2d},

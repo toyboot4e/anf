@@ -1,4 +1,5 @@
 //! Roguelike game utilities
 
-pub mod map;
+pub mod dungeon;
+pub mod rlmap;
 pub mod view;

@@ -28,7 +28,7 @@ pub enum LoopState {
 
 #[derive(Debug, Clone)]
 pub struct SpriteAnimPattern {
-    frames: Vec<SpriteData>,
+    pub frames: Vec<SpriteData>,
     fps: f32,
     loop_mode: LoopMode,
 }

@@ -1,8 +1,12 @@
 //! ANF sample games
 
+// --------------------------------------------------------------------------------
+// modules
+
 // framework
 pub mod base;
 
+// libraries
 pub mod render;
 pub mod rl;
 pub mod utils;
@@ -10,9 +14,14 @@ pub mod utils;
 // specific games
 pub mod games;
 
-use anf::engine::prelude::*;
+// --------------------------------------------------------------------------------
+// main
 
-use base::{context::Context, framework::SampleFramework, scene::SceneBasedGameData};
+use anf::engine::prelude::*;
+use base::{context::Context, framework::SampleFramework};
+
+mod scene;
+use scene::SceneBasedGameData;
 
 fn main() -> AnfResult<()> {
     env_logger::init();

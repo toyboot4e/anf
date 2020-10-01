@@ -49,7 +49,7 @@ impl Context {
             win,
             dcx,
             fps: FpsCounter::default(),
-            kbd: Keyboard::new(),
+            kbd: Keyboard::default(),
             time_step: Duration::new(0, 0),
             // debug
             win_title: cfg.title.clone(),
