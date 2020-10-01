@@ -8,6 +8,10 @@ edition = "2018"
 members = ["crates/anf_gfx", "crates/fna3d_hie"]
 exclude = ["crates/rust-fna3d"]
 
+[[example]]
+name = "fixed_context"
+test = true
+
 [dependencies]
 sdl2 = "0.34.3"
 fna3d = { path = "crates/rust-fna3d/fna3d" }

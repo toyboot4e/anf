@@ -22,6 +22,7 @@ pub mod prelude {
     //! Exports most of the ANF engine
 
     pub use fna3d;
+    pub use fna3d::Color;
     pub use sdl2;
 
     pub use crate::engine::{app::*, draw::*, lifecycle::*, time::TimeStep};

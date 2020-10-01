@@ -1,6 +1,6 @@
-//! Roguelike game utilities
+//! Roguelike game utilities, internals and visualization
 
-pub mod dungeon;
+pub mod dun;
 pub mod fov;
 pub mod rlmap;
 pub mod view;

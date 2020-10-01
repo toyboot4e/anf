@@ -6,7 +6,10 @@ use anf::{engine::prelude::*, gfx::prelude::*};
 
 use tiled::LayerData;
 
-use crate::utils::grid2d::{Rect2i, Vec2i, Vec2u};
+use crate::{
+    rl::{fov::*, rlmap::RlMap},
+    utils::grid2d::{Rect2i, Vec2i, Vec2u},
+};
 
 /// World coordinates to tile coordinates rounding up remaning pixels (this is visually correct)
 pub fn w2t_round_up(w: impl Into<Vec2f>, tiled: &tiled::Map) -> Vec2i {
@@ -56,7 +59,7 @@ pub fn render_tiled(
     texture: &TextureData2d,
     px_bounds: impl Into<Rect2f>,
 ) {
-    let px_bounds = px_bounds.into();
+    let px_bounds: Rect2f = px_bounds.into();
     let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
 
     let mut pass = dcx.pass();
@@ -152,8 +155,8 @@ pub fn render_block_cells(
     px_bounds: &Rect2f,
     grid_bounds: &Rect2i,
 ) {
-    let tiled_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
-    self::tiled_render_with(tiled_size, px_bounds, grid_bounds, |x, y| {
+    let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
+    self::tiled_render_with(tile_size, px_bounds, grid_bounds, |x, y| {
         //
     });
 }
@@ -172,4 +175,26 @@ fn tiled_render_with(
             f(x, y);
         }
     }
+}
+
+pub fn render_fov(pass: &mut BatchPass<'_>, tiled: &tiled::Map, fov: &FovData, px_bounds: &Rect2f) {
+    let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
+    let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
+
+    self::tiled_render_with(tile_size, px_bounds, &grid_bounds, |x, y| {
+        if fov.is_in_view([x as i32, y as i32].into()) {
+            return;
+        }
+
+        pass.white_dot()
+            .color(Color::rgba(0, 0, 0, 255))
+            .src_rect_uv([0.0, 0.0, 1.0, 1.0])
+            .dest_rect_px([
+                (
+                    (x as i32 * tile_size.x as i32 - px_bounds.left_up().x as i32) as f32,
+                    (y as i32 * tile_size.y as i32 - px_bounds.left_up().y as i32) as f32,
+                ),
+                (tile_size.x as f32, tile_size.y as f32),
+            ]);
+    });
 }

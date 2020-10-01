@@ -1,6 +1,6 @@
 //! Internals of orthogonal tilemap
 
-use crate::utils::grid2d::Vec2i;
+use crate::{rl::fov::OpacityMap, utils::grid2d::Vec2i};
 
 /// Roguelike map data
 pub struct RlMap {
@@ -53,5 +53,15 @@ impl RlMap {
             size: [tiled.width as usize, tiled.height as usize],
             blocks: collision,
         }
+    }
+}
+
+impl OpacityMap for RlMap {
+    fn is_opaque(&self, pos: Vec2i) -> bool {
+        !self.contains(pos) || self.is_blocked(pos)
+    }
+
+    fn contains(&self, pos: Vec2i) -> bool {
+        <Self>::contains(self, pos)
     }
 }

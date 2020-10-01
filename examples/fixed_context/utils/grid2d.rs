@@ -120,6 +120,7 @@ impl_op_ex!(*= |lhs: &mut Vec2i, rhs: &Vec2i| { lhs.x *= rhs.x; lhs.y *= rhs.y; 
 impl_op_ex!(/= |lhs: &mut Vec2i, rhs: &Vec2i| { lhs.x /= rhs.x; lhs.y /= rhs.y; });
 
 impl_op_ex!(*|lhs: &Vec2i, rhs: &i32| -> Vec2i { Vec2i::new(lhs.x * rhs, lhs.y * rhs) });
+impl_op_ex!(*|lhs: &i32, rhs: &Vec2i| -> Vec2i { Vec2i::new(rhs.x * lhs, rhs.y * lhs) });
 impl_op_ex!(/|lhs: &Vec2i, rhs: &i32| -> Vec2i { Vec2i::new(lhs.x / rhs, lhs.y / rhs) });
 impl_op_ex!(*= |lhs: &mut Vec2i, rhs: &i32| { lhs.x *= rhs; lhs.y *= rhs; });
 impl_op_ex!(/= |lhs: &mut Vec2i, rhs: &i32| { lhs.x /= rhs; lhs.y /= rhs; });
@@ -127,6 +128,14 @@ impl_op_ex!(/= |lhs: &mut Vec2i, rhs: &i32| { lhs.x /= rhs; lhs.y /= rhs; });
 impl Vec2i {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+
+    pub fn len_rock(&self) -> u32 {
+        (self.x.abs() + self.y.abs()) as u32
+    }
+
+    pub fn len_king(&self) -> u32 {
+        std::cmp::max(self.x.abs(), self.y.abs()) as u32
     }
 }
 
@@ -178,6 +187,7 @@ impl_op_ex!(*= |lhs: &mut Vec2u, rhs: &Vec2u| { lhs.x *= rhs.x; lhs.y *= rhs.y; 
 impl_op_ex!(/= |lhs: &mut Vec2u, rhs: &Vec2u| { lhs.x /= rhs.x; lhs.y /= rhs.y; });
 
 impl_op_ex!(*|lhs: &Vec2u, rhs: &u32| -> Vec2u { Vec2u::new(lhs.x * rhs, lhs.y * rhs) });
+impl_op_ex!(*|lhs: &u32, rhs: &Vec2u| -> Vec2u { Vec2u::new(rhs.x * lhs, rhs.y * lhs) });
 impl_op_ex!(/|lhs: &Vec2u, rhs: &u32| -> Vec2u { Vec2u::new(lhs.x / rhs, lhs.y / rhs) });
 impl_op_ex!(*= |lhs: &mut Vec2u, rhs: &u32| { lhs.x *= rhs; lhs.y *= rhs; });
 impl_op_ex!(/= |lhs: &mut Vec2u, rhs: &u32| { lhs.x /= rhs; lhs.y /= rhs; });

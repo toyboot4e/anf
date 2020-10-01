@@ -5,7 +5,8 @@ pub use tiled::{Image, Layer, Map, Tile, Tileset};
 
 use crate::{
     base::{context::Context, framework::SampleUserDataLifecycle},
-    rl::{self, view::TiledRlMap},
+    render::tiled_render,
+    rl::{self, fov::*, view::TiledRlMap},
     utils::{
         anim::SpriteAnimState,
         grid2d::{Dir8, Vec2i},
@@ -68,6 +69,9 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
 
         if pos != self.player.pos && !self.map.rlmap.is_blocked(pos) {
             self.player.pos = pos;
+            self.player
+                .fov
+                .update(6, self.player.pos, &mut self.map.rlmap);
         }
         self.player.dir = dir;
         self.player.anim.set_pattern(dir, false);
@@ -78,16 +82,23 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
     fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
         anf::gfx::clear_frame(&mut cx.dcx, fna3d::Color::rgb(210, 70, 70));
 
-        self.map
-            .render(&mut cx.dcx, (self.camera.pos, [1280.0, 720.0]));
+        let px_bounds = Rect2f::from((self.camera.pos, [1280.0, 720.0]));
+        self.map.render(&mut cx.dcx, px_bounds.clone());
 
+        // player
+        {
+            let mut pass = cx.dcx.pass();
+            let pos = self.player.pos * 32;
+            let pos = Vec2f::new(pos.x as f32, pos.y as f32) + Vec2f::new(16.0, 16.0);
+            let pos = pos - self.camera.pos;
+            let sprite = self.player.anim.current_frame();
+            pass.sprite(sprite).dest_pos_px(pos);
+        }
+
+        // player fov
+        // FIXME: no clone
         let mut pass = cx.dcx.pass();
-
-        let pos = self.player.pos * 32;
-        let pos = Vec2f::new(pos.x as f32, pos.y as f32) + Vec2f::new(16.0, 16.0);
-        let pos = pos - self.camera.pos;
-        let sprite = self.player.anim.current_frame();
-        pass.sprite(sprite).dest_pos_px(pos);
+        tiled_render::render_fov(&mut pass, &self.map.tiled, &self.player.fov, &px_bounds);
 
         Ok(())
     }
@@ -106,6 +117,7 @@ pub struct Player {
     anim: SpriteAnimState<Dir8>,
     pos: Vec2i,
     dir: Dir8,
+    fov: FovData,
 }
 
 fn clear_tiled(tiled: &mut tiled::Map) {
@@ -125,7 +137,7 @@ fn clear_tiled(tiled: &mut tiled::Map) {
 
 fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
     let size = [tiled.width as usize, tiled.height as usize];
-    let cave = crate::rl::dungeon::gen_cave(size, 45, 10);
+    let cave = crate::rl::dun::gen_cave(size, 45, 10);
 
     let tile_layer = &mut tiled.layers[0];
     let tiles = {
@@ -150,7 +162,7 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
     let path = vfs::path("map/tmx/1.tmx");
     let rlmap = {
         let mut map = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
-        self::gen_cave(&mut map.tiled, &mut map.rlmap.blocks);
+        // self::gen_cave(&mut map.tiled, &mut map.rlmap.blocks);
         map
     };
 
@@ -159,18 +171,23 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
         let origin = [0.5, 0.8].into();
         let patterns = rl::view::gen_anim4_with(&ika_atlas, 4.0, |s| {
             s.origin = origin;
-            s.color = fna3d::Color::rgb(255, 100, 100)
+            s.color = Color::rgb(255, 255, 100)
         });
         SpriteAnimState::new(patterns, Dir8::S)
     };
 
+    let mut player = Player {
+        anim: ika_anim,
+        pos: Vec2i::default(),
+        dir: Dir8::S,
+        fov: FovData::new(10),
+    };
+
+    // TODO: update FoV here
+
     RlGameData {
         map: rlmap,
         camera: Camera::default(),
-        player: Player {
-            anim: ika_anim,
-            pos: Vec2i::default(),
-            dir: Dir8::S,
-        },
+        player,
     }
 }
