@@ -177,17 +177,27 @@ fn tiled_render_with(
     }
 }
 
-pub fn render_fov(pass: &mut BatchPass<'_>, tiled: &tiled::Map, fov: &FovData, px_bounds: &Rect2f) {
+pub fn render_fov_shadows(
+    pass: &mut BatchPass<'_>,
+    tiled: &tiled::Map,
+    fov: &FovData,
+    px_bounds: &Rect2f,
+) {
     let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
     let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
 
     self::tiled_render_with(tile_size, px_bounds, &grid_bounds, |x, y| {
-        if fov.is_in_view([x as i32, y as i32].into()) {
-            return;
-        }
+        // FIXME: why is this semi-transparent
+        let color = if fov.is_in_view([x as i32, y as i32].into()) {
+            let len = (Vec2i::new(x as i32, y as i32) - fov.origin()).len_f32();
+            let x = (len as f32 / fov.radius() as f32).sin();
+            Color::rgba(0, 0, 0, 255).multiply(ease(x))
+        } else {
+            Color::rgba(0, 0, 0, 255)
+        };
 
         pass.white_dot()
-            .color(Color::rgba(0, 0, 0, 255))
+            .color(color)
             .src_rect_uv([0.0, 0.0, 1.0, 1.0])
             .dest_rect_px([
                 (
@@ -197,4 +207,13 @@ pub fn render_fov(pass: &mut BatchPass<'_>, tiled: &tiled::Map, fov: &FovData, p
                 (tile_size.x as f32, tile_size.y as f32),
             ]);
     });
+
+    /// x: [0.0, 1.0]
+    fn ease(x: f32) -> f32 {
+        if x < 0.5 {
+            4.0 * x * x * x
+        } else {
+            1.0 - (-2.0 * x as f32 + 2.0).powf(3.0) / 2.0
+        }
+    }
 }

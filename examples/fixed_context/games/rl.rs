@@ -86,19 +86,18 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
         self.map.render(&mut cx.dcx, px_bounds.clone());
 
         // player
-        {
-            let mut pass = cx.dcx.pass();
-            let pos = self.player.pos * 32;
-            let pos = Vec2f::new(pos.x as f32, pos.y as f32) + Vec2f::new(16.0, 16.0);
-            let pos = pos - self.camera.pos;
-            let sprite = self.player.anim.current_frame();
-            pass.sprite(sprite).dest_pos_px(pos);
-        }
+        let mut pass = cx.dcx.pass();
+        let pos = self.player.pos * 32;
+        let pos = Vec2f::new(pos.x as f32, pos.y as f32) + Vec2f::new(16.0, 16.0);
+        let pos = pos - self.camera.pos;
+        let sprite = self.player.anim.current_frame();
+        pass.sprite(sprite).dest_pos_px(pos);
+        drop(pass);
 
         // player fov
         // FIXME: no clone
         let mut pass = cx.dcx.pass();
-        tiled_render::render_fov(&mut pass, &self.map.tiled, &self.player.fov, &px_bounds);
+        tiled_render::render_fov_shadows(&mut pass, &self.map.tiled, &self.player.fov, &px_bounds);
 
         Ok(())
     }
@@ -137,7 +136,7 @@ fn clear_tiled(tiled: &mut tiled::Map) {
 
 fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
     let size = [tiled.width as usize, tiled.height as usize];
-    let cave = crate::rl::dun::gen_cave(size, 45, 10);
+    let cave = crate::rl::dun::gen_cave(size, 50, 20);
 
     let tile_layer = &mut tiled.layers[0];
     let tiles = {
@@ -162,7 +161,8 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
     let path = vfs::path("map/tmx/1.tmx");
     let rlmap = {
         let mut map = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
-        // self::gen_cave(&mut map.tiled, &mut map.rlmap.blocks);
+        self::clear_tiled(&mut map.tiled);
+        self::gen_cave(&mut map.tiled, &mut map.rlmap.blocks);
         map
     };
 

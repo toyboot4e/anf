@@ -3,6 +3,7 @@
 //! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is the recommended.
 
 pub use anf_gfx::cmd::prelude::*;
+use fna3d::Color;
 
 use std::path::Path;
 
@@ -171,5 +172,16 @@ impl<'a> BatchPass<'a> {
     // TODO: add wrapper of primitive renderer
     pub fn white_dot(&mut self) -> SpritePushCommand<'_, TextureData2d> {
         self.texture(self.dcx.white_dot.clone())
+    }
+
+    pub fn line(&mut self, p1: Vec2f, p2: Vec2f, color: Color) {
+        let delta = p2 - p1;
+        let rad = delta.rad();
+        let len = delta.len();
+
+        self.white_dot()
+            .color(color)
+            .dest_rect_px([p1, (len, 1.0).into()])
+            .rot(rad);
     }
 }

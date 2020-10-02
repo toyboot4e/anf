@@ -55,6 +55,19 @@ impl Vec2f {
             y: self.y * scale.y,
         }
     }
+
+    /// Angle in radian
+    pub fn rad(&self) -> f32 {
+        self.y.atan2(self.x)
+    }
+
+    pub fn len_squared(&self) -> f32 {
+        self.x * self.x + self.y * self.y
+    }
+
+    pub fn len(&self) -> f32 {
+        self.len_squared().sqrt()
+    }
 }
 
 // Vec2f, f32

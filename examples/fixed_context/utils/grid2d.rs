@@ -137,6 +137,14 @@ impl Vec2i {
     pub fn len_king(&self) -> u32 {
         std::cmp::max(self.x.abs(), self.y.abs()) as u32
     }
+
+    pub fn len_f32_squared(&self) -> f32 {
+        (self.x * self.x + self.y * self.y) as f32
+    }
+
+    pub fn len_f32(&self) -> f32 {
+        self.len_f32_squared().sqrt()
+    }
 }
 
 impl Into<[i32; 2]> for Vec2i {

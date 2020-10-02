@@ -210,18 +210,27 @@ impl ImGuiRenderer {
         draw_data: &imgui::DrawData,
         device: &mut fna3d::Device,
     ) -> Result<()> {
+        // TODO: restore/restore previous state
+        device.set_blend_state(&fna3d::BlendState::non_premultiplied());
+        let res = self.render_impl(draw_data, device);
+        device.set_blend_state(&fna3d::BlendState::alpha_blend());
+        // SamplerState.LinearWrap;
+        // DepthStencilState.None;
+        // RasterizerState = RasterizerState.CullNone;
+        res
+    }
+
+    fn render_impl(
+        &mut self,
+        draw_data: &imgui::DrawData,
+        device: &mut fna3d::Device,
+    ) -> Result<()> {
         let fb_width = draw_data.display_size[0] * draw_data.framebuffer_scale[0];
         let fb_height = draw_data.display_size[1] * draw_data.framebuffer_scale[1];
 
         if fb_width <= 0.0 || fb_height <= 0.0 {
             return Ok(());
         }
-
-        // TODO: restore/restore previous state
-        device.set_blend_state(&fna3d::BlendState::non_premultiplied());
-        // SamplerState.LinearWrap;
-        // DepthStencilState.None;
-        // RasterizerState = RasterizerState.CullNone;
 
         let matrix = Self::ortho_matrix(draw_data);
         fna3d::mojo::set_projection_matrix(self.batch.effect_data, &matrix);

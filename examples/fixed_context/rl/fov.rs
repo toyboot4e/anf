@@ -33,10 +33,19 @@ impl FovData {
         }
     }
 
-    fn ix(&self, mut pos: Vec2i) -> usize {
+    pub fn radius(&self) -> u32 {
+        self.radius
+    }
+
+    pub fn origin(&self) -> Vec2i {
+        self.origin
+    }
+
+    fn ix(&self, pos: Vec2i) -> usize {
+        let mut delta = pos - self.origin;
         let edge = self.radius * 2 + 1;
-        pos += Vec2i::new(self.radius as i32, self.radius as i32);
-        (pos.x as u32 + pos.y as u32 * edge) as usize
+        delta += Vec2i::new(self.radius as i32, self.radius as i32);
+        (delta.x as u32 + delta.y as u32 * edge) as usize
     }
 
     pub fn is_in_view(&self, pos: Vec2i) -> bool {
@@ -95,7 +104,9 @@ struct ScanContext<'a, T: FovWrite, U: OpacityMap> {
     origin: Vec2i,
     /// Octant
     oct: OctantContext,
+    /// Field of view
     fov: &'a mut T,
+    /// Opacity map
     opa: &'a U,
 }
 
@@ -110,6 +121,7 @@ impl<'a, T: FovWrite, U: OpacityMap> ScanContext<'a, T, U> {
         }
     }
 
+    /// (row, column) -> (absolute grid position)
     pub fn rc2pos(&self, row: i32, col: i32) -> Vec2i {
         self.origin + row * self.oct.row + col * self.oct.col
     }
