@@ -151,6 +151,13 @@ impl<'a> BatchPass<'a> {
 
     /// Creates [`SpritePushCommand`] using [`SubTexture2d`] attributes
     pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
+        if self.dcx.batcher.is_satured() {
+            self.dcx
+                .batcher
+                .flush(&mut self.dcx.device, &mut self.dcx.pipe);
+            self.dcx.batcher.begin();
+        }
+
         self.dcx.push.reset_to_defaults();
         let quad = QuadPushBinding {
             push: &mut self.dcx.push,
@@ -161,6 +168,13 @@ impl<'a> BatchPass<'a> {
 
     /// Creates [`SpritePushCommand`] using [`Sprite`] attributes
     pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePushCommand<'_, T> {
+        if self.dcx.batcher.is_satured() {
+            self.dcx
+                .batcher
+                .flush(&mut self.dcx.device, &mut self.dcx.pipe);
+            self.dcx.batcher.begin();
+        }
+
         self.dcx.push.reset_to_defaults();
         let quad = QuadPushBinding {
             push: &mut self.dcx.push,
@@ -174,7 +188,10 @@ impl<'a> BatchPass<'a> {
         self.texture(self.dcx.white_dot.clone())
     }
 
-    pub fn line(&mut self, p1: Vec2f, p2: Vec2f, color: Color) {
+    pub fn line(&mut self, p1: impl Into<Vec2f>, p2: impl Into<Vec2f>, color: Color) {
+        let p1 = p1.into();
+        let p2 = p2.into();
+
         let delta = p2 - p1;
         let rad = delta.rad();
         let len = delta.len();
@@ -183,5 +200,21 @@ impl<'a> BatchPass<'a> {
             .color(color)
             .dest_rect_px([p1, (len, 1.0).into()])
             .rot(rad);
+    }
+
+    pub fn rect(&mut self, rect: impl Into<Rect2f>, color: Color) {
+        let rect = rect.into();
+        let (p1, p2, p3, p4) = (
+            rect.left_up(),
+            rect.right_up(),
+            rect.right_down(),
+            rect.left_down(),
+        );
+
+        self.line(p1, p2, color);
+        self.line(p2, p3, color);
+        self.line(p3, p4, color);
+        // FIXME: allow p4 -> p1
+        self.line(p1, p4, color);
     }
 }

@@ -28,7 +28,12 @@ impl SpriteBatch {
 
 /// For quad push
 impl SpriteBatch {
-    pub fn next_quad_mut(&mut self, texture: *mut fna3d::Texture) -> &mut QuadData {
+    pub fn is_satured(&self) -> bool {
+        self.quads.len() <= self.n_quads
+    }
+
+    /// Make sure it's not satured
+    pub unsafe fn next_quad_mut(&mut self, texture: *mut fna3d::Texture) -> &mut QuadData {
         self.raw_texture_track[self.n_quads] = texture;
         let quad = &mut self.quads[self.n_quads];
         self.n_quads += 1;
@@ -39,7 +44,7 @@ impl SpriteBatch {
 /// For batcher
 impl SpriteBatch {
     pub fn any_quads_pushed(&self) -> bool {
-        self.n_quads != 0
+        self.n_quads > 0
     }
 
     pub fn iter(&self) -> SpriteDrawCallIter<'_> {
@@ -78,13 +83,15 @@ impl<'a> Iterator for SpriteDrawCallIter<'a> {
 
         self.quad_count += 1; // current quad count is `self.quad_count - 1`
 
+        println!("{}", self.batch.n_quads);
+
         let lo = self.current;
-        for hi in 1..self.batch.n_quads {
+        for hi in (self.current + 1)..self.batch.n_quads {
             if &self.batch.raw_texture_track[hi] == &self.batch.raw_texture_track[lo] {
-                continue;
+                continue; // batch the quad
             }
 
-            // we found different texture
+            // we found different texture. make a draw call
             self.current = hi;
             return Some(SpriteDrawCall {
                 span: BatchSpan { lo, hi },
@@ -92,6 +99,7 @@ impl<'a> Iterator for SpriteDrawCallIter<'a> {
             });
         }
 
+        // finally make a draw call
         let hi = self.batch.n_quads;
         self.current = hi;
         return Some(SpriteDrawCall {

@@ -82,8 +82,19 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
     fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
         anf::gfx::clear_frame(&mut cx.dcx, fna3d::Color::rgb(210, 70, 70));
 
+        // map
         let px_bounds = Rect2f::from((self.camera.pos, [1280.0, 720.0]));
         self.map.render(&mut cx.dcx, px_bounds.clone());
+
+        // grids
+        let mut pass = cx.dcx.pass();
+        tiled_render::render_non_blocking_grids(
+            &mut pass,
+            &self.map.tiled,
+            &self.map.rlmap.blocks,
+            &px_bounds,
+        );
+        drop(pass);
 
         // player
         let mut pass = cx.dcx.pass();
@@ -95,9 +106,9 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
         drop(pass);
 
         // player fov
-        // FIXME: no clone
         let mut pass = cx.dcx.pass();
         tiled_render::render_fov_shadows(&mut pass, &self.map.tiled, &self.player.fov, &px_bounds);
+        drop(pass);
 
         Ok(())
     }
@@ -171,12 +182,12 @@ pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
         let origin = [0.5, 0.8].into();
         let patterns = rl::view::gen_anim4_with(&ika_atlas, 4.0, |s| {
             s.origin = origin;
-            s.color = Color::rgb(255, 255, 100)
+            s.color = Color::rgb(255, 255, 100);
         });
         SpriteAnimState::new(patterns, Dir8::S)
     };
 
-    let mut player = Player {
+    let player = Player {
         anim: ika_anim,
         pos: Vec2i::default(),
         dir: Dir8::S,

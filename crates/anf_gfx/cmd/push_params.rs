@@ -93,6 +93,7 @@ impl QuadPush {
 ///
 /// Flush `SpriteBatch` before running if it's saturated.
 impl QuadPush {
+    /// Make sure the batcher is not satured
     pub fn run_texture2d(
         &self,
         batch: &mut SpriteBatch,
@@ -178,7 +179,8 @@ fn push_texture2d(
     depth: f32,
     flips: Flips,
 ) {
-    let quad = batch.next_quad_mut(texture.raw_texture());
+    let quad = unsafe { batch.next_quad_mut(texture.raw_texture()) };
+
     self::set_quad(
         quad, skew, origin, src_rect, dest_rect, color, rot, depth, flips,
     );

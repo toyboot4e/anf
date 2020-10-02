@@ -44,26 +44,28 @@ impl Batcher {
 impl Batcher {
     /// Accessor to `Batcher` would like this marking method
     pub fn begin(&mut self) {
+        // TODO: this is nonsense..
         self.is_begin_called = true;
     }
 
     /// Flushes batch data to actually draw to a render target
     pub fn end(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
-        if !self.is_begin_called {
-            log::warn!("`Batcher::end` is called before `begin`");
-            return;
-        }
         self.flush(device, p);
     }
 
+    pub fn is_satured(&self) -> bool {
+        self.batch.is_satured()
+    }
+
     /// Draws all the pushed sprites
-    fn flush(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
+    pub fn flush(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
         // guard
         if !self.is_begin_called {
             log::warn!("`Batcher::flush` was called before begin");
             return;
         }
         self.is_begin_called = false;
+
         if !self.batch.any_quads_pushed() {
             return;
         }
