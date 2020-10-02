@@ -116,9 +116,10 @@ impl TextureData2d {
         path: impl AsRef<std::path::Path>,
     ) -> Option<Self> {
         let path = path.as_ref();
-        let reader = File::open(path)
-            .ok()
-            .unwrap_or_else(|| panic!("failed to open file {}", path.display()));
+        // TODO: return error
+        let reader = File::open(path).unwrap_or_else(|err| {
+            panic!("failed to open file `{}`. io error {}", path.display(), err)
+        });
         let reader = BufReader::new(reader); // FIXME: is this good?
         Self::from_reader(device, reader)
     }
@@ -137,6 +138,12 @@ impl TextureData2d {
 
         fna3d::img::free(pixels_ptr as *mut _);
         return Some(texture);
+    }
+
+    /// Helper for embedded file bytes
+    pub fn from_undecoded_bytes(device: &mut fna3d::Device, bytes: &[u8]) -> Option<Self> {
+        let reader = std::io::Cursor::new(bytes);
+        Self::from_reader(device, reader)
     }
 
     pub fn from_pixels(device: &mut fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {

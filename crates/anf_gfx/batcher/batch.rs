@@ -83,8 +83,6 @@ impl<'a> Iterator for SpriteDrawCallIter<'a> {
 
         self.quad_count += 1; // current quad count is `self.quad_count - 1`
 
-        println!("{}", self.batch.n_quads);
-
         let lo = self.current;
         for hi in (self.current + 1)..self.batch.n_quads {
             if &self.batch.raw_texture_track[hi] == &self.batch.raw_texture_track[lo] {

@@ -2,6 +2,8 @@
 //!
 //! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is the recommended.
 
+const WHITE_DOT: &[u8] = include_bytes!("white_dot.png");
+
 pub use anf_gfx::cmd::prelude::*;
 use fna3d::Color;
 
@@ -17,8 +19,6 @@ use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
 use crate::{engine::time::TimeStep, gfx::TextureData2d};
-
-const WHITE_PIXEL: &[u8] = include_bytes!("white_dot.png");
 
 /// The imperative draw API
 ///
@@ -62,7 +62,7 @@ impl DrawContext {
     ) -> Self {
         let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader);
         let batcher = Batcher::from_device(&mut device);
-        let white_dot = TextureData2d::from_pixels(&mut device, WHITE_PIXEL, 1, 1);
+        let white_dot = TextureData2d::from_undecoded_bytes(&mut device, WHITE_DOT).unwrap();
         Self {
             device,
             batcher,

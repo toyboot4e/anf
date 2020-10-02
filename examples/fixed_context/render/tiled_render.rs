@@ -7,7 +7,7 @@ use anf::{engine::prelude::*, gfx::prelude::*};
 use tiled::LayerData;
 
 use crate::{
-    rl::{fov::*, rlmap::RlMap},
+    rl::fov::*,
     utils::grid2d::{Rect2i, Vec2i, Vec2u},
 };
 
@@ -134,9 +134,9 @@ pub fn render_fov_shadows(
         let color = if fov.is_in_view([x as i32, y as i32].into()) {
             let len = (Vec2i::new(x as i32, y as i32) - fov.origin()).len_f32();
             let x = (len as f32 / fov.radius() as f32).sin();
-            Color::rgba(0, 0, 0, 255).multiply(ease(x))
+            Color::rgba(0, 0, 0, 255).multiply(ease(x) * 0.5)
         } else {
-            Color::rgba(0, 0, 0, 255)
+            Color::rgba(0, 0, 0, 255).multiply(0.7)
         };
 
         pass.white_dot()
@@ -187,7 +187,7 @@ pub fn render_non_blocking_grids(
 
         pass.rect(
             [pos + Vec2f::new(2.0, 2.0), (28.0, 28.0).into()],
-            Color::white().multiply(0.8),
+            Color::white().multiply(0.5),
         );
     });
 }

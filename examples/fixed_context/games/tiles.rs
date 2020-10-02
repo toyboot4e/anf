@@ -98,7 +98,7 @@ pub struct Player {
 }
 
 pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> TiledGameData {
-    let path = vfs::path("map/tmx/1.tmx");
+    let path = vfs::path("map/tmx/tiles.tmx");
     let rlmap = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
 
     let ika_atlas = TextureData2d::from_path(dcx.as_mut(), vfs::path("ika-chan.png")).unwrap();

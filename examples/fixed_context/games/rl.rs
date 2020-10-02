@@ -13,6 +13,12 @@ use crate::{
     },
 };
 
+#[repr(u32)]
+enum Gid {
+    Floor = 9,
+    Ceil = 25,
+}
+
 pub struct RlGameData {
     map: TiledRlMap,
     camera: Camera,
@@ -71,7 +77,7 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
             self.player.pos = pos;
             self.player
                 .fov
-                .update(6, self.player.pos, &mut self.map.rlmap);
+                .update(5, self.player.pos, &mut self.map.rlmap);
         }
         self.player.dir = dir;
         self.player.anim.set_pattern(dir, false);
@@ -87,14 +93,14 @@ impl SampleUserDataLifecycle<Context> for RlGameData {
         self.map.render(&mut cx.dcx, px_bounds.clone());
 
         // grids
-        let mut pass = cx.dcx.pass();
-        tiled_render::render_non_blocking_grids(
-            &mut pass,
-            &self.map.tiled,
-            &self.map.rlmap.blocks,
-            &px_bounds,
-        );
-        drop(pass);
+        // let mut pass = cx.dcx.pass();
+        // tiled_render::render_non_blocking_grids(
+        //     &mut pass,
+        //     &self.map.tiled,
+        //     &self.map.rlmap.blocks,
+        //     &px_bounds,
+        // );
+        // drop(pass);
 
         // player
         let mut pass = cx.dcx.pass();
@@ -160,8 +166,8 @@ fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
     for y in 0..size[1] {
         for x in 0..size[0] {
             let ix = x + y * size[0];
-            let gid = if cave[ix] { 2 } else { 18 };
-
+            // we need the offset
+            let gid = 1 + if cave[ix] { Gid::Floor } else { Gid::Ceil } as u32;
             tiles[y][x] = tiled::LayerTile::new(gid);
             blocks[ix] = !cave[ix];
         }
@@ -169,7 +175,7 @@ fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
 }
 
 pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
-    let path = vfs::path("map/tmx/1.tmx");
+    let path = vfs::path("map/tmx/rl.tmx");
     let rlmap = {
         let mut map = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
         self::clear_tiled(&mut map.tiled);
