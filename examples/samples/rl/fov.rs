@@ -1,8 +1,9 @@
-//! Field of view for orthogonal grid world
+//! Field of view for orthogonal grid maps
 
 use crate::utils::grid2d::Vec2i;
 
 pub trait FovWrite {
+    /// Define that the cell is in view
     fn light(&mut self, pos: Vec2i);
 }
 
@@ -11,6 +12,9 @@ pub trait OpacityMap {
     fn is_opaque(&self, pos: Vec2i) -> bool;
     fn contains(&self, pos: Vec2i) -> bool;
 }
+
+// --------------------------------------------------------------------------------
+// For user
 
 #[derive(Debug, Clone)]
 pub struct FovData {
@@ -42,9 +46,8 @@ impl FovData {
     }
 
     fn ix(&self, pos: Vec2i) -> usize {
-        let mut delta = pos - self.origin;
         let edge = self.radius * 2 + 1;
-        delta += Vec2i::new(self.radius as i32, self.radius as i32);
+        let delta = pos - self.origin + Vec2i::new(self.radius as i32, self.radius as i32);
         (delta.x as u32 + delta.y as u32 * edge) as usize
     }
 
@@ -138,7 +141,7 @@ impl Scanner {
     }
 
     pub fn run<T: FovWrite, U: OpacityMap>(&mut self, row_from: u32, scx: &mut ScanContext<T, U>) {
-        for row in row_from..scx.r {
+        for row in row_from..=scx.r {
             if !self.scan_row(row, scx) {
                 break;
             }
@@ -150,7 +153,7 @@ impl Scanner {
         let to = {
             let to = self.slopes[1] * row as f32;
             let to_max = ((r as f32 + 0.5) * (r as f32 + 0.5) - row as f32 * row as f32).sqrt();
-            std::cmp::min(to.floor() as u32, to_max.floor() as u32)
+            std::cmp::min(to.floor() as u32, to_max.round() as u32)
         };
         [from.ceil() as u32, to]
     }
@@ -187,6 +190,15 @@ impl Scanner {
                 if state == ScanState::Opaque {
                     // right-down
                     self.slopes[0] = (col as f32 + 0.5) / (row as f32 - 0.5);
+
+                    // this is an important fix in such situations:
+                    //
+                    // @#.
+                    // #..
+                    // ...
+                    if self.slopes[0] > 1.0 {
+                        self.slopes[0] = 1.0;
+                    }
                 }
 
                 state = ScanState::Transparent;
@@ -214,7 +226,7 @@ impl Scanner {
 enum ScanState {
     /// Initial scan
     Initial,
-    /// Previous scan was on opaquecell
+    /// Previous scan was on opaque cell
     Opaque,
     /// Previous scan was on transparent cell
     Transparent,
