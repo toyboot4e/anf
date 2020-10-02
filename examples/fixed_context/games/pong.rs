@@ -44,14 +44,12 @@ impl SampleUserDataLifecycle<Context> for PongGameData {
 /// Updating logic
 impl PongGameData {
     fn handle_input(&mut self, kbd: &Keyboard) {
-        if kbd.is_key_pressed(Key::W) {
+        self.entities[0].vel = Vec2f::zero();
+        if kbd.is_key_down(Key::W) {
             self.entities[0].vel = Vec2f::new(0.0, -400.0);
         }
-        if kbd.is_key_pressed(Key::S) {
+        if kbd.is_key_down(Key::S) {
             self.entities[0].vel = Vec2f::new(0.0, 400.0);
-        }
-        if kbd.is_key_pressed(Key::A) || kbd.is_key_pressed(Key::D) {
-            self.entities[0].vel = Vec2f::zero();
         }
     }
 
