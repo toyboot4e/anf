@@ -256,7 +256,6 @@ impl Mat3f {
         let mut res = Mat3f::default();
 
         let mut vector = obj_pos - cam_pos;
-        let mut vector2 = Vec3f::default();
 
         let num = vector.len_squared();
         vector = if num < 0.0001 {

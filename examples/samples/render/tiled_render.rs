@@ -88,7 +88,7 @@ pub fn render_layer(
         LayerData::Infinite(_) => unimplemented!("tiled map infinite layer"),
     };
 
-    self::tiled_render_with(grid_bounds, |x, y| {
+    self::walk_visible_cells_with(grid_bounds, |x, y| {
         let tile = tiles[y][x];
         if tile.gid == 0 {
             return;
@@ -129,7 +129,7 @@ pub fn render_fov_shadows(
     let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
     let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
 
-    self::tiled_render_with(&grid_bounds, |x, y| {
+    self::walk_visible_cells_with(&grid_bounds, |x, y| {
         // FIXME: why is this semi-transparent
         let color = if fov.is_in_view([x as i32, y as i32].into()) {
             let len = (Vec2i::new(x as i32, y as i32) - fov.origin()).len_f32();
@@ -174,7 +174,7 @@ pub fn render_non_blocking_grids(
     let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
     let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
 
-    self::tiled_render_with(&grid_bounds, |x, y| {
+    self::walk_visible_cells_with(&grid_bounds, |x, y| {
         let ix = x + y * grid_size.x as usize;
         if blocks[ix] {
             return;
@@ -200,7 +200,7 @@ pub fn render_non_blocking_grids(
 /// # Warning
 ///
 /// Closures may be inefficient
-fn tiled_render_with(grid_bounds: &Rect2i, mut f: impl FnMut(usize, usize)) {
+fn walk_visible_cells_with(grid_bounds: &Rect2i, mut f: impl FnMut(usize, usize)) {
     let left_up = grid_bounds.left_up();
     let right_down = grid_bounds.right_down();
 

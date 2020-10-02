@@ -6,10 +6,10 @@ edition = "2018"
 
 [workspace]
 members = ["crates/anf_gfx", "crates/fna3d_hie"]
-exclude = ["crates/rust-fna3d"]
+exclude = ["crates/rust-fna3d", "crates/soloud-rs"]
 
 [[example]]
-name = "fixed_context"
+name = "samples"
 test = true
 
 [dependencies]
@@ -25,6 +25,7 @@ anyhow = "1.0.32"
 [dev-dependencies]
 imgui = "0.5.0"
 imgui_fna3d = { path = "crates/imgui_fna3d" }
+soloud = { path = "crates/soloud-rs/soloud" }
 
 env_logger = "0.7.1"
 rand = "0.7.3"

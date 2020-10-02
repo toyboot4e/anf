@@ -153,7 +153,7 @@ fn clear_tiled(tiled: &mut tiled::Map) {
 
 fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
     let size = [tiled.width as usize, tiled.height as usize];
-    let cave = crate::rl::dun::gen_cave(size, 50, 20);
+    let cave = crate::rl::dun::gen_cave(size, 50, 100);
 
     let tile_layer = &mut tiled.layers[0];
     let tiles = {

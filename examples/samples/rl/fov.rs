@@ -153,6 +153,7 @@ impl Scanner {
         let to = {
             let to = self.slopes[1] * row as f32;
             let to_max = ((r as f32 + 0.5) * (r as f32 + 0.5) - row as f32 * row as f32).sqrt();
+            // FIXME: round vs floor (not tested)
             std::cmp::min(to.floor() as u32, to_max.round() as u32)
         };
         [from.ceil() as u32, to]

@@ -5,6 +5,8 @@ use rand::{
     rngs::ThreadRng,
 };
 
+use anf::utils::Double;
+
 pub fn gen_cave(size: [usize; 2], prob_init_floor: usize, n_steps: usize) -> Vec<bool> {
     let mut x = CaveGenAdvance::new(size, prob_init_floor);
     for _ in 0..n_steps {
@@ -14,61 +16,9 @@ pub fn gen_cave(size: [usize; 2], prob_init_floor: usize, n_steps: usize) -> Vec
     x.map.bufs.into_front()
 }
 
-struct DoubleVec<T> {
-    a: Vec<T>,
-    b: Vec<T>,
-    is_front_a: bool,
-}
-
-impl<T> DoubleVec<T> {
-    pub fn into_front(self) -> Vec<T> {
-        if self.is_front_a {
-            self.a
-        } else {
-            self.b
-        }
-    }
-
-    pub fn front(&self) -> &Vec<T> {
-        if self.is_front_a {
-            &self.a
-        } else {
-            &self.b
-        }
-    }
-
-    pub fn front_mut(&mut self) -> &mut Vec<T> {
-        if self.is_front_a {
-            &mut self.a
-        } else {
-            &mut self.b
-        }
-    }
-
-    pub fn back(&self) -> &Vec<T> {
-        if self.is_front_a {
-            &self.b
-        } else {
-            &self.a
-        }
-    }
-
-    pub fn back_mut(&mut self) -> &mut Vec<T> {
-        if self.is_front_a {
-            &mut self.b
-        } else {
-            &mut self.a
-        }
-    }
-
-    pub fn swap(&mut self) {
-        self.is_front_a = !self.is_front_a
-    }
-}
-
 pub struct CaveMap {
     /// Floor if it's true, wall if it's false. Indexed as [x + y * width]
-    bufs: DoubleVec<bool>,
+    bufs: Double<Vec<bool>>,
     /// Width, height
     size: [usize; 2],
 }
@@ -141,11 +91,7 @@ impl CaveGenAdvance {
         }
 
         let b = cells.clone();
-        let bufs = DoubleVec {
-            a: cells,
-            b,
-            is_front_a: true,
-        };
+        let bufs = Double::new(cells, b);
 
         Self {
             map: CaveMap { bufs, size },

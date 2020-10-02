@@ -13,13 +13,15 @@ pub struct SceneBasedGameData {
     current: usize,
 }
 
+const LIST: &[&str] = &["Pong", "Tiled", "Media", "Roguelike"];
+
 impl SceneBasedGameData {
     pub fn init(cx: &mut Context) -> Self {
         Self {
             scenes: vec![
                 Box::new(games::pong::new_game(&cx.win, &mut cx.dcx)),
                 Box::new(games::tiles::new_game(&cx.win, &mut cx.dcx)),
-                Box::new(games::input::new_game(&cx.win, &mut cx.dcx)),
+                Box::new(games::media::new_game(&cx.win, &mut cx.dcx)),
                 Box::new(games::rl::new_game(&cx.win, &mut cx.dcx)),
             ],
             current: 0,
@@ -28,26 +30,21 @@ impl SceneBasedGameData {
 }
 
 impl SampleUserDataLifecycle<Context> for SceneBasedGameData {
-    #[allow(unused_variables)]
     fn event(&mut self, cx: &mut Context, ev: &Event) -> AnfResult<()> {
         self.scenes[self.current].event(cx, ev)?;
         Ok(())
     }
 
-    #[allow(unused_variables)]
     fn update(&mut self, cx: &mut Context) -> AnfResult<()> {
         self.scenes[self.current].update(cx)?;
         Ok(())
     }
 
-    #[allow(unused_variables)]
     fn render(&mut self, cx: &mut Context) -> AnfResult<()> {
-        // cx.dcx.as_mut().set_render_targets(render_targets, num_render_targets, depth_stencil_buffer, depth_format, preserve_target_contents)
         self.scenes[self.current].render(cx)?;
         Ok(())
     }
 
-    #[allow(unused_variables)]
     fn debug_render(&mut self, cx: &mut Context) -> AnfResult<()> {
         let (ui, fin) = {
             let size = cx.win.screen_size(); // (u32, u32)
@@ -77,5 +74,3 @@ impl SampleUserDataLifecycle<Context> for SceneBasedGameData {
         Ok(())
     }
 }
-
-const LIST: &[&str] = &["Pong", "Tiled", "Input", "Roguelike"];
