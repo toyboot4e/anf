@@ -8,8 +8,6 @@ use sdl2::{event::Event, EventPump};
 
 use crate::engine::{app::*, draw::*, time::*};
 
-const DEFAULT_SHADER: &[u8] = include_bytes!("SpriteEffect.fxb");
-
 /// Return type of ANF game
 pub type AnfResult<T> = anyhow::Result<T>;
 
@@ -53,7 +51,7 @@ impl AnfFramework {
     pub fn from_cfg(cfg: WindowConfig) -> Self {
         let (mut window, dcx) = {
             let (window, device, params) = init_app(&cfg);
-            let dcx = DrawContext::new(device, DEFAULT_SHADER, params);
+            let dcx = DrawContext::new(device, crate::engine::builtin::SPRITE_EFFECT, params);
             (window, dcx)
         };
 
