@@ -1,12 +1,14 @@
-//! Base to build sprite push API
+//! Quad rendering command and API
 
 mod push_cmd;
 mod push_params;
 
-pub use push_cmd::{QuadPushBinding, SpritePushCommand};
-pub use push_params::QuadPush;
+pub use push_cmd::{QuadPush, SpritePushCommand};
+pub use push_params::QuadParams;
 
 pub mod prelude {
-    pub use super::push_cmd::{QuadPushBuilder, Sprite, SubTexture2d};
-    pub use super::push_params::{DrawPolicy, QuadPush, Texture2d};
+    //! Traits to push quadliterals
+
+    pub use super::push_cmd::{QuadParamsBuilder, Sprite, SubTexture2d};
+    pub use super::push_params::{DrawPolicy, QuadParams, Texture2d};
 }

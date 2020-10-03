@@ -11,7 +11,7 @@ use std::path::Path;
 
 use anf_gfx::{
     batcher::{bufspecs::ColoredVertexData, Batcher},
-    cmd::{QuadPush, QuadPushBinding, SpritePushCommand},
+    cmd::{QuadParams, QuadPush, SpritePushCommand},
     geom2d::*,
 };
 
@@ -43,7 +43,7 @@ pub struct DrawContext {
     // states
     batcher: Batcher,
     pipe: Pipeline,
-    push: QuadPush,
+    push: QuadParams,
     // builtin
     white_dot: TextureData2d,
     /// dependency
@@ -68,7 +68,7 @@ impl DrawContext {
             batcher,
             pipe,
             white_dot,
-            push: QuadPush::default(),
+            push: QuadParams::default(),
             params,
             time_step: TimeStep::default(),
         }
@@ -159,7 +159,7 @@ impl<'a> BatchPass<'a> {
         }
 
         self.dcx.push.reset_to_defaults();
-        let quad = QuadPushBinding {
+        let quad = QuadPush {
             push: &mut self.dcx.push,
             batch: &mut self.dcx.batcher.batch,
         };
@@ -176,13 +176,16 @@ impl<'a> BatchPass<'a> {
         }
 
         self.dcx.push.reset_to_defaults();
-        let quad = QuadPushBinding {
+        let quad = QuadPush {
             push: &mut self.dcx.push,
             batch: &mut self.dcx.batcher.batch,
         };
         SpritePushCommand::from_sprite(quad, sprite)
     }
+}
 
+/// Outline drawing
+impl<'a> BatchPass<'a> {
     // TODO: add wrapper of primitive renderer
     pub fn white_dot(&mut self) -> SpritePushCommand<'_, TextureData2d> {
         self.texture(self.dcx.white_dot.clone())

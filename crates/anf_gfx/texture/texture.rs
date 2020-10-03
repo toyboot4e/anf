@@ -5,7 +5,7 @@ use std::{
     io::{BufReader, Read, Seek},
 };
 
-/// 2d texture handle
+/// 2D texture handle
 ///
 /// # Safety
 ///

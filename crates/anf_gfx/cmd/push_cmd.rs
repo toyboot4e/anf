@@ -1,6 +1,6 @@
 use crate::{
     batcher::batch::SpriteBatch,
-    cmd::push_params::{DrawPolicy, QuadPush, Scaled, Texture2d},
+    cmd::push_params::{DrawPolicy, QuadParams, Scaled, Texture2d},
     geom2d::*,
 };
 
@@ -21,15 +21,15 @@ pub trait Sprite: SubTexture2d {
 }
 
 /// Comes with default implementation
-pub trait QuadPushBuilder {
-    /// This is mainly for default implementations, but it can be used to modify [`QuadPush`] manually
-    fn data(&mut self) -> &mut QuadPush;
+pub trait QuadParamsBuilder {
+    /// This is mainly for default implementations, but it can be used to modify [`QuadParams`] manually
+    fn params(&mut self) -> &mut QuadParams;
 
     /// Set source rectangle in normalized coordinates
     ///
     /// Specify [x, y] and [w, h].
     fn src_rect_uv(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
-        self.data().src_rect = Scaled::Normalized(rect.into());
+        self.params().src_rect = Scaled::Normalized(rect.into());
         self
     }
 
@@ -37,7 +37,7 @@ pub trait QuadPushBuilder {
     ///
     /// Specify [x, y] and [w, h].
     fn src_rect_px(&mut self, rect: impl Into<Rect2f>) -> &mut Self {
-        self.data().src_rect = Scaled::Px(rect.into());
+        self.params().src_rect = Scaled::Px(rect.into());
         self
     }
 
@@ -45,7 +45,7 @@ pub trait QuadPushBuilder {
     fn dest_pos_px(&mut self, xs: impl Into<[f32; 2]>) -> &mut Self {
         let xs = xs.into();
 
-        let data = self.data();
+        let data = self.params();
         let mut rect = data.dest_rect.inner().clone();
         rect.x = xs[0];
         rect.y = xs[1];
@@ -58,7 +58,7 @@ pub trait QuadPushBuilder {
     fn dest_size_px(&mut self, ws: impl Into<[f32; 2]>) -> &mut Self {
         let ws = ws.into();
 
-        let data = self.data();
+        let data = self.params();
         let mut rect = data.dest_rect.inner().clone();
         rect.w = ws[0];
         rect.h = ws[1];
@@ -71,7 +71,7 @@ pub trait QuadPushBuilder {
     fn dest_rect_px(&mut self, xs: impl Into<Rect2f>) -> &mut Self {
         let rect = xs.into();
 
-        let data = self.data();
+        let data = self.params();
         data.dest_rect = Scaled::Px(rect.into());
 
         self
@@ -79,50 +79,51 @@ pub trait QuadPushBuilder {
 
     /// Sets origin where we specify coordinates / where the quad rotates
     fn origin(&mut self, origin: impl Into<Vec2f>) -> &mut Self {
-        self.data().origin = origin.into();
+        self.params().origin = origin.into();
         self
     }
 
     /// Alpha value is considered here, too
     fn color(&mut self, color: fna3d::Color) -> &mut Self {
-        self.data().color = color;
+        self.params().color = color;
         self
     }
 
     fn rot(&mut self, rot: f32) -> &mut Self {
-        self.data().rot = rot;
+        self.params().rot = rot;
         self
     }
 
     fn flips(&mut self, flips: Flips) -> &mut Self {
-        self.data().flips = flips;
+        self.params().flips = flips;
         self
     }
 
     fn skew(&mut self, skew: Skew2f) -> &mut Self {
-        self.data().skew = skew;
+        self.params().skew = skew;
         self
     }
 }
 
-pub struct QuadPushBinding<'a> {
-    pub push: &'a mut QuadPush,
+/// Binding to push [`QuadParams`] to [`SpriteBatch`]
+pub struct QuadPush<'a> {
+    pub push: &'a mut QuadParams,
     pub batch: &'a mut SpriteBatch,
 }
 
-impl<'a> QuadPushBuilder for QuadPushBinding<'a> {
-    fn data(&mut self) -> &mut QuadPush {
+impl<'a> QuadParamsBuilder for QuadPush<'a> {
+    fn params(&mut self) -> &mut QuadParams {
         &mut self.push
     }
 }
 
-impl<'a> QuadPushBinding<'a> {
+impl<'a> QuadPush<'a> {
     fn on_set_sub_texture<T: SubTexture2d>(&'_ mut self, texture: &T) {
         self.src_rect_uv(texture.uv_rect())
             .dest_size_px([texture.w(), texture.h()]);
     }
 
-    pub fn on_set_sprite<T: Sprite>(&'_ mut self, sprite: &T) {
+    fn on_set_sprite<T: Sprite>(&'_ mut self, sprite: &T) {
         let scale = sprite.scale();
         self.src_rect_uv(sprite.uv_rect())
             .dest_size_px([sprite.w() * scale[0], sprite.h() * scale[1]])
@@ -134,7 +135,7 @@ impl<'a> QuadPushBinding<'a> {
 
 /// Primary interface to push sprite
 pub struct SpritePushCommand<'a, T: Texture2d> {
-    quad: QuadPushBinding<'a>,
+    quad: QuadPush<'a>,
     texture: T,
     policy: DrawPolicy,
     flips: Flips,
@@ -148,7 +149,7 @@ impl<'a, T: Texture2d> Drop for SpritePushCommand<'a, T> {
 }
 
 impl<'a, T: Texture2d> SpritePushCommand<'a, T> {
-    pub fn new(quad: QuadPushBinding<'a>, texture: T) -> Self {
+    pub fn new(quad: QuadPush<'a>, texture: T) -> Self {
         Self {
             quad,
             texture,
@@ -165,21 +166,21 @@ impl<'a, T: Texture2d> SpritePushCommand<'a, T> {
 }
 
 /// impl default builder methods
-impl<'a, T: Texture2d> QuadPushBuilder for SpritePushCommand<'a, T> {
-    fn data(&mut self) -> &mut QuadPush {
+impl<'a, T: Texture2d> QuadParamsBuilder for SpritePushCommand<'a, T> {
+    fn params(&mut self) -> &mut QuadParams {
         &mut self.quad.push
     }
 }
 
 impl<'a, T: SubTexture2d> SpritePushCommand<'a, T> {
-    pub fn from_sub_texture(mut quad: QuadPushBinding<'a>, sub_texture: T) -> Self {
+    pub fn from_sub_texture(mut quad: QuadPush<'a>, sub_texture: T) -> Self {
         quad.on_set_sub_texture(&sub_texture);
         Self::new(quad, sub_texture)
     }
 }
 
 impl<'a, T: Sprite> SpritePushCommand<'a, T> {
-    pub fn from_sprite(mut quad: QuadPushBinding<'a>, sub_texture: T) -> Self {
+    pub fn from_sprite(mut quad: QuadPush<'a>, sub_texture: T) -> Self {
         quad.on_set_sprite(&sub_texture);
         Self::new(quad, sub_texture)
     }

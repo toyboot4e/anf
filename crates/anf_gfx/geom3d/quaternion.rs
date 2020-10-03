@@ -1,6 +1,6 @@
 use auto_ops::*;
 
-use crate::geom3d::{Mat3f, Vec3f};
+use crate::geom3d::{Mat4x4, Vec3f};
 
 #[derive(Debug, Clone, Default)]
 pub struct Quaternion {
@@ -97,7 +97,7 @@ impl Quaternion {
         }
     }
 
-    pub fn from_rot_matrix(mat: Mat3f) -> Self {
+    pub fn from_rot_matrix(mat: Mat4x4) -> Self {
         let scale = mat.m11 + mat.m22 + mat.m33;
 
         let mut result = Self::default();

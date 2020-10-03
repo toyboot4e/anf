@@ -7,7 +7,7 @@ use crate::{
         batch::{SpriteBatch, SpriteDrawCall},
         bufspecs::GpuViBuffer,
     },
-    geom3d::{Mat3f, Vec3f},
+    geom3d::{Mat4x4, Vec3f},
 };
 
 /// [`SpriteBatch`] with GPU vertex/index buffer handle
@@ -17,13 +17,13 @@ pub struct Batcher {
     bufs: GpuViBuffer,
     is_begin_called: bool,
     /// The projection matrix (orthographic matrix)
-    proj_mat: Mat3f,
+    proj_mat: Mat4x4,
     /// The transformation matrix
-    transform_mat: Mat3f,
+    transform_mat: Mat4x4,
     /// The view projection matrix used by vertex shader
     ///
     /// M_v = M_t M_p
-    view_proj_mat: Mat3f,
+    view_proj_mat: Mat4x4,
 }
 
 impl Batcher {
@@ -32,9 +32,9 @@ impl Batcher {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
             is_begin_called: false,
-            proj_mat: Mat3f::orthographic(1.0, 1.0, 1.0, 0.0),
-            transform_mat: Mat3f::identity(),
-            view_proj_mat: Mat3f::default(),
+            proj_mat: Mat4x4::orthographic(1.0, 1.0, 1.0, 0.0),
+            transform_mat: Mat4x4::identity(),
+            view_proj_mat: Mat4x4::default(),
         }
     }
 }
@@ -42,9 +42,10 @@ impl Batcher {
 /// Batch cycle
 /// ---
 impl Batcher {
-    /// Accessor to `Batcher` would like this marking method
+    /// Maker
+    ///
+    /// * TODO: does not make sense.. needed?
     pub fn begin(&mut self) {
-        // TODO: this is nonsense..
         self.is_begin_called = true;
     }
 
@@ -79,11 +80,11 @@ impl Batcher {
 
         // update shader matrix
         // FIXME: get viewport
-        self.proj_mat = Mat3f::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
+        self.proj_mat = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
 
         unsafe {
             let name = std::ffi::CString::new("MatrixTransform").unwrap();
-            self.view_proj_mat = Mat3f::multiply(&self.transform_mat, &self.proj_mat);
+            self.view_proj_mat = Mat4x4::multiply(&self.transform_mat, &self.proj_mat);
             // internally, MojoShader uses column-major matrices so we transpose it
             pipe.shader
                 .set_param(&name, &self.view_proj_mat.transpose());
@@ -111,7 +112,7 @@ impl Batcher {
     /// Copies vertex data from CPU to GPU ([`SpriteBatch::vertex_data`] to [`VertexBuffer`])
     fn upload_vertices(&mut self, device: &mut fna3d::Device) {
         let offset = 0;
-        let data = &mut self.batch.quads_to_upload_to_gpu();
+        let data = &mut self.batch.quads_mut();
         self.bufs
             .vbuf
             .upload_vertices(device, offset, data, fna3d::SetDataOptions::None);

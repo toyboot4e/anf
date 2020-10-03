@@ -1,7 +1,4 @@
-//! Handles of vertex/index buffer in GPU memory
-//!
-//! Internally, they are wrappers of [`*mut fna3d::Buffer`](fna3d::Buffer); they are dynamically
-//! "typed" with attributes.
+//! GPU buffers, wrappers of [`*mut fna3d::Buffer`](fna3d::Buffer)
 //!
 //! * TODO: explain what "dynamic" buffer means and what options are available
 

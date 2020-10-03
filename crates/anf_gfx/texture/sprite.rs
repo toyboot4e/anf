@@ -31,7 +31,7 @@ impl TextureData2d {
     }
 }
 
-/// 2d texture handle with region (uv values)
+/// 2D texture handle with region (uv values)
 ///
 /// # Safety
 ///
@@ -67,7 +67,7 @@ impl AsRef<TextureData2d> for SubTextureData2d {
     }
 }
 
-/// Full-featured 2d texture handle
+/// 2D texture handle with region (uv values), origin, color, scale, rotation and flips
 ///
 /// # Safety
 ///

@@ -18,7 +18,7 @@ pub struct DrawPolicy {
     // is_batching_disabled: bool,
 }
 
-/// Texture with size data. Used by [`QuadPush`]
+/// Texture with size data. Used by [`QuadParams`]
 pub trait Texture2d {
     fn raw_texture(&self) -> *mut fna3d::Texture;
     /// Pixel
@@ -45,9 +45,9 @@ impl<T> Scaled<T> {
 // --------------------------------------------------------------------------------
 // QuadPush
 
-/// Full-featured geometry parameters to push a sprite onto [`SpriteBatch`]
+/// Full-featured geometry parameters to push a quadliteral onto [`SpriteBatch`]
 #[derive(Debug)]
-pub struct QuadPush {
+pub struct QuadParams {
     // TODO: consider using two vectors per src/dest
     pub src_rect: Scaled<Rect2f>,
     pub dest_rect: Scaled<Rect2f>,
@@ -60,7 +60,7 @@ pub struct QuadPush {
     pub skew: Skew2f,
 }
 
-impl Default for QuadPush {
+impl Default for QuadParams {
     fn default() -> Self {
         Self {
             src_rect: Scaled::Normalized(Rect2f::unit()),
@@ -75,7 +75,7 @@ impl Default for QuadPush {
     }
 }
 
-impl QuadPush {
+impl QuadParams {
     pub fn reset_to_defaults(&mut self) {
         self.src_rect = Scaled::Normalized(Rect2f::unit());
         self.dest_rect = Scaled::Normalized(Rect2f::default());
@@ -91,8 +91,8 @@ impl QuadPush {
 /// Run
 /// ---
 ///
-/// Flush `SpriteBatch` before running if it's saturated.
-impl QuadPush {
+/// Be sure to flush [`SpriteBatch`] before running if it's saturated.
+impl QuadParams {
     /// Make sure the batcher is not satured
     pub fn run_texture2d(
         &self,

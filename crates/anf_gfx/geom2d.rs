@@ -2,11 +2,11 @@
 //!
 //! # Usage
 //!
-//! * provide cozy interface (methods)
+//! * provide abstract data type
 //! * accept a variety of input types using `From` and `Into` traits:
 //!
-//! ```
-//! use anf_gfx::geom2d::*;
+//! ```no_run
+//! use anf_gfx::geom2d::{Rect2f, Vec2f};
 //!
 //! let a: Rect2f = [0.0, 0.0, 128.0, 72.0].into();
 //! let b: Rect2f = [(0.0, 0.0), (128.0, 72.0)].into();

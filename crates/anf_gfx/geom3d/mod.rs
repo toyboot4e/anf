@@ -9,4 +9,4 @@ mod plane;
 mod quaternion;
 mod vec;
 
-pub use self::{matrix::Mat3f, plane::Plane3f, quaternion::Quaternion, vec::Vec3f};
+pub use self::{matrix::Mat4x4, plane::Plane3f, quaternion::Quaternion, vec::Vec3f};

@@ -17,7 +17,7 @@ use crate::geom3d::{Plane3f, Quaternion, Vec3f};
 ///
 /// This is very likely buggy. TODO: debug
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct Mat3f {
+pub struct Mat4x4 {
     /// First row, first column
     pub m11: f32,
     /// Second row, second column
@@ -41,7 +41,7 @@ pub struct Mat3f {
     pub m44: f32,
 }
 
-impl Mat3f {
+impl Mat4x4 {
     pub fn new(
         m11: f32,
         m12: f32,
@@ -243,7 +243,7 @@ impl Mat3f {
     }
 }
 /// Constructors
-impl Mat3f {
+impl Mat4x4 {
     /// Creates a new matrix for spherical billboarding that rotates around specified object
     /// position.
     pub fn create_billboard(
@@ -253,7 +253,7 @@ impl Mat3f {
         camera_forward_vector: Option<Vec3f>,
     ) -> Self {
         // resulting matrix
-        let mut res = Mat3f::default();
+        let mut res = Mat4x4::default();
 
         let mut vector = obj_pos - cam_pos;
 
@@ -498,7 +498,7 @@ impl Mat3f {
     ///
     /// # Parameters
     ///
-    /// See the implementation of [`Mat3f::orthographic`] to get the picture.
+    /// See the implementation of [`Self::orthographic`] to get the picture.
     ///
     /// * `top` < `bottom`
     ///
@@ -753,7 +753,7 @@ impl Mat3f {
     }
 }
 
-impl Mat3f {
+impl Mat4x4 {
     /// Creates a new matrix which contains inversion of the specified matrix
     pub fn inv(&self) -> Self {
         /*
@@ -859,7 +859,7 @@ impl Mat3f {
     }
 
     /// Creates a new matrix that contains linear interpolation of the values in specified matrixes.
-    pub fn lerp_mut(&mut self, other: &Mat3f, amount: f32) {
+    pub fn lerp_mut(&mut self, other: &Mat4x4, amount: f32) {
         self.m11 = self.m11 + ((other.m11 - self.m11) * amount);
         self.m12 = self.m12 + ((other.m12 - self.m12) * amount);
         self.m13 = self.m13 + ((other.m13 - self.m13) * amount);
@@ -887,7 +887,7 @@ impl Mat3f {
 }
 
 /// Arithmatic operators
-impl Mat3f {
+impl Mat4x4 {
     /// Creates a new matrix that contains a multiplication of two matrix.
     ///
     /// c_{i,j} = a_{i, k} b_{k, j}
@@ -986,8 +986,8 @@ impl Mat3f {
     }
 }
 
-impl_op_ex!(-|me: &Mat3f| -> Mat3f {
-    Mat3f {
+impl_op_ex!(-|me: &Mat4x4| -> Mat4x4 {
+    Mat4x4 {
         m11: -me.m11,
         m12: -me.m12,
         m13: -me.m13,
@@ -1007,8 +1007,8 @@ impl_op_ex!(-|me: &Mat3f| -> Mat3f {
     }
 });
 
-impl_op_ex!(+ |lhs: &Mat3f, rhs: &Mat3f| -> Mat3f {
-    Mat3f::new(
+impl_op_ex!(+ |lhs: &Mat4x4, rhs: &Mat4x4| -> Mat4x4 {
+    Mat4x4::new(
     lhs.m11 +lhs.m11 ,
     lhs.m12 +lhs.m12 ,
     lhs.m13 +lhs.m13 ,
@@ -1028,7 +1028,7 @@ impl_op_ex!(+ |lhs: &Mat3f, rhs: &Mat3f| -> Mat3f {
     )
 });
 
-impl_op_ex!(+= |lhs: &mut Mat3f, rhs: &Mat3f| {
+impl_op_ex!(+= |lhs: &mut Mat4x4, rhs: &Mat4x4| {
     lhs.m11 +=lhs.m11;
     lhs.m12 +=lhs.m12;
     lhs.m13 +=lhs.m13;
@@ -1047,8 +1047,8 @@ impl_op_ex!(+= |lhs: &mut Mat3f, rhs: &Mat3f| {
     lhs.m44 +=lhs.m44;
 });
 
-impl_op_ex!(-|a: &Mat3f, b: &Mat3f| -> Mat3f {
-    Mat3f {
+impl_op_ex!(-|a: &Mat4x4, b: &Mat4x4| -> Mat4x4 {
+    Mat4x4 {
         m11: a.m11 - b.m11,
         m12: a.m12 - b.m12,
         m13: a.m13 - b.m13,
@@ -1068,7 +1068,7 @@ impl_op_ex!(-|a: &Mat3f, b: &Mat3f| -> Mat3f {
     }
 });
 
-impl_op_ex!(-= |lhs: &mut Mat3f, rhs: &Mat3f| {
+impl_op_ex!(-= |lhs: &mut Mat4x4, rhs: &Mat4x4| {
     lhs.m11 -= lhs.m11;
     lhs.m12 -= lhs.m12;
     lhs.m13 -= lhs.m13;
@@ -1087,8 +1087,8 @@ impl_op_ex!(-= |lhs: &mut Mat3f, rhs: &Mat3f| {
     lhs.m44 -= lhs.m44;
 });
 
-impl_op_ex!(*|me: &Mat3f, scale: f32| -> Mat3f {
-    Mat3f {
+impl_op_ex!(*|me: &Mat4x4, scale: f32| -> Mat4x4 {
+    Mat4x4 {
         m11: me.m11 * scale,
         m12: me.m12 * scale,
         m13: me.m13 * scale,
@@ -1108,7 +1108,7 @@ impl_op_ex!(*|me: &Mat3f, scale: f32| -> Mat3f {
     }
 });
 
-impl_op_ex!(*= |me: &mut Mat3f, scale: f32| {
+impl_op_ex!(*= |me: &mut Mat4x4, scale: f32| {
     me.m11 *= scale;
     me.m12 *= scale;
     me.m13 *= scale;
@@ -1127,10 +1127,10 @@ impl_op_ex!(*= |me: &mut Mat3f, scale: f32| {
     me.m44 *= scale;
 });
 
-impl Mat3f {
+impl Mat4x4 {
     /// Swap the matrix rows and columns
     pub fn transpose(&mut self) -> Self {
-        let mut m = Mat3f::default();
+        let mut m = Mat4x4::default();
 
         m.m11 = self.m11;
         m.m12 = self.m21;
@@ -1162,10 +1162,10 @@ impl Mat3f {
 
 #[cfg(test)]
 mod test {
-    use super::Mat3f;
+    use super::Mat4x4;
     use std::mem::size_of;
 
     fn test_size() {
-        assert_eq!(size_of::<Mat3f>(), size_of::<f32>() * 16);
+        assert_eq!(size_of::<Mat4x4>(), size_of::<f32>() * 16);
     }
 }
