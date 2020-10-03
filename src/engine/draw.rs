@@ -1,6 +1,6 @@
 //! Object-oriented draw APIs
 //!
-//! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is the recommended.
+//! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is recommended.
 
 const WHITE_DOT: &[u8] = include_bytes!("white_dot.png");
 
@@ -22,7 +22,7 @@ use crate::{engine::time::TimeStep, gfx::TextureData2d};
 
 /// The imperative draw API
 ///
-/// Batches draw calls automatically. Owns FNA3D device.
+/// Draw calls are batched automatically. Owns FNA3D device.
 ///
 /// This type should be loved by users. If you don't.. please let me know!
 ///
@@ -36,6 +36,7 @@ use crate::{engine::time::TimeStep, gfx::TextureData2d};
 ///     let mut pass = dcx.pass(); // batch pass
 ///     pass.texture(tex).dest_pos_px([100.0, 100.0]); // push texture
 ///     pass.texture(tex).dest_pos_px([100.0, 400.0]);
+///     // drop(pass);
 /// }
 /// ```
 #[derive(Debug)]
@@ -57,12 +58,13 @@ pub struct DrawContext {
 impl DrawContext {
     pub fn new(
         mut device: Device,
-        default_shader: impl AsRef<Path>,
+        default_shader_bytes: &[u8],
         params: fna3d::PresentationParameters,
     ) -> Self {
-        let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader);
+        let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader_bytes);
         let batcher = Batcher::from_device(&mut device);
         let white_dot = TextureData2d::from_undecoded_bytes(&mut device, WHITE_DOT).unwrap();
+
         Self {
             device,
             batcher,
@@ -77,7 +79,10 @@ impl DrawContext {
     pub fn raw_window(&self) -> *mut sdl2::sys::SDL_Window {
         self.params.deviceWindowHandle as *mut _
     }
+}
 
+/// Context
+impl DrawContext {
     pub fn device_mut(&mut self) -> &mut Device {
         &mut self.device
     }
@@ -100,6 +105,7 @@ impl AsMut<fna3d::Device> for DrawContext {
     }
 }
 
+/// Draw interface
 impl DrawContext {
     /// Begins a batch pass, rendering with particular set of state
     pub fn pass(&mut self) -> BatchPass<'_> {

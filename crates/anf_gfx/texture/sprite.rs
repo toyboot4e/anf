@@ -1,3 +1,5 @@
+//! [`SubTextureData2d`] and [`SpriteData2d`]
+
 use fna3d::Color;
 
 pub use crate::texture::texture::{TextureData2d, TextureKind};
@@ -76,7 +78,7 @@ impl AsRef<TextureData2d> for SubTextureData2d {
 pub struct SpriteData {
     pub texture: TextureData2d,
     pub uv_rect: Rect2f,
-    /// [0.0, 0.0] is left-up (default0, [1.0, 1.0] is right-down
+    /// [0.0, 0.0] is left up (default value), [1.0, 1.0] is right down
     pub origin: Vec2f,
     pub color: Color,
     pub scale: Vec2f,

@@ -1,16 +1,15 @@
 //! Primitive framework
 //!
-//! It requires some boilerplate code to run.
+//! Users need to write some boilerplate code to run their games.
 //!
-//! # Builtin lifecycle and custom lifecycle
+//! # Lifecycle
 //!
-//! [`lifecycle::AnfLifecycle`] provides a very primitive lifecycle. It doesn't contain more
-//! specific stages such as `debug_render`. So it's for building your own framework lifecycle on top
-//! of it!
+//! [`lifecycle::AnfLifecycle`] provides a very primitive lifecycle. It doesn't contain specific
+//!  stages such as `debug_render`. So it's for building your own framework lifecycle on top of it!
 //!
 //! See [`examples`] to get started; it contains context/user-data patten lifecycle.
 //!
-//! [`examples`]: https://github.com/toyboot4e/anf/tree/master/examples
+//! [`examples`]: https://github.com/toyboot4e/anf_samples
 
 pub mod app;
 pub mod draw;

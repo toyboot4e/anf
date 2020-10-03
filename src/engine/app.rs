@@ -1,4 +1,4 @@
-//! SDL window and FNA3D device
+//! Creation of SDL window and FNA3D device
 //!
 //! # Example
 //!

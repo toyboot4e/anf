@@ -1,6 +1,6 @@
 //! Data for drawing
 //!
-//! These structs implement draw API traits in [`crate::engine::draw`] so they can be pushed via
+//! These structs implement draw API traits in [`crate::engine::draw`] so they can be drawn via
 //! [`DrawContext`].
 //!
 //! [`DrawContext`]: crate::engine::draw::DrawContext

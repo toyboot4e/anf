@@ -1,22 +1,21 @@
 //! Event/update/render lifecycle
 //!
-//! User it to provide their own framework lifecycle on top of it.
+//! Build your own lifecycle on top of it.
 
 // The internals need refactoring
 
 use sdl2::{event::Event, EventPump};
 
-use crate::{
-    engine::{app::*, draw::*, time::*},
-    vfs,
-};
+use crate::engine::{app::*, draw::*, time::*};
+
+const DEFAULT_SHADER: &[u8] = include_bytes!("SpriteEffect.fxb");
 
 /// Return type of ANF game
 pub type AnfResult<T> = anyhow::Result<T>;
 
 /// Lifecycle provided by [`AnfFramework`]
 ///
-/// Users are encouraged to extend this lifecycle to provide more specific situations such as
+/// Users are encouraged to build their own framework on top of it maybe specifying stages such as
 /// `debug_render`.
 pub trait AnfLifecycle {
     // TODO: lifecycle with `EventPump` with window?
@@ -40,7 +39,9 @@ pub trait AnfLifecycle {
     }
 }
 
-/// The entry point of the ANF game loop
+/// Runs the primitive [`AnfLifecycle`]
+///
+/// The entry point of ANF application.
 pub struct AnfFramework {
     cfg: WindowConfig,
     window: WindowHandle,
@@ -52,7 +53,7 @@ impl AnfFramework {
     pub fn from_cfg(cfg: WindowConfig) -> Self {
         let (mut window, dcx) = {
             let (window, device, params) = init_app(&cfg);
-            let dcx = DrawContext::new(device, vfs::default_shader(), params);
+            let dcx = DrawContext::new(device, DEFAULT_SHADER, params);
             (window, dcx)
         };
 

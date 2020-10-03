@@ -28,6 +28,14 @@ impl Shader {
         Ok(Self { effect, data })
     }
 
+    pub fn from_bytes(
+        device: &mut fna3d::Device,
+        shader_bytes: &[u8],
+    ) -> fna3d::mojo::Result<Self> {
+        let (effect, data) = fna3d::mojo::from_bytes(device, shader_bytes)?;
+        Ok(Self { effect, data })
+    }
+
     pub fn destroy(self, device: &mut fna3d::Device) {
         // both (effect, data) are destroied:
         device.add_dispose_effect(self.effect);
@@ -54,7 +62,7 @@ impl Shader {
     }
 
     /// Sets uniforms of vertex shader (i.e. projection matrix)
-    pub fn set_projection_matrix(&mut self, mat: &[f32; 16]) {
+    pub fn set_projection_matrix_1d(&mut self, mat: &[f32; 16]) {
         fna3d::mojo::set_projection_matrix(self.data, mat);
     }
 

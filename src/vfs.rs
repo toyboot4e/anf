@@ -1,6 +1,6 @@
 //! Virtual file system
 //!
-//! It just locates the root; it's not so much a file system (for now).
+//! It just locates the root; not so much a file system for now.
 
 use std::path::{Path, PathBuf};
 
@@ -12,11 +12,4 @@ fn root() -> PathBuf {
 /// Creates an absolute path to an asset file from a **relative path** to your `assets` directory.
 pub fn path(p: impl AsRef<Path>) -> PathBuf {
     root().join(p.as_ref())
-}
-
-/// Path to the default shader file
-///
-/// TODO: consider using `include_bytes!` macro
-pub fn default_shader() -> PathBuf {
-    self::path("FNAEffects/SpriteEffect.fxb")
 }

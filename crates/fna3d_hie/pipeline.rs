@@ -4,15 +4,12 @@ use crate::{
     buffers::{GpuVertexAttributes, GpuVertexBuffer},
     shader::Shader,
 };
-use std::path::Path;
 
-/// Handle to setup the GPU rendering pipeline
+/// Pipeline state objects
 ///
-/// # Missing features
-///
-/// * multiple vertex/index buffer slots
-/// * rasterizer state, depth stencil state
-/// * sampler count (MSAA), sampling masks
+/// * TODO: multiple slots (buffers and attributes)
+/// * TODO: rasterizer state, depth stencil state
+/// * TODO: sampler count (MSAA), sampling masks
 #[derive(Debug)]
 pub struct Pipeline {
     vtx_attrs: GpuVertexAttributes,
@@ -23,30 +20,25 @@ pub struct Pipeline {
 impl Pipeline {
     pub fn new(
         device: &mut fna3d::Device,
-        decl: fna3d::VertexDeclaration,
-        shader_path: impl AsRef<Path>,
+        initial_vtx_decl: fna3d::VertexDeclaration,
+        shader_bytes: &[u8],
     ) -> Self {
-        let shader_path = shader_path.as_ref();
-        let mut s = Self {
-            vtx_attrs: GpuVertexAttributes::new(decl),
+        let mut shader =
+            Shader::from_bytes(device, shader_bytes).expect("failed to load shader from bytes");
+        shader.set_projection_matrix_1d(&fna3d::mojo::ORTHOGRAPHIC_MATRIX);
+
+        Self {
+            vtx_attrs: GpuVertexAttributes::new(initial_vtx_decl),
+            shader,
             sampler: SamplerSlots::from_device(device),
-            shader: Shader::from_file(device, shader_path).unwrap_or_else(|err| {
-                panic!(
-                    "faild to create a shader from path {}",
-                    shader_path.display()
-                )
-            }),
-        };
-        s.shader
-            .set_projection_matrix(&fna3d::mojo::ORTHOGRAPHIC_MATRIX);
-        s
+        }
     }
 }
 
 /// Rendering pipeline methods
 /// ---
 impl Pipeline {
-    // pub fn set_projection_matrix(&mut self, mat: &Mat4) {}
+    // pub fn set_proj_mat(&mut self, mat: &Mat4) {}
 
     /// * `FNA3D_ApplyEffect`
     pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
@@ -59,7 +51,7 @@ impl Pipeline {
     }
 
     /// Copies vertex buffer attributes
-    pub fn reset_vertex_attributes(&mut self, vbuf: &mut GpuVertexBuffer, offset: u32) {
+    pub fn set_vertex_attributes(&mut self, vbuf: &mut GpuVertexBuffer, offset: u32) {
         self.vtx_attrs.reset_vertex_attributes(vbuf, offset);
     }
 

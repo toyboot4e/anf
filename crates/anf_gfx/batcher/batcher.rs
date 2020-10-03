@@ -7,7 +7,7 @@ use crate::{
         batch::{SpriteBatch, SpriteDrawCall},
         bufspecs::GpuViBuffer,
     },
-    geom3d::{Mat4x4, Vec3f},
+    geom3d::Mat4x4,
 };
 
 /// [`SpriteBatch`] with GPU vertex/index buffer handle
@@ -16,14 +16,26 @@ pub struct Batcher {
     pub batch: SpriteBatch,
     bufs: GpuViBuffer,
     is_begin_called: bool,
-    /// The projection matrix (orthographic matrix)
-    proj_mat: Mat4x4,
+    /// The projection matrix (fixed to orthographic matrix)
+    mat_proj: Mat4x4,
     /// The transformation matrix
-    transform_mat: Mat4x4,
+    mat_model_view: Mat4x4,
     /// The view projection matrix used by vertex shader
     ///
-    /// M_v = M_t M_p
-    view_proj_mat: Mat4x4,
+    /// # Coordinate systems
+    ///
+    /// See https://learnopengl.com/Getting-started/Coordinate-Systems
+    ///
+    /// In column-major sence,
+    ///
+    /// * P_clip = M_proj (M_view M_model) P_local
+    /// * M_transform = (M_view M_model)
+    ///
+    /// In row-major sence,
+    ///
+    /// * P_clip = P_local (M_model M_view) M_proj
+    /// * M_transform = (M_view M_model)
+    mat_model_view_proj: Mat4x4,
 }
 
 impl Batcher {
@@ -32,9 +44,9 @@ impl Batcher {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
             is_begin_called: false,
-            proj_mat: Mat4x4::orthographic(1.0, 1.0, 1.0, 0.0),
-            transform_mat: Mat4x4::identity(),
-            view_proj_mat: Mat4x4::default(),
+            mat_proj: Mat4x4::orthographic(1.0, 1.0, 1.0, 0.0),
+            mat_model_view: Mat4x4::identity(),
+            mat_model_view_proj: Mat4x4::default(),
         }
     }
 }
@@ -80,14 +92,14 @@ impl Batcher {
 
         // update shader matrix
         // FIXME: get viewport
-        self.proj_mat = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
+        self.mat_proj = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
 
         unsafe {
             let name = std::ffi::CString::new("MatrixTransform").unwrap();
-            self.view_proj_mat = Mat4x4::multiply(&self.transform_mat, &self.proj_mat);
+            self.mat_model_view_proj = Mat4x4::multiply(&self.mat_model_view, &self.mat_proj);
             // internally, MojoShader uses column-major matrices so we transpose it
             pipe.shader
-                .set_param(&name, &self.view_proj_mat.transpose());
+                .set_param(&name, &self.mat_model_view_proj.transpose());
             // TODO: use inlined transposed orthographic matrix for efficiency
         }
 
@@ -126,7 +138,7 @@ impl Batcher {
         call: SpriteDrawCall<'_>,
     ) {
         pipe.set_texture_raw(device, call.texture());
-        pipe.reset_vertex_attributes(&mut bufs.vbuf.inner, 0);
+        pipe.set_vertex_attributes(&mut bufs.vbuf.inner, 0);
         pipe.upload_vertex_attributes(device, call.base_vertex() as u32);
         self::draw_triangles(device, call, &bufs.ibuf);
     }

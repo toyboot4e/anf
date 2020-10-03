@@ -1,4 +1,4 @@
-//! [`TextureData2d`] & [`SpriteData`]
+//! [`TextureData2d`]
 
 use std::{
     fs::File,
