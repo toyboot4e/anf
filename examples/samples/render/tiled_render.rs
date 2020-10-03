@@ -30,31 +30,6 @@ pub fn w2t_floor(w: impl Into<Vec2f>, tiled: &tiled::Map) -> Vec2i {
     Vec2i::new(x as i32, y as i32)
 }
 
-fn grid_bounds_from_pixel_bounds(map: &tiled::Map, bounds: impl Into<Rect2f>) -> Rect2i {
-    let bounds = bounds.into();
-
-    let left_up = {
-        let mut pos = w2t_floor(bounds.left_up(), map);
-        pos.x = cmp::max(pos.x, 0);
-        pos.y = cmp::max(pos.y, 0);
-        pos
-    };
-
-    let right_down = {
-        let mut pos = w2t_round_up(bounds.right_down(), map);
-        pos.x = cmp::min(pos.x, (map.width - 1) as i32);
-        pos.y = cmp::min(pos.y, (map.height - 1) as i32);
-        pos
-    };
-
-    let size = [
-        (right_down.x - left_up.x) as u32,
-        (right_down.y - left_up.y) as u32,
-    ];
-
-    Rect2i::new(left_up, size)
-}
-
 // --------------------------------------------------------------------------------
 // Rendering
 
@@ -66,11 +41,18 @@ pub fn render_tiled(
     px_bounds: impl Into<Rect2f>,
 ) {
     let px_bounds: Rect2f = px_bounds.into();
-    let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
+    let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, &px_bounds);
 
     let mut pass = dcx.pass();
     for layer in tiled.layers.iter().filter(|l| l.visible) {
-        render_layer(&mut pass, tiled, layer, texture, &px_bounds, &grid_bounds);
+        render_layer(
+            &mut pass,
+            tiled,
+            layer,
+            texture,
+            px_bounds.left_up(),
+            &grid_bounds,
+        );
     }
 }
 
@@ -79,7 +61,8 @@ pub fn render_layer(
     tiled: &tiled::Map,
     layer: &tiled::Layer,
     texture: &TextureData2d,
-    px_bounds: &Rect2f,
+    // TODO: handle transform
+    offset: Vec2f,
     grid_bounds: &Rect2i,
 ) {
     let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
@@ -88,36 +71,40 @@ pub fn render_layer(
         LayerData::Infinite(_) => unimplemented!("tiled map infinite layer"),
     };
 
-    self::walk_visible_cells_with(grid_bounds, |x, y| {
-        let tile = tiles[y][x];
-        if tile.gid == 0 {
-            return;
+    let (ys, xs) = self::visible_cells_from_grid_bounds(grid_bounds);
+    for y in ys[0]..ys[1] {
+        for x in xs[0]..xs[1] {
+            let tile = tiles[y as usize][x as usize];
+
+            if tile.gid == 0 {
+                return;
+            }
+
+            // TODO: handle multiple tilesets
+            let tileset = tiled.get_tileset_by_gid(tile.gid).unwrap();
+            let id = tile.gid - tileset.first_gid;
+
+            // get uv rect (another approach is to calculate them when loading tiled maps)
+            let n_cols = tileset.images[0].width as u32 / tileset.tile_width;
+            let src_x = id % n_cols;
+            let src_y = id / n_cols;
+
+            pass.texture(texture)
+                .src_rect_px([
+                    tile_size.x as f32 * src_x as f32,
+                    tile_size.x as f32 * src_y as f32,
+                    tile_size.x as f32,
+                    tile_size.y as f32,
+                ])
+                .dest_rect_px([
+                    (
+                        (x as i32 * tile_size.x as i32 - offset.x as i32) as f32,
+                        (y as i32 * tile_size.y as i32 - offset.y as i32) as f32,
+                    ),
+                    (tile_size.x as f32, tile_size.y as f32),
+                ]);
         }
-
-        // TODO: handle multiple tilesets
-        let tileset = tiled.get_tileset_by_gid(tile.gid).unwrap();
-        let id = tile.gid - tileset.first_gid;
-
-        // get uv rect (another approach is to calculate them when loading tiled maps)
-        let n_cols = tileset.images[0].width as u32 / tileset.tile_width;
-        let src_x = id % n_cols;
-        let src_y = id / n_cols;
-
-        pass.texture(texture)
-            .src_rect_px([
-                tile_size.x as f32 * src_x as f32,
-                tile_size.x as f32 * src_y as f32,
-                tile_size.x as f32,
-                tile_size.y as f32,
-            ])
-            .dest_rect_px([
-                (
-                    (x as i32 * tile_size.x as i32 - px_bounds.left_up().x as i32) as f32,
-                    (y as i32 * tile_size.y as i32 - px_bounds.left_up().y as i32) as f32,
-                ),
-                (tile_size.x as f32, tile_size.y as f32),
-            ]);
-    });
+    }
 }
 
 pub fn render_fov_shadows(
@@ -127,29 +114,32 @@ pub fn render_fov_shadows(
     px_bounds: &Rect2f,
 ) {
     let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
-    let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
 
-    self::walk_visible_cells_with(&grid_bounds, |x, y| {
-        // FIXME: why is this semi-transparent
-        let color = if fov.is_in_view([x as i32, y as i32].into()) {
-            let len = (Vec2i::new(x as i32, y as i32) - fov.origin()).len_f32();
-            let x = (len as f32 / fov.radius() as f32).sin();
-            Color::rgba(0, 0, 0, 255).multiply(ease(x) * 0.5)
-        } else {
-            Color::rgba(0, 0, 0, 255).multiply(0.7)
-        };
+    let (ys, xs) = self::visible_cells_from_px_bounds(px_bounds, tiled);
+    for y in ys[0]..ys[1] {
+        for x in xs[0]..xs[1] {
+            let alpha = if fov.is_in_view([x as i32, y as i32].into()) {
+                let len = (Vec2i::new(x as i32, y as i32) - fov.origin()).len_f32();
+                let x = len / fov.radius() as f32;
+                ease(x) * 0.5
+            } else {
+                0.7
+            };
 
-        pass.white_dot()
-            .color(color)
-            .src_rect_uv([0.0, 0.0, 1.0, 1.0])
-            .dest_rect_px([
-                (
-                    (x as i32 * tile_size.x as i32 - px_bounds.left_up().x as i32) as f32,
-                    (y as i32 * tile_size.y as i32 - px_bounds.left_up().y as i32) as f32,
-                ),
-                (tile_size.x as f32, tile_size.y as f32),
-            ]);
-    });
+            let color = Color::rgba(0, 0, 0, 255).multiply(alpha);
+
+            pass.white_dot()
+                .color(color)
+                .src_rect_uv([0.0, 0.0, 1.0, 1.0])
+                .dest_rect_px([
+                    (
+                        (x as i32 * tile_size.x as i32 - px_bounds.left_up().x as i32) as f32,
+                        (y as i32 * tile_size.y as i32 - px_bounds.left_up().y as i32) as f32,
+                    ),
+                    (tile_size.x as f32, tile_size.y as f32),
+                ]);
+        }
+    }
 
     /// x: [0.0, 1.0]
     fn ease(x: f32) -> f32 {
@@ -172,41 +162,70 @@ pub fn render_non_blocking_grids(
 ) {
     let grid_size = Vec2u::new(tiled.width, tiled.height);
     let tile_size = Vec2u::new(tiled.tile_width, tiled.tile_height);
-    let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds.clone());
 
-    self::walk_visible_cells_with(&grid_bounds, |x, y| {
-        let ix = x + y * grid_size.x as usize;
-        if blocks[ix] {
-            return;
+    let (ys, xs) = self::visible_cells_from_px_bounds(px_bounds, tiled);
+    for y in ys[0]..ys[1] {
+        for x in xs[0]..xs[1] {
+            let ix = (x + y * grid_size.x) as usize;
+            if blocks[ix] {
+                return;
+            }
+
+            let pos = Vec2f::new(
+                (x as i32 * tile_size.x as i32 - px_bounds.left_up().x as i32) as f32,
+                (y as i32 * tile_size.y as i32 - px_bounds.left_up().y as i32) as f32,
+            );
+
+            pass.rect(
+                [pos + Vec2f::new(2.0, 2.0), (28.0, 28.0).into()],
+                Color::white().multiply(0.5),
+            );
         }
-
-        let pos = Vec2f::new(
-            (x as i32 * tile_size.x as i32 - px_bounds.left_up().x as i32) as f32,
-            (y as i32 * tile_size.y as i32 - px_bounds.left_up().y as i32) as f32,
-        );
-
-        pass.rect(
-            [pos + Vec2f::new(2.0, 2.0), (28.0, 28.0).into()],
-            Color::white().multiply(0.5),
-        );
-    });
+    }
 }
 
 // --------------------------------------------------------------------------------
 // Internal utilities
 
-/// Iterates through tiled cells in view
-///
-/// # Warning
-///
-/// Closures may be inefficient
-fn walk_visible_cells_with(grid_bounds: &Rect2i, mut f: impl FnMut(usize, usize)) {
-    let left_up = grid_bounds.left_up();
-    let right_down = grid_bounds.right_down();
+/// Returns (ys, xs)
+fn visible_cells_from_px_bounds(px_bounds: &Rect2f, tiled: &tiled::Map) -> ([u32; 2], [u32; 2]) {
+    let grid_bounds = self::grid_bounds_from_pixel_bounds(tiled, px_bounds);
+    self::visible_cells_from_grid_bounds(&grid_bounds)
+}
 
-    for y in (left_up.y as usize)..(right_down.y as usize) {
-        for x in (left_up.x as usize)..(right_down.x as usize) {
-            f(x, y);
-        }
-    }
+/// Returns (ys, xs)
+fn visible_cells_from_grid_bounds(grid_bounds: &Rect2i) -> ([u32; 2], [u32; 2]) {
+    (
+        [
+            grid_bounds.up() as u32,
+            grid_bounds.up() as u32 + grid_bounds.h(),
+        ],
+        [
+            grid_bounds.left() as u32,
+            grid_bounds.left() as u32 + grid_bounds.w(),
+        ],
+    )
+}
+
+fn grid_bounds_from_pixel_bounds(map: &tiled::Map, bounds: &Rect2f) -> Rect2i {
+    let left_up = {
+        let mut pos = w2t_floor(bounds.left_up(), map);
+        pos.x = cmp::max(pos.x, 0);
+        pos.y = cmp::max(pos.y, 0);
+        pos
+    };
+
+    let right_down = {
+        let mut pos = w2t_round_up(bounds.right_down(), map);
+        pos.x = cmp::min(pos.x, (map.width - 1) as i32);
+        pos.y = cmp::min(pos.y, (map.height - 1) as i32);
+        pos
+    };
+
+    let size = [
+        (right_down.x - left_up.x) as u32,
+        (right_down.y - left_up.y) as u32,
+    ];
+
+    Rect2i::new(left_up, size)
 }

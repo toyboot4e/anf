@@ -76,28 +76,50 @@ impl Rect2i {
         }
     }
 
-    pub fn size(&self) -> Vec2u {
+    pub fn size_u(&self) -> Vec2u {
         self.size
+    }
+
+    pub fn size_i(&self) -> Vec2i {
+        Vec2i::new(self.pos.x as i32, self.pos.y as i32)
+    }
+
+    pub fn w(&self) -> u32 {
+        self.size.x
+    }
+
+    pub fn h(&self) -> u32 {
+        self.size.y
+    }
+
+    pub fn up(&self) -> i32 {
+        self.pos.y
+    }
+
+    pub fn left(&self) -> i32 {
+        self.pos.x
     }
 
     pub fn left_up(&self) -> Vec2i {
         self.pos
     }
 
-    pub fn right_up(&self) -> Vec2i {
-        Vec2i::new(self.pos.x + self.size.x as i32, self.pos.y)
-    }
+    // EXCLUSIVE or not
 
-    pub fn left_down(&self) -> Vec2i {
-        Vec2i::new(self.pos.x, self.pos.y + self.size.y as i32)
-    }
+    // pub fn right_up(&self) -> Vec2i {
+    //     Vec2i::new(self.pos.x + self.size.x as i32, self.pos.y)
+    // }
 
-    pub fn right_down(&self) -> Vec2i {
-        Vec2i::new(
-            self.pos.x + self.size.x as i32,
-            self.pos.y + self.size.y as i32,
-        )
-    }
+    // pub fn left_down(&self) -> Vec2i {
+    //     Vec2i::new(self.pos.x, self.pos.y + self.size.y as i32)
+    // }
+
+    // pub fn right_down(&self) -> Vec2i {
+    //     Vec2i::new(
+    //         self.pos.x + self.size.x as i32,
+    //         self.pos.y + self.size.y as i32,
+    //     )
+    // }
 }
 
 /// Size/point in pixels
