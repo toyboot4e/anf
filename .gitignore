@@ -1,7 +1,4 @@
 /target
 
-samples/target
-samples/assets
-
 .DS_Store
 imgui.ini

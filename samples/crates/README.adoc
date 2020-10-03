@@ -1,4 +1,0 @@
-= Crates
-
-* `imgui-fna3d`: ImGUI backend in SDL2 and render in FNA3D
-* `soloud-rs`: wrapper of SoLoud
