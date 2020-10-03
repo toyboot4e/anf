@@ -1,10 +1,15 @@
 = ANF
 
-ANF is a 2D framework in Rust.  See the https://docs.rs/anf[API documentation] to get started.
+ANF is a 2D framework in Rust
+
+== References
+
+* https://docs.rs/anf[API documentation]
+* link:./samples[samples]
 
 == Feedback
 
-Feel free to contact with me! Via issues, email or maybe on Discord.
+Please don't hesitate to contact with me! Via issues, email or maybe on Discord.
 
 == Credits / Acknowledgements
 
