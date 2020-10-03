@@ -6,9 +6,9 @@ use anf::{engine::prelude::*, gfx::prelude::*};
 
 use tiled::LayerData;
 
-use crate::{
-    rl::fov::*,
-    utils::grid2d::{Rect2i, Vec2i, Vec2u},
+use crate::rl::{
+    fov::*,
+    grid2d::{Rect2i, Vec2i, Vec2u},
 };
 
 // --------------------------------------------------------------------------------

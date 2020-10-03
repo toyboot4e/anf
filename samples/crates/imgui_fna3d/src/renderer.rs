@@ -349,9 +349,8 @@ impl Batch {
         let vbuf = GpuVertexBuffer::new(device, 4 * N_QUADS); // four vertices per quad
         let ibuf = GpuIndexBuffer::new(device, 6 * N_QUADS); // six indices per quad
 
-        let (effect, effect_data) =
-            fna3d::mojo::load_shader_from_bytes(device, crate::SHARDER).unwrap();
-        fna3d::mojo::set_projection_matrix(effect_data, &fna3d::mojo::ORTHOGRAPHICAL_MATRIX);
+        let (effect, effect_data) = fna3d::mojo::from_bytes(device, crate::SHARDER).unwrap();
+        fna3d::mojo::set_projection_matrix(effect_data, &fna3d::mojo::ORTHOGRAPHIC_MATRIX);
 
         Self {
             raw_device: device.raw(),

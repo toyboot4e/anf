@@ -1,8 +1,4 @@
-//! A 2D framework built on top of ANF
-//!
-//! User provide concrete _context_ and _user data_.
-//!
-//! This framework should be modified by user's needs.
+//! Context/user-data pattern
 
 use sdl2::event::Event;
 

@@ -6,11 +6,13 @@ pub use tiled::{Image, Layer, Map, Tile, Tileset};
 use crate::{
     base::{context::Context, framework::SampleUserDataLifecycle},
     render::tiled_render,
-    rl::{self, fov::*, view::TiledRlMap},
-    utils::{
-        anim::SpriteAnimState,
+    rl::{
+        self,
+        fov::*,
         grid2d::{Dir8, Vec2i},
+        rlmap::TiledRlMap,
     },
+    utils::anim::SpriteAnimState,
 };
 
 #[repr(u32)]
@@ -177,7 +179,7 @@ fn gen_cave(tiled: &mut tiled::Map, blocks: &mut [bool]) {
 pub fn new_game(win: &WindowHandle, dcx: &mut DrawContext) -> RlGameData {
     let path = vfs::path("map/tmx/rl.tmx");
     let rlmap = {
-        let mut map = rl::view::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
+        let mut map = rl::rlmap::TiledRlMap::from_tiled_path(&path, dcx.device_mut());
         self::clear_tiled(&mut map.tiled);
         self::gen_cave(&mut map.tiled, &mut map.rlmap.blocks);
         map

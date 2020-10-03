@@ -1,3 +1,5 @@
+//! Sample game context
+//!
 //! Modify the [`Context`] for your own game. Then it becomes a specific framework for you!
 
 use std::time::Duration;

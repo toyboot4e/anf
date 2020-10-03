@@ -24,7 +24,7 @@ impl Shader {
         device: &mut fna3d::Device,
         shader_path: impl AsRef<Path>,
     ) -> fna3d::mojo::Result<Self> {
-        let (effect, data) = fna3d::mojo::load_shader_from_file(device, shader_path)?;
+        let (effect, data) = fna3d::mojo::from_file(device, shader_path)?;
         Ok(Self { effect, data })
     }
 

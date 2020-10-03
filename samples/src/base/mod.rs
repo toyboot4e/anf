@@ -1,4 +1,4 @@
-//! Base of the sample games
+//! Framework on top of ANF for sample games
 //!
 //! Because Rust does not have inheritance, ANF requires user to write a lot of code to build their
 //! own basis. User would build their own lifecycle on top of it, maybe specifying situations such
@@ -9,8 +9,5 @@
 //!
 //! [`AnfLifecycle`]: anf::engine::lifecycle::AnfLifecycle
 
-// context/user-data pattern
-pub mod framework;
-
-// context for the sample games
 pub mod context;
+pub mod framework;

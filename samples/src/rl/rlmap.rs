@@ -1,6 +1,17 @@
-//! Internals of orthogonal tilemap
+//! Roguelike map with Tiled
 
-use crate::{rl::fov::OpacityMap, utils::grid2d::Vec2i};
+use std::{collections::HashMap, fs, path::Path};
+
+use anf::{engine::draw::*, gfx::prelude::*};
+
+use crate::{
+    render::tiled_render,
+    rl::{
+        fov::OpacityMap,
+        grid2d::{Dir8, Vec2i},
+    },
+    utils::anim::{LoopMode, SpriteAnimPattern},
+};
 
 /// Roguelike map data
 pub struct RlMap {
@@ -63,5 +74,44 @@ impl OpacityMap for RlMap {
 
     fn contains(&self, pos: Vec2i) -> bool {
         <Self>::contains(self, pos)
+    }
+}
+
+/// Bundles tiled map and roguelike map data
+pub struct TiledRlMap {
+    pub tiled: tiled::Map,
+    pub rlmap: RlMap,
+    // TODO: support multiple textures
+    texture: TextureData2d,
+}
+
+impl TiledRlMap {
+    pub fn from_tiled_path(path: &Path, device: &mut fna3d::Device) -> Self {
+        let file = fs::File::open(path).unwrap();
+
+        let tiled = tiled::parse_with_path(file, &path).unwrap_or_else(|_err| {
+            panic!(
+                "error opening tiled map file: `{}` does it exist",
+                path.display()
+            )
+        });
+        let rlmap = RlMap::from_tiled(&tiled);
+
+        let texture = {
+            // tile image is relative to the tmx file directory
+            let tmx_directory = path.parent().unwrap();
+            let img_path = tmx_directory.join(&tiled.tilesets[0].images[0].source);
+            TextureData2d::from_path(device, img_path).unwrap()
+        };
+
+        Self {
+            tiled,
+            rlmap,
+            texture,
+        }
+    }
+
+    pub fn render(&mut self, dcx: &mut DrawContext, px_bounds: impl Into<Rect2f>) {
+        tiled_render::render_tiled(dcx, &self.tiled, &self.texture, px_bounds);
     }
 }

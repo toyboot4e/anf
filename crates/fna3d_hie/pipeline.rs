@@ -38,7 +38,7 @@ impl Pipeline {
             }),
         };
         s.shader
-            .set_projection_matrix(&fna3d::mojo::ORTHOGRAPHICAL_MATRIX);
+            .set_projection_matrix(&fna3d::mojo::ORTHOGRAPHIC_MATRIX);
         s
     }
 }

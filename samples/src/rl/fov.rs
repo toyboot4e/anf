@@ -1,6 +1,6 @@
 //! Field of view for orthogonal grid maps
 
-use crate::utils::grid2d::Vec2i;
+use crate::rl::grid2d::Vec2i;
 
 pub trait FovWrite {
     /// Define that the cell is in view
@@ -16,6 +16,7 @@ pub trait OpacityMap {
 // --------------------------------------------------------------------------------
 // For user
 
+/// Stub [`FovWrite`] implementation
 #[derive(Debug, Clone)]
 pub struct FovData {
     data: Vec<bool>,
