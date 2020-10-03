@@ -5,7 +5,7 @@ ANF is a 2D framework in Rust
 == References
 
 * https://docs.rs/anf[API documentation]
-* link:./samples[samples]
+* https://github.com/toyboot4e/anf_samples[samples]
 
 == Feedback
 
