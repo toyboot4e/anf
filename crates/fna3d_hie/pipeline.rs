@@ -26,10 +26,16 @@ impl Pipeline {
         decl: fna3d::VertexDeclaration,
         shader_path: impl AsRef<Path>,
     ) -> Self {
+        let shader_path = shader_path.as_ref();
         let mut s = Self {
             vtx_attrs: GpuVertexAttributes::new(decl),
             sampler: SamplerSlots::from_device(device),
-            shader: Shader::from_file(device, shader_path).expect("faild to create a shader"),
+            shader: Shader::from_file(device, shader_path).unwrap_or_else(|err| {
+                panic!(
+                    "faild to create a shader from path {}",
+                    shader_path.display()
+                )
+            }),
         };
         s.shader
             .set_projection_matrix(&fna3d::mojo::ORTHOGRAPHICAL_MATRIX);

@@ -1,38 +1,50 @@
 //! Virtual input, bundles of input states
 //!
+//! Virtual inputs are defined as queries because
+//!
 //! # Usage
 //!
 //! It's good for typical input abstraction. For example, your "select key" may be any of enter,
-//! space, gamepad button or even left click. Then virtual input is perfect for bundling them.
+//! space, some gamepad button or even left click. Then virtual input is perfect for bundling them.
 //!
 //! However, they are not generic enough. For example, you might want to handle left click in a
 //! different way from enter key. Then you have to build your custom input system like UI commands,
 //! maybe on top of virtual input.
 
-use crate::{engine::lifecycle::AnfLifecycle, input::Key};
+use crate::{
+    engine::lifecycle::AnfLifecycle,
+    input::{
+        axis::{Dir4, Dir8},
+        Key, Keyboard, Mouse, MouseInput,
+    },
+};
 
 pub struct InputBundle {
-    key: KeyBundle,
+    keys: KeyBundle,
+    mouse: MouseBundle,
 }
 
 /// Some value that is decided by a set of [`Key`]'s state
 #[derive(Debug, Clone)]
 pub struct KeyBundle {
     keys: Vec<Key>,
-    is_down: bool,
 }
 
 impl KeyBundle {
-    // pub fn is_down(&self) -> bool {
-    //     //
-    // }
+    pub fn is_down(&self, kbd: &Keyboard) -> bool {
+        kbd.is_any_key_down(&self.keys)
+    }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum State {
-    Up,
-    Down,
-    None,
+#[derive(Debug, Clone)]
+pub struct MouseBundle {
+    inputs: Vec<MouseInput>,
+}
+
+impl MouseBundle {
+    pub fn is_down(&self, mouse: &Mouse) -> bool {
+        mouse.is_any_down(&self.inputs)
+    }
 }
 
 /// Negative or positive in one direction
@@ -40,35 +52,6 @@ enum State {
 pub struct AxisInput {
     pos: KeyBundle,
     neg: KeyBundle,
-}
-
-/// Positive, negative or neutral
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Sign {
-    Pos,
-    Neg,
-    Neutral,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Dir4 {
-    Up,
-    Right,
-    Down,
-    Left,
-}
-
-/// North north east, .., or north west
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Dir8 {
-    N,
-    NE,
-    E,
-    SE,
-    S,
-    SW,
-    W,
-    NW,
 }
 
 /// One of [`Dir4`]

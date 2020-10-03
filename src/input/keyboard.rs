@@ -9,10 +9,12 @@ pub use sdl2::{
     keyboard::{Keycode, Mod, Scancode},
 };
 
-use super::Double;
-use crate::engine::lifecycle::{AnfLifecycle, AnfResult};
+use crate::{
+    engine::lifecycle::{AnfLifecycle, AnfResult},
+    utils::Double,
+};
 
-/// ANF key code
+/// Used to query [`Keyboard`] state
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, TryFromPrimitive)]
 #[repr(u32)]
 pub enum Key {
@@ -182,7 +184,7 @@ pub enum Key {
     OemEnlW = 0xf4,
 }
 
-/// Full-feature keyboard state
+/// Full-featured mouse state. Updated via [`AnfLifecycle`]
 #[derive(Debug)]
 pub struct Keyboard {
     /// SDL2 keycode to ANF keycode
@@ -190,8 +192,8 @@ pub struct Keyboard {
     kbd: Double<self::KeyboardStateSnapshot>,
 }
 
-impl Keyboard {
-    pub fn new() -> Self {
+impl Default for Keyboard {
+    fn default() -> Self {
         Self {
             s2f: self::gen_key_translation(),
             kbd: Double::default(),
@@ -199,9 +201,8 @@ impl Keyboard {
     }
 }
 
-/// Interface
+/// Single key
 impl Keyboard {
-    // single key
     pub fn is_key_down(&self, key: Key) -> bool {
         self.kbd.a.is_down(key)
     }
@@ -217,8 +218,10 @@ impl Keyboard {
     pub fn is_key_released(&self, key: Key) -> bool {
         self.kbd.b.is_down(key) && self.kbd.a.is_up(key)
     }
+}
 
-    // multiple keys
+/// Multiple keys
+impl Keyboard {
     pub fn is_any_key_down<'a>(&self, keys: impl IntoIterator<Item = &'a Key>) -> bool {
         keys.into_iter().any(|key| self.is_key_down(*key))
     }

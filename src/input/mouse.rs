@@ -4,15 +4,39 @@
 
 use sdl2::event::Event;
 
-use super::Double;
-use crate::engine::prelude::*;
+use crate::{engine::prelude::*, utils::Double};
 
+/// Full-featured mouse state. Updated via [`AnfLifecycle`]
+#[derive(Debug)]
 pub struct Mouse {
     window: *mut sdl2::sys::SDL_Window,
-    /// Mouse position and buttons
+    /// Mouse position and buttons (current/previous)
     mouses: Double<MouseSnapshot>,
-    /// Mouse wheels
+    /// Mouse wheels (current/previous)
     wheels: Double<i32>,
+}
+
+/// Used to query [`Mouse`] state
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u32)]
+pub enum MouseInput {
+    Left = sdl2::sys::SDL_BUTTON_LEFT,
+    Right = sdl2::sys::SDL_BUTTON_RIGHT,
+    Mid = sdl2::sys::SDL_BUTTON_MIDDLE,
+    /// First external button
+    X1 = sdl2::sys::SDL_BUTTON_X1,
+    /// Second external button
+    X2 = sdl2::sys::SDL_BUTTON_X2,
+}
+
+impl Mouse {
+    pub fn new(window: *mut sdl2::sys::SDL_Window) -> Self {
+        Self {
+            window,
+            mouses: Double::default(),
+            wheels: Double::default(),
+        }
+    }
 }
 
 impl AnfLifecycle for Mouse {
@@ -96,6 +120,10 @@ impl Mouse {
     pub fn is_x2_down(&self) -> bool {
         self.mouses.b.is_x2_down()
     }
+
+    pub fn is_down(&self, input: MouseInput) -> bool {
+        self.mouses.b.is_down(input)
+    }
 }
 
 impl Mouse {
@@ -111,7 +139,10 @@ impl Mouse {
     }
 
     // TODO: scaled mouse position, multiplying resolution scale
+}
 
+/// Pressed/released
+impl Mouse {
     pub fn is_left_pressed(&self) -> bool {
         self.mouses.b.is_left_down() && !self.mouses.a.is_left_down()
     }
@@ -151,6 +182,60 @@ impl Mouse {
     pub fn is_x2_released(&self) -> bool {
         !self.mouses.b.is_x2_down() && self.mouses.a.is_x2_down()
     }
+
+    pub fn is_pressed(&self, input: MouseInput) -> bool {
+        self.mouses.b.is_down(input) && !self.mouses.a.is_down(input)
+    }
+
+    pub fn is_released(&self, input: MouseInput) -> bool {
+        !self.mouses.b.is_down(input) && self.mouses.a.is_down(input)
+    }
+}
+
+/// Up
+impl Mouse {
+    pub fn is_left_up(&self) -> bool {
+        self.mouses.b.is_left_up()
+    }
+
+    pub fn is_mid_up(&self) -> bool {
+        self.mouses.b.is_mid_up()
+    }
+
+    pub fn is_right_up(&self) -> bool {
+        self.mouses.b.is_right_up()
+    }
+
+    pub fn is_x1_up(&self) -> bool {
+        self.mouses.b.is_x1_up()
+    }
+
+    pub fn is_x2_up(&self) -> bool {
+        self.mouses.b.is_x2_up()
+    }
+
+    pub fn is_up(&self, input: MouseInput) -> bool {
+        self.mouses.b.is_up(input)
+    }
+}
+
+/// Multiple inputs
+impl Mouse {
+    pub fn is_any_down<'a>(&self, inputs: impl IntoIterator<Item = &'a MouseInput>) -> bool {
+        inputs.into_iter().any(|input| self.is_down(*input))
+    }
+
+    pub fn is_any_up<'a>(&self, inputs: impl IntoIterator<Item = &'a MouseInput>) -> bool {
+        inputs.into_iter().any(|input| self.is_up(*input))
+    }
+
+    pub fn is_any_pressed<'a>(&self, inputs: impl IntoIterator<Item = &'a MouseInput>) -> bool {
+        inputs.into_iter().any(|input| self.is_down(*input))
+    }
+
+    pub fn is_any_released<'a>(&self, inputs: impl IntoIterator<Item = &'a MouseInput>) -> bool {
+        inputs.into_iter().any(|input| self.is_down(*input))
+    }
 }
 
 /// Represents a mouse state with cursor position and button press information.
@@ -159,7 +244,7 @@ impl Mouse {
 ///
 /// * Relative mouse position is relative to the window
 /// * Global mouse position is relative to the top-left corner of the desktop
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct MouseSnapshot {
     pub x: i32,
     pub y: i32,
@@ -174,7 +259,10 @@ impl MouseSnapshot {
     pub fn y(&self) -> i32 {
         self.y
     }
+}
 
+/// Down
+impl MouseSnapshot {
     fn mask(button: u32) -> u32 {
         1 << (button - 1)
     }
@@ -197,5 +285,47 @@ impl MouseSnapshot {
 
     pub fn is_x2_down(&self) -> bool {
         (self.flags & Self::mask(sdl2::sys::SDL_BUTTON_X2)) != 0
+    }
+
+    pub fn is_down(&self, input: MouseInput) -> bool {
+        (self.flags & Self::mask(input as u32)) != 0
+    }
+}
+
+/// Up
+impl MouseSnapshot {
+    pub fn is_left_up(&self) -> bool {
+        !self.is_left_down()
+    }
+
+    pub fn is_mid_up(&self) -> bool {
+        !self.is_mid_down()
+    }
+
+    pub fn is_right_up(&self) -> bool {
+        !self.is_right_down()
+    }
+
+    pub fn is_x1_up(&self) -> bool {
+        !self.is_x1_down()
+    }
+
+    pub fn is_x2_up(&self) -> bool {
+        !self.is_x2_down()
+    }
+
+    pub fn is_up(&self, input: MouseInput) -> bool {
+        !(self.is_down(input))
+    }
+}
+
+/// Multiple inputs
+impl MouseSnapshot {
+    pub fn is_any_down<'a>(&self, inputs: impl IntoIterator<Item = &'a MouseInput>) -> bool {
+        inputs.into_iter().any(|input| self.is_down(*input))
+    }
+
+    pub fn is_any_up<'a>(&self, inputs: impl IntoIterator<Item = &'a MouseInput>) -> bool {
+        inputs.into_iter().any(|input| self.is_up(*input))
     }
 }
