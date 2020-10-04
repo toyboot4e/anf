@@ -9,7 +9,7 @@ pub enum TargetFps {
 }
 
 /// Delta time
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct TimeStep {
     // public in crate so that it can be set by framework
     pub(crate) elapsed: Duration,

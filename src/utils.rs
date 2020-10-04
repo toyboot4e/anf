@@ -1,7 +1,7 @@
 //! Utilities
 
 /// Double buffer
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Double<T> {
     /// Front buffer at initial state
     pub a: T,

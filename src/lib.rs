@@ -20,10 +20,10 @@
 
 pub use fna3d;
 pub use sdl2;
+pub use xdl;
 
 pub mod engine;
 
 pub mod gfx;
-pub mod input;
 pub mod utils;
 pub mod vfs;

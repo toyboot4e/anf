@@ -12,11 +12,12 @@
 //! [`examples`]: https://github.com/toyboot4e/anf_samples
 
 pub mod app;
-mod builtin;
 pub mod draw;
 pub mod lifecycle;
 pub mod time;
 pub mod utils;
+
+mod builtin;
 
 pub mod prelude {
     //! Exports most of the ANF engine

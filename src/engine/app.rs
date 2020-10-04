@@ -133,7 +133,7 @@ impl WindowHandle {
         WindowHandle { sdl, win }
     }
 
-    pub(crate) fn raw_window(&self) -> *mut SDL_Window {
+    pub fn raw_window(&self) -> *mut SDL_Window {
         self.win.raw()
     }
 
