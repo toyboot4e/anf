@@ -96,7 +96,7 @@ impl QuadParams {
     /// Make sure the batcher is not satured
     pub fn run_texture2d(
         &self,
-        batch: &mut SpriteBatch,
+        quad: &mut QuadData,
         texture: &impl Texture2d,
         policy: DrawPolicy,
         flips: Flips,
@@ -107,8 +107,9 @@ impl QuadParams {
         //     rect.x = rect.x.round();
         //     rect.y = rect.y.round();
         // }
+
         self::push_texture2d(
-            batch,
+            quad,
             texture,
             self.origin,
             src_rect,
@@ -168,7 +169,7 @@ impl QuadParams {
 /// Pass normalized geometry values
 #[inline]
 fn push_texture2d(
-    batch: &mut SpriteBatch,
+    quad: &mut QuadData,
     texture: &impl Texture2d,
     origin: Vec2f,
     src_rect: Rect2f,
@@ -179,8 +180,6 @@ fn push_texture2d(
     depth: f32,
     flips: Flips,
 ) {
-    let quad = unsafe { batch.next_quad_mut(texture.raw_texture()) };
-
     self::set_quad(
         quad, skew, origin, src_rect, dest_rect, color, rot, depth, flips,
     );

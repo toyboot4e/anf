@@ -3,7 +3,7 @@
 mod push_cmd;
 mod push_params;
 
-pub use push_cmd::{QuadPush, SpritePushCommand};
+pub use push_cmd::{QuadPush, SpritePush};
 pub use push_params::QuadParams;
 
 pub mod prelude {

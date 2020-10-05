@@ -1,5 +1,5 @@
 use crate::{
-    batcher::batch::SpriteBatch,
+    batcher::{batch::SpriteBatch, bufspecs::QuadData},
     cmd::push_params::{DrawPolicy, QuadParams, Scaled, Texture2d},
     geom2d::*,
 };
@@ -107,13 +107,13 @@ pub trait QuadParamsBuilder {
 
 /// Binding to push [`QuadParams`] to [`SpriteBatch`]
 pub struct QuadPush<'a> {
-    pub push: &'a mut QuadParams,
-    pub batch: &'a mut SpriteBatch,
+    pub params: &'a mut QuadParams,
+    pub data: &'a mut QuadData,
 }
 
 impl<'a> QuadParamsBuilder for QuadPush<'a> {
     fn params(&mut self) -> &mut QuadParams {
-        &mut self.push
+        &mut self.params
     }
 }
 
@@ -134,7 +134,7 @@ impl<'a> QuadPush<'a> {
 }
 
 /// Primary interface to push sprite
-pub struct SpritePushCommand<'a, T: Texture2d> {
+pub struct SpritePush<'a, T: Texture2d> {
     quad: QuadPush<'a>,
     texture: T,
     policy: DrawPolicy,
@@ -142,13 +142,14 @@ pub struct SpritePushCommand<'a, T: Texture2d> {
 }
 
 /// Push sprite to batch data when it goes out of scope
-impl<'a, T: Texture2d> Drop for SpritePushCommand<'a, T> {
+impl<'a, T: Texture2d> Drop for SpritePush<'a, T> {
     fn drop(&mut self) {
         self.run();
     }
 }
 
-impl<'a, T: Texture2d> SpritePushCommand<'a, T> {
+impl<'a, T: Texture2d> SpritePush<'a, T> {
+    /// Make sure the [`QuadPush`] is not satuerd
     pub fn new(quad: QuadPush<'a>, texture: T) -> Self {
         Self {
             quad,
@@ -160,28 +161,30 @@ impl<'a, T: Texture2d> SpritePushCommand<'a, T> {
 
     fn run(&mut self) {
         self.quad
-            .push
-            .run_texture2d(&mut self.quad.batch, &self.texture, self.policy, self.flips);
+            .params
+            .run_texture2d(&mut self.quad.data, &self.texture, self.policy, self.flips);
     }
 }
 
-/// impl default builder methods
-impl<'a, T: Texture2d> QuadParamsBuilder for SpritePushCommand<'a, T> {
-    fn params(&mut self) -> &mut QuadParams {
-        &mut self.quad.push
-    }
-}
-
-impl<'a, T: SubTexture2d> SpritePushCommand<'a, T> {
+impl<'a, T: SubTexture2d> SpritePush<'a, T> {
+    /// Make sure the [`QuadPush`] is not satuerd
     pub fn from_sub_texture(mut quad: QuadPush<'a>, sub_texture: T) -> Self {
         quad.on_set_sub_texture(&sub_texture);
         Self::new(quad, sub_texture)
     }
 }
 
-impl<'a, T: Sprite> SpritePushCommand<'a, T> {
+impl<'a, T: Sprite> SpritePush<'a, T> {
+    /// Make sure the [`QuadPush`] is not satuerd
     pub fn from_sprite(mut quad: QuadPush<'a>, sub_texture: T) -> Self {
         quad.on_set_sprite(&sub_texture);
         Self::new(quad, sub_texture)
+    }
+}
+
+/// impl default builder methods
+impl<'a, T: Texture2d> QuadParamsBuilder for SpritePush<'a, T> {
+    fn params(&mut self) -> &mut QuadParams {
+        &mut self.quad.params
     }
 }

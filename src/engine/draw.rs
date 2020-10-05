@@ -6,8 +6,8 @@ pub use anf_gfx::cmd::prelude::*;
 use fna3d::Color;
 
 use anf_gfx::{
-    batcher::{bufspecs::ColoredVertexData, Batcher},
-    cmd::{QuadParams, QuadPush, SpritePushCommand},
+    batcher::{batch::SpriteBatch, bufspecs::ColoredVertexData, Batcher},
+    cmd::{QuadParams, QuadPush, SpritePush},
     geom2d::*,
 };
 
@@ -77,10 +77,18 @@ impl DrawContext {
     pub fn raw_window(&self) -> *mut sdl2::sys::SDL_Window {
         self.params.deviceWindowHandle as *mut _
     }
+
+    pub fn batch_mut(&mut self) -> &mut SpriteBatch {
+        &mut self.batcher.batch
+    }
 }
 
 /// Context
 impl DrawContext {
+    pub fn device(&mut self) -> &Device {
+        &self.device
+    }
+
     pub fn device_mut(&mut self) -> &mut Device {
         &mut self.device
     }
@@ -153,8 +161,8 @@ impl<'a> BatchPass<'a> {
         Self { dcx }
     }
 
-    /// Creates [`SpritePushCommand`] using [`SubTexture2d`] attributes
-    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePushCommand<'_, T> {
+    /// Creates [`SpritePush`] using [`SubTexture2d`] attributes
+    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePush<'_, T> {
         if self.dcx.batcher.is_satured() {
             self.dcx
                 .batcher
@@ -162,16 +170,19 @@ impl<'a> BatchPass<'a> {
             self.dcx.batcher.begin();
         }
 
+        let data = unsafe { self.dcx.batcher.batch.next_quad_mut(texture.raw_texture()) };
         self.dcx.push.reset_to_defaults();
+
         let quad = QuadPush {
-            push: &mut self.dcx.push,
-            batch: &mut self.dcx.batcher.batch,
+            params: &mut self.dcx.push,
+            data,
         };
-        SpritePushCommand::from_sub_texture(quad, texture)
+
+        SpritePush::from_sub_texture(quad, texture)
     }
 
-    /// Creates [`SpritePushCommand`] using [`Sprite`] attributes
-    pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePushCommand<'_, T> {
+    /// Creates [`SpritePush`] using [`Sprite`] attributes
+    pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePush<'_, T> {
         if self.dcx.batcher.is_satured() {
             self.dcx
                 .batcher
@@ -179,19 +190,22 @@ impl<'a> BatchPass<'a> {
             self.dcx.batcher.begin();
         }
 
+        let data = unsafe { self.dcx.batcher.batch.next_quad_mut(sprite.raw_texture()) };
         self.dcx.push.reset_to_defaults();
+
         let quad = QuadPush {
-            push: &mut self.dcx.push,
-            batch: &mut self.dcx.batcher.batch,
+            params: &mut self.dcx.push,
+            data,
         };
-        SpritePushCommand::from_sprite(quad, sprite)
+
+        SpritePush::from_sprite(quad, sprite)
     }
 }
 
 /// Outline drawing
 impl<'a> BatchPass<'a> {
     // TODO: add wrapper of primitive renderer
-    pub fn white_dot(&mut self) -> SpritePushCommand<'_, TextureData2d> {
+    pub fn white_dot(&mut self) -> SpritePush<'_, TextureData2d> {
         self.texture(self.dcx.white_dot.clone())
     }
 

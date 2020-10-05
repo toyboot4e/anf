@@ -20,7 +20,6 @@
 
 pub use fna3d;
 pub use sdl2;
-pub use xdl;
 
 pub mod engine;
 
