@@ -59,7 +59,7 @@ pub fn init_app(
     /// FNA3D requires us to set viewport/rasterizer/blend state. **If this is skipped, we can't
     /// draw anything** (we only can clear the screen)
     fn init_device(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         // batcher: &mut Batcher,
         params: &fna3d::PresentationParameters,
     ) {
@@ -147,7 +147,7 @@ impl WindowHandle {
     pub fn set_screen_size(
         &mut self,
         size: [u32; 2],
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         params: &mut fna3d::PresentationParameters,
     ) {
         self.win.set_size(size[0], size[1]).unwrap();

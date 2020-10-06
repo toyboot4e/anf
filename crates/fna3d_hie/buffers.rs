@@ -29,7 +29,7 @@ impl GpuIndexBuffer {
     }
 
     pub fn new(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         index_elem_size: fna3d::IndexElementSize,
         n_indices: u32,
         usage: fna3d::BufferUsage,
@@ -51,12 +51,7 @@ impl GpuIndexBuffer {
     }
 
     /// Sends index buffer to GPU memory
-    pub fn upload_indices<T>(
-        &mut self,
-        device: &mut fna3d::Device,
-        offset_in_bytes: u32,
-        data: &[T],
-    ) {
+    pub fn upload_indices<T>(&mut self, device: &fna3d::Device, offset_in_bytes: u32, data: &[T]) {
         device.set_index_buffer_data(
             self.raw(),
             offset_in_bytes,
@@ -94,7 +89,7 @@ impl GpuVertexBuffer {
     }
 
     pub fn new(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         decl: fna3d::VertexDeclaration,
         n_vertices: u32,
         usage: fna3d::BufferUsage,
@@ -115,7 +110,7 @@ impl GpuVertexBuffer {
     /// Sets vertex data to the GPU buffer
     pub fn upload_vertices<T: VertexData>(
         &mut self,
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         offset_in_bytes: u32,
         vdata: &mut [T],
     ) {
@@ -134,7 +129,7 @@ impl GpuDynamicVertexBuffer {
     }
 
     pub fn new(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         decl: fna3d::VertexDeclaration,
         n_vertices: u32,
         usage: fna3d::BufferUsage,
@@ -147,7 +142,7 @@ impl GpuDynamicVertexBuffer {
     /// Sends vertex data to GPU memory
     pub fn upload_vertices<T: VertexData>(
         &mut self,
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         buf_offset_in_bytes: u32,
         vdata: &mut [T],
         opts: fna3d::SetDataOptions,
@@ -185,7 +180,7 @@ impl GpuVertexAttributes {
         self.bind.vertexOffset = base_vertex as i32;
     }
 
-    pub fn upload_vertex_attributes(&mut self, device: &mut fna3d::Device, base_vertex: u32) {
+    pub fn upload_vertex_attributes(&mut self, device: &fna3d::Device, base_vertex: u32) {
         device.apply_vertex_buffer_bindings(&[self.bind], true, base_vertex);
     }
 }

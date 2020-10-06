@@ -2,11 +2,17 @@
 //!
 //! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is recommended.
 
+use std::time::Duration;
+
 pub use anf_gfx::cmd::prelude::*;
 use fna3d::Color;
 
 use anf_gfx::{
-    batcher::{batch::SpriteBatch, bufspecs::ColoredVertexData, Batcher},
+    batcher::{
+        batch::SpriteBatch,
+        bufspecs::{ColoredVertexData, QuadData},
+        Batcher,
+    },
     cmd::{QuadParams, QuadPush, SpritePush},
     geom2d::*,
 };
@@ -14,7 +20,7 @@ use anf_gfx::{
 use fna3d::{self, Device};
 use fna3d_hie::Pipeline;
 
-use crate::{engine::time::TimeStep, gfx::TextureData2d};
+use crate::gfx::TextureData2d;
 
 /// The imperative draw API
 ///
@@ -48,7 +54,7 @@ pub struct DrawContext {
     /// dependency
     params: fna3d::PresentationParameters,
     /// interface
-    time_step: TimeStep,
+    time_step: Duration,
 }
 
 impl DrawContext {
@@ -70,7 +76,7 @@ impl DrawContext {
             white_dot,
             push: QuadParams::default(),
             params,
-            time_step: TimeStep::default(),
+            time_step: Duration::default(),
         }
     }
 
@@ -78,8 +84,13 @@ impl DrawContext {
         self.params.deviceWindowHandle as *mut _
     }
 
-    pub fn batch_mut(&mut self) -> &mut SpriteBatch {
-        &mut self.batcher.batch
+    pub fn next_quad_mut_safe(&mut self, t: *mut fna3d::Texture) -> &mut QuadData {
+        self.batcher
+            .next_quad_mut_safe(t, &self.device, &mut self.pipe)
+    }
+
+    pub fn flush(&mut self) {
+        self.batcher.flush(&mut self.device, &mut self.pipe);
     }
 }
 
@@ -89,25 +100,9 @@ impl DrawContext {
         &self.device
     }
 
-    pub fn device_mut(&mut self) -> &mut Device {
-        &mut self.device
-    }
-
     /// TODO: remove this
-    pub fn set_time_step(&mut self, ts: TimeStep) {
+    pub fn set_time_step(&mut self, ts: Duration) {
         self.time_step = ts;
-    }
-}
-
-impl AsRef<fna3d::Device> for DrawContext {
-    fn as_ref(&self) -> &fna3d::Device {
-        &self.device
-    }
-}
-
-impl AsMut<fna3d::Device> for DrawContext {
-    fn as_mut(&mut self) -> &mut fna3d::Device {
-        &mut self.device
     }
 }
 
@@ -129,7 +124,7 @@ impl DrawContext {
     }
 
     pub fn dt_secs_f32(&self) -> f32 {
-        self.time_step.dt_secs_f32()
+        self.time_step.as_secs_f32()
     }
 }
 
@@ -151,26 +146,29 @@ impl<'a> Drop for BatchPass<'a> {
     fn drop(&mut self) {
         self.dcx
             .batcher
-            .end(&mut self.dcx.device, &mut self.dcx.pipe);
+            .flush(&mut self.dcx.device, &mut self.dcx.pipe);
     }
 }
 
 impl<'a> BatchPass<'a> {
     pub fn new(dcx: &'a mut DrawContext) -> Self {
-        dcx.batcher.begin();
         Self { dcx }
     }
 
-    /// Creates [`SpritePush`] using [`SubTexture2d`] attributes
-    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePush<'_, T> {
+    fn unsature(&mut self) {
         if self.dcx.batcher.is_satured() {
             self.dcx
                 .batcher
                 .flush(&mut self.dcx.device, &mut self.dcx.pipe);
-            self.dcx.batcher.begin();
         }
+    }
 
-        let data = unsafe { self.dcx.batcher.batch.next_quad_mut(texture.raw_texture()) };
+    /// Creates [`SpritePush`] using [`SubTexture2d`] attributes
+    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePush<'_, T> {
+        let data = {
+            self.unsature();
+            unsafe { self.dcx.batcher.batch.next_quad_mut(texture.raw_texture()) }
+        };
         self.dcx.push.reset_to_defaults();
 
         let quad = QuadPush {
@@ -183,14 +181,10 @@ impl<'a> BatchPass<'a> {
 
     /// Creates [`SpritePush`] using [`Sprite`] attributes
     pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePush<'_, T> {
-        if self.dcx.batcher.is_satured() {
-            self.dcx
-                .batcher
-                .flush(&mut self.dcx.device, &mut self.dcx.pipe);
-            self.dcx.batcher.begin();
-        }
-
-        let data = unsafe { self.dcx.batcher.batch.next_quad_mut(sprite.raw_texture()) };
+        let data = {
+            self.unsature();
+            unsafe { self.dcx.batcher.batch.next_quad_mut(sprite.raw_texture()) }
+        };
         self.dcx.push.reset_to_defaults();
 
         let quad = QuadPush {

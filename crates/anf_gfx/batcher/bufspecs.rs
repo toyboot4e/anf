@@ -110,7 +110,7 @@ pub struct GpuViBuffer {
 }
 
 impl GpuViBuffer {
-    pub fn from_device(device: &mut fna3d::Device) -> Self {
+    pub fn from_device(device: &fna3d::Device) -> Self {
         let vbuf = GpuDynamicVertexBuffer::new(
             device,
             ColoredVertexData::decl(),

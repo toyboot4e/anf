@@ -30,10 +30,10 @@ impl SpriteBatch {
 impl SpriteBatch {
     /// Flush batcher if [`SpriteBatch`] is satured
     pub fn is_satured(&self) -> bool {
-        self.quads.len() <= self.n_quads
+        self.quads.len() - 1 <= self.n_quads
     }
 
-    /// Make sure [`SpriteBatch`] is not satured before calling this method
+    /// Make sure the [`SpriteBatch`] is not satured before calling this method
     pub unsafe fn next_quad_mut(&mut self, texture: *mut fna3d::Texture) -> &mut QuadData {
         self.raw_texture_track[self.n_quads] = texture;
         let quad = &mut self.quads[self.n_quads];

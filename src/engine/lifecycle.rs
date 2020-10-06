@@ -4,6 +4,8 @@
 
 // The internals need refactoring
 
+use std::time::Duration;
+
 use sdl2::{event::Event, EventPump};
 
 use crate::engine::{app::*, draw::*, time::*};
@@ -23,12 +25,12 @@ pub trait AnfLifecycle {
     }
 
     #[allow(unused_variables)]
-    fn update(&mut self, time_step: TimeStep) -> AnfResult<()> {
+    fn update(&mut self, time_step: Duration) -> AnfResult<()> {
         Ok(())
     }
 
     #[allow(unused_variables)]
-    fn render(&mut self, time_step: TimeStep) -> AnfResult<()> {
+    fn render(&mut self, time_step: Duration) -> AnfResult<()> {
         Ok(())
     }
 

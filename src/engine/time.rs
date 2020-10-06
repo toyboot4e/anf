@@ -8,34 +8,11 @@ pub enum TargetFps {
     Variable(u32),
 }
 
-/// Delta time
-#[derive(Debug, Clone, Copy, Default)]
-pub struct TimeStep {
-    // public in crate so that it can be set by framework
-    pub(crate) elapsed: Duration,
-}
-
-impl TimeStep {
-    pub fn new() -> Self {
-        Self {
-            elapsed: Duration::new(0, 0),
-        }
-    }
-
-    pub fn elapsed(&self) -> Duration {
-        self.elapsed
-    }
-
-    pub fn dt_secs_f32(&self) -> f32 {
-        self.elapsed.as_secs_f32()
-    }
-}
-
 /// Creates frames
 #[derive(Debug, Clone)]
 pub struct GameClock {
     // states
-    time_step: TimeStep,
+    time_step: Duration,
     accum: Duration,
     total: Duration,
     last_time: Instant,
@@ -49,7 +26,7 @@ pub struct GameClock {
 impl GameClock {
     pub fn new() -> Self {
         Self {
-            time_step: TimeStep::new(),
+            time_step: Duration::new(0, 0),
             accum: Duration::new(0, 0),
             total: Duration::new(0, 0),
             last_time: Instant::now(),
@@ -84,7 +61,7 @@ impl GameClock {
         GameClockTick::new(self)
     }
 
-    pub fn timestep(&self) -> TimeStep {
+    pub fn timestep(&self) -> Duration {
         self.time_step.clone()
     }
 
@@ -119,7 +96,7 @@ pub struct GameClockTick<'a> {
 
 impl<'a> GameClockTick<'a> {
     fn new(clock: &'a mut GameClock) -> Self {
-        clock.time_step.elapsed = clock.target_elapsed();
+        clock.time_step = clock.target_elapsed();
         GameClockTick {
             clock,
             n_updates: 0,
@@ -128,7 +105,7 @@ impl<'a> GameClockTick<'a> {
 }
 
 impl<'a> Iterator for GameClockTick<'a> {
-    type Item = TimeStep;
+    type Item = Duration;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.clock.is_fixed_timestep {
@@ -141,7 +118,7 @@ impl<'a> Iterator for GameClockTick<'a> {
 
 /// Internals
 impl<'a> GameClockTick<'a> {
-    fn next_fixed(&mut self) -> Option<TimeStep> {
+    fn next_fixed(&mut self) -> Option<Duration> {
         let target_elapsed = self.clock.target_elapsed();
 
         // Perform as many full fixed length time steps as we can
@@ -171,12 +148,12 @@ impl<'a> GameClockTick<'a> {
             self.clock.lag -= 1;
         }
 
-        self.clock.time_step.elapsed = target_elapsed * self.n_updates;
+        self.clock.time_step = target_elapsed * self.n_updates;
 
         None
     }
 
-    fn next_variable(&mut self) -> Option<TimeStep> {
+    fn next_variable(&mut self) -> Option<Duration> {
         if self.n_updates > 0 {
             return None;
         }
@@ -187,11 +164,11 @@ impl<'a> GameClockTick<'a> {
         //     time.elapsed = Duration::new(0, 0.0);
         //     forceElapsedTimeToZero = false;
         // } else {
-        self.clock.time_step.elapsed = self.clock.accum;
+        self.clock.time_step = self.clock.accum;
         self.clock.total += self.clock.accum;
         // }
 
-        self.clock.time_step.elapsed = Duration::new(0, 0);
+        self.clock.time_step = Duration::new(0, 0);
         // AssertNotDisposed();
         self.n_updates = 1;
 

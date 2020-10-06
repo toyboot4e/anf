@@ -26,5 +26,5 @@ pub mod prelude {
     pub use fna3d::Color;
     pub use sdl2;
 
-    pub use crate::engine::{app::*, draw::*, lifecycle::*, time::TimeStep};
+    pub use crate::engine::{app::*, draw::*, lifecycle::*};
 }

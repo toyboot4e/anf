@@ -5,7 +5,7 @@ use fna3d_hie::{buffers::GpuIndexBuffer, Pipeline};
 use crate::{
     batcher::{
         batch::{SpriteBatch, SpriteDrawCall},
-        bufspecs::GpuViBuffer,
+        bufspecs::{GpuViBuffer, QuadData},
     },
     geom3d::Mat4x4,
 };
@@ -15,7 +15,6 @@ use crate::{
 pub struct Batcher {
     pub batch: SpriteBatch,
     bufs: GpuViBuffer,
-    is_begin_called: bool,
     /// The projection matrix (fixed to orthographic matrix)
     mat_proj: Mat4x4,
     /// The transformation matrix
@@ -39,46 +38,39 @@ pub struct Batcher {
 }
 
 impl Batcher {
-    pub fn from_device(device: &mut fna3d::Device) -> Self {
+    pub fn from_device(device: &fna3d::Device) -> Self {
         Self {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
-            is_begin_called: false,
             mat_proj: Mat4x4::orthographic(1.0, 1.0, 1.0, 0.0),
             mat_model_view: Mat4x4::identity(),
             mat_model_view_proj: Mat4x4::default(),
         }
-    }
-}
-
-/// Batch cycle
-/// ---
-impl Batcher {
-    /// Maker
-    ///
-    /// * TODO: does not make sense.. needed?
-    pub fn begin(&mut self) {
-        self.is_begin_called = true;
-    }
-
-    /// Flushes batch data to actually draw to a render target
-    pub fn end(&mut self, device: &mut fna3d::Device, p: &mut Pipeline) {
-        self.flush(device, p);
     }
 
     pub fn is_satured(&self) -> bool {
         self.batch.is_satured()
     }
 
-    /// Draws all the pushed sprites
-    pub fn flush(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
-        // guard
-        if !self.is_begin_called {
-            log::warn!("`Batcher::flush` was called before begin");
-            return;
+    pub fn next_quad_mut_safe(
+        &mut self,
+        texture: *mut fna3d::Texture,
+        device: &fna3d::Device,
+        pipe: &mut Pipeline,
+    ) -> &mut QuadData {
+        if self.batch.is_satured() {
+            self.flush(device, pipe);
         }
-        self.is_begin_called = false;
 
+        unsafe { self.batch.next_quad_mut(texture) }
+    }
+}
+
+/// Batch cycle
+/// ---
+impl Batcher {
+    /// Draws all the pushed sprites
+    pub fn flush(&mut self, device: &fna3d::Device, pipe: &mut Pipeline) {
         if !self.batch.any_quads_pushed() {
             return;
         }
@@ -86,7 +78,7 @@ impl Batcher {
         self.flush_impl(device, pipe);
     }
 
-    fn flush_impl(&mut self, device: &mut fna3d::Device, pipe: &mut Pipeline) {
+    fn flush_impl(&mut self, device: &fna3d::Device, pipe: &mut Pipeline) {
         // Material (blend, sampler, depth/stencil, rasterizer)
         // viewport, scissors rect
 
@@ -122,7 +114,7 @@ impl Batcher {
 /// ---
 impl Batcher {
     /// Copies vertex data from CPU to GPU ([`SpriteBatch::vertex_data`] to [`VertexBuffer`])
-    fn upload_vertices(&mut self, device: &mut fna3d::Device) {
+    fn upload_vertices(&mut self, device: &fna3d::Device) {
         let offset = 0;
         let data = &mut self.batch.quads_mut();
         self.bufs
@@ -132,7 +124,7 @@ impl Batcher {
 
     /// Runs [`SpriteDrawCall`] got from [`SpriteBatch`]
     fn make_draw_call(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         pipe: &mut Pipeline,
         bufs: &mut GpuViBuffer,
         call: SpriteDrawCall<'_>,
@@ -144,7 +136,7 @@ impl Batcher {
     }
 }
 
-fn draw_triangles(device: &mut fna3d::Device, call: SpriteDrawCall<'_>, ibuf: &GpuIndexBuffer) {
+fn draw_triangles(device: &fna3d::Device, call: SpriteDrawCall<'_>, ibuf: &GpuIndexBuffer) {
     device.draw_indexed_primitives(
         fna3d::PrimitiveType::TriangleList,
         call.base_vertex() as u32, // the number of vertices to skip

@@ -19,7 +19,7 @@ pub struct Pipeline {
 
 impl Pipeline {
     pub fn new(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         initial_vtx_decl: fna3d::VertexDeclaration,
         shader_bytes: &[u8],
     ) -> Self {
@@ -41,12 +41,12 @@ impl Pipeline {
     // pub fn set_proj_mat(&mut self, mat: &Mat4) {}
 
     /// * `FNA3D_ApplyEffect`
-    pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
+    pub fn apply_effect(&mut self, device: &fna3d::Device, pass: u32) {
         self.shader.apply_effect(device, pass);
     }
 
     /// * `FNA3D_VerifySamplerState`
-    pub fn set_texture_raw(&mut self, device: &mut fna3d::Device, texture: *mut fna3d::Texture) {
+    pub fn set_texture_raw(&mut self, device: &fna3d::Device, texture: *mut fna3d::Texture) {
         self.sampler.set_texture_raw(device, texture);
     }
 
@@ -58,7 +58,7 @@ impl Pipeline {
     /// * `FNA3D_ApplyVertexBufferBindings`
     ///
     /// "The very last thing to call when making a draw call".
-    pub fn upload_vertex_attributes(&mut self, device: &mut fna3d::Device, base_vertex: u32) {
+    pub fn upload_vertex_attributes(&mut self, device: &fna3d::Device, base_vertex: u32) {
         self.vtx_attrs.upload_vertex_attributes(device, base_vertex);
     }
 }
@@ -99,7 +99,7 @@ impl SamplerSlots {
         }
     }
 
-    pub fn set_texture_raw(&mut self, device: &mut fna3d::Device, texture: *mut fna3d::Texture) {
+    pub fn set_texture_raw(&mut self, device: &fna3d::Device, texture: *mut fna3d::Texture) {
         let slot = 0;
         device.verify_sampler(slot as u32, texture, &self.samplers[slot]);
     }

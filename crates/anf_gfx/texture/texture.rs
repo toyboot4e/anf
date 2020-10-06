@@ -69,7 +69,7 @@ impl TextureData2d {
     }
 
     pub fn new(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         w: u32,
         h: u32,
         fmt: fna3d::SurfaceFormat,
@@ -82,7 +82,7 @@ impl TextureData2d {
         Self { raw, w, h, fmt }
     }
 
-    pub fn with_size(device: &mut fna3d::Device, w: u32, h: u32) -> Self {
+    pub fn with_size(device: &fna3d::Device, w: u32, h: u32) -> Self {
         Self::new(
             device,
             w,
@@ -111,10 +111,7 @@ impl TextureData2d {
 /// Texture loading methods
 /// ---
 impl TextureData2d {
-    pub fn from_path(
-        device: &mut fna3d::Device,
-        path: impl AsRef<std::path::Path>,
-    ) -> Option<Self> {
+    pub fn from_path(device: &fna3d::Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
         let path = path.as_ref();
         // TODO: return error
         let reader = File::open(path).unwrap_or_else(|err| {
@@ -124,7 +121,7 @@ impl TextureData2d {
         Self::from_reader(device, reader)
     }
 
-    pub fn from_reader<R: Read + Seek>(device: &mut fna3d::Device, reader: R) -> Option<Self> {
+    pub fn from_reader<R: Read + Seek>(device: &fna3d::Device, reader: R) -> Option<Self> {
         let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
 
         if pixels_ptr == std::ptr::null_mut() {
@@ -141,12 +138,12 @@ impl TextureData2d {
     }
 
     /// Helper for embedded file bytes
-    pub fn from_undecoded_bytes(device: &mut fna3d::Device, bytes: &[u8]) -> Option<Self> {
+    pub fn from_undecoded_bytes(device: &fna3d::Device, bytes: &[u8]) -> Option<Self> {
         let reader = std::io::Cursor::new(bytes);
         Self::from_reader(device, reader)
     }
 
-    pub fn from_pixels(device: &mut fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+    pub fn from_pixels(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
         let mut t = Self::with_size(device, w, h);
         t.upload_pixels(device, 0, None, pixels);
         t
@@ -155,7 +152,7 @@ impl TextureData2d {
     /// Sets GPU texture data
     pub fn upload_pixels(
         &mut self,
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         level: u32,
         rect: Option<[u32; 4]>,
         data: &[u8],
@@ -174,7 +171,7 @@ impl TextureData2d {
         device.set_texture_data_2d(self.raw, x, y, w, h, level, data);
     }
 
-    // pub fn save_to_png(&self, device: &mut fna3d::Device, path: impl AsRef<Path>) {
+    // pub fn save_to_png(&self, device: &fna3d::Device, path: impl AsRef<Path>) {
     //     device.get_texture_data_2d(texture, x, y, w, h, level, data)
     // }
 }

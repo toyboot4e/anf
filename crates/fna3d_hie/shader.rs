@@ -21,22 +21,19 @@ pub struct Shader {
 
 impl Shader {
     pub fn from_file(
-        device: &mut fna3d::Device,
+        device: &fna3d::Device,
         shader_path: impl AsRef<Path>,
     ) -> fna3d::mojo::Result<Self> {
         let (effect, data) = fna3d::mojo::from_file(device, shader_path)?;
         Ok(Self { effect, data })
     }
 
-    pub fn from_bytes(
-        device: &mut fna3d::Device,
-        shader_bytes: &[u8],
-    ) -> fna3d::mojo::Result<Self> {
+    pub fn from_bytes(device: &fna3d::Device, shader_bytes: &[u8]) -> fna3d::mojo::Result<Self> {
         let (effect, data) = fna3d::mojo::from_bytes(device, shader_bytes)?;
         Ok(Self { effect, data })
     }
 
-    pub fn destroy(self, device: &mut fna3d::Device) {
+    pub fn destroy(self, device: &fna3d::Device) {
         // both (effect, data) are destroied:
         device.add_dispose_effect(self.effect);
     }
@@ -48,7 +45,7 @@ impl Shader {
     /// * `FNA3D_ApplyEffect`
     ///
     /// * TODO: what is `pass`? is it actually typed?
-    pub fn apply_effect(&mut self, device: &mut fna3d::Device, pass: u32) {
+    pub fn apply_effect(&mut self, device: &fna3d::Device, pass: u32) {
         // no effect state change
         let state_changes = fna3d::mojo::EffectStateChanges {
             render_state_change_count: 0,
