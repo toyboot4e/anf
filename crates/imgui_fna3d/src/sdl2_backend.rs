@@ -12,6 +12,7 @@ use sdl2::{
     video::Window,
 };
 
+/// SDL2 backend for ImGUI
 pub struct ImguiSdl2 {
     mouse_press: [bool; 5],
     ignore_mouse: bool,

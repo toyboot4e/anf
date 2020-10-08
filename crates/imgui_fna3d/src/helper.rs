@@ -1,5 +1,9 @@
-use crate::sdl2_backend::ImguiSdl2;
 use sdl2::{event::Event, video::Window};
+
+use crate::{
+    fna3d_renderer::{ImGuiRenderer, RcTexture2d, Texture2dDrop},
+    sdl2_backend::ImguiSdl2,
+};
 
 /// Just holds both ImGUI context and backend/renderer of it
 pub struct Fna3dImgui {
@@ -10,7 +14,7 @@ pub struct Fna3dImgui {
 
 pub struct Fna3dImguiPart {
     backend: ImguiSdl2,
-    renderer: crate::ImGuiRenderer,
+    renderer: ImGuiRenderer,
 }
 
 impl Fna3dImguiPart {
@@ -34,7 +38,7 @@ impl Fna3dImgui {
         hidpi_factor: f32,
     ) -> crate::Result<Self> {
         let (mut icx, renderer) =
-            crate::ImGuiRenderer::quick_start(device, display_size, font_size, hidpi_factor)?;
+            ImGuiRenderer::quick_start(device, display_size, font_size, hidpi_factor)?;
         let backend = ImguiSdl2::new(&mut icx, window);
         Ok(Self {
             icx,
@@ -46,11 +50,11 @@ impl Fna3dImgui {
         self.icx.io_mut()
     }
 
-    pub fn font_texture(&self) -> &crate::Texture2d {
+    pub fn font_texture(&self) -> &Texture2dDrop {
         self.part.renderer.font_texture()
     }
 
-    pub fn textures_mut(&mut self) -> &mut imgui::Textures<crate::RcTexture2d> {
+    pub fn textures_mut(&mut self) -> &mut imgui::Textures<RcTexture2d> {
         self.part.renderer.textures_mut()
     }
 
