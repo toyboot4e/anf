@@ -4,12 +4,12 @@
 //!
 //! FIXME: is it bad practice to use `raw_device` field because it may drop earlier than Device
 
-use std::{mem::size_of, rc::Rc};
-
-use thiserror::Error;
-
-use imgui::{
-    im_str, internal::RawWrapper, BackendFlags, DrawCmd, DrawCmdParams, FontConfig, FontSource,
+use ::{
+    imgui::{
+        im_str, internal::RawWrapper, BackendFlags, DrawCmd, DrawCmdParams, FontConfig, FontSource,
+    },
+    std::{mem::size_of, rc::Rc},
+    thiserror::Error,
 };
 
 // TODO: extend and use this error

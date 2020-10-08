@@ -2,7 +2,7 @@
 //!
 //! It just locates the root; not so much a file system for now.
 
-use std::path::{Path, PathBuf};
+use ::std::path::{Path, PathBuf};
 
 // FIXME:
 fn root() -> PathBuf {

@@ -11,8 +11,10 @@ mod fna3d_renderer;
 mod helper;
 mod sdl2_backend;
 
-pub use fna3d_renderer::{ImGuiRendererError, RcTexture2d, Result, Texture2dDrop};
-pub use helper::Fna3dImgui;
+pub use crate::{
+    fna3d_renderer::{ImGuiRendererError, RcTexture2d, Result, Texture2dDrop},
+    helper::Fna3dImgui,
+};
 
 /// SpriteEffect.fxb
 pub const SHARDER: &[u8] = include_bytes!("../SpriteEffect.fxb");

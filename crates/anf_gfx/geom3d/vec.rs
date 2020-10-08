@@ -1,4 +1,4 @@
-use auto_ops::*;
+use ::auto_ops::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec3f {

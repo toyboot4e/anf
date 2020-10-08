@@ -1,4 +1,4 @@
-use sdl2::{event::Event, video::Window};
+use ::sdl2::{event::Event, video::Window};
 
 use crate::{
     fna3d_renderer::{ImGuiRenderer, RcTexture2d, Texture2dDrop},

@@ -1,4 +1,4 @@
-use auto_ops::*;
+use ::auto_ops::*;
 
 use crate::geom3d::{Plane3f, Quaternion, Vec3f};
 

@@ -1,6 +1,6 @@
 //! Frames
 
-use std::time::{Duration, Instant};
+use ::std::time::{Duration, Instant};
 
 /// TODO: use this
 pub enum TargetFps {

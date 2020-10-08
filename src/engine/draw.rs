@@ -2,23 +2,21 @@
 //!
 //! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is recommended.
 
-use std::time::Duration;
+pub use ::anf_gfx::cmd::prelude::*;
 
-pub use anf_gfx::cmd::prelude::*;
-use fna3d::Color;
-
-use anf_gfx::{
-    batcher::{
-        batch::SpriteBatch,
-        bufspecs::{ColoredVertexData, QuadData},
-        Batcher,
+use ::{
+    anf_gfx::{
+        batcher::{
+            bufspecs::{ColoredVertexData, QuadData},
+            Batcher,
+        },
+        cmd::{QuadParams, QuadPush, SpritePush},
+        geom2d::*,
     },
-    cmd::{QuadParams, QuadPush, SpritePush},
-    geom2d::*,
+    fna3d::{self,Color,Device},
+    fna3d_hie::Pipeline,
+    std::time::Duration,
 };
-
-use fna3d::{self, Device};
-use fna3d_hie::Pipeline;
 
 use crate::gfx::TextureData2d;
 

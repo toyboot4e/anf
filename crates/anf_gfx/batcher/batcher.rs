@@ -1,6 +1,6 @@
 //! Re-exported to super module
 
-use fna3d_hie::{buffers::GpuIndexBuffer, Pipeline};
+use ::fna3d_hie::{buffers::GpuIndexBuffer, Pipeline};
 
 use crate::{
     batcher::{

@@ -3,7 +3,7 @@
 //! [`SpriteBatch`]: crate::batcher::batch::SpriteBatch
 
 use crate::{geom2d::*, geom3d::Vec3f};
-use fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer};
+use ::fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer};
 
 // --------------------------------------------------------------------------------
 // Constants

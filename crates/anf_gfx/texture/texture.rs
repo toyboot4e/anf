@@ -1,6 +1,6 @@
 //! [`TextureData2d`]
 
-use std::{
+use ::std::{
     fs::File,
     io::{BufReader, Read, Seek},
 };

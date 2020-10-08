@@ -4,10 +4,8 @@
 //! ** textures with name `fs_textures`
 //! * TODO: full-featured pipeline state object
 
-mod shader;
-pub use shader::Shader;
-
-mod pipeline;
-pub use pipeline::Pipeline;
-
 pub mod buffers;
+mod pipeline;
+mod shader;
+
+pub use crate::{pipeline::Pipeline, shader::Shader};

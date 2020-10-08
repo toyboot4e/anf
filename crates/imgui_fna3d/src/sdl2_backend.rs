@@ -4,12 +4,14 @@
 //!
 //! [rust-imgui-sdl2]: https://github.com/michaelfairley/rust-imgui-sdl2
 
-use imgui::{ConfigFlags, Context, Key, MouseCursor};
-use sdl2::{
-    event::Event,
-    keyboard::Scancode,
-    mouse::{Cursor, SystemCursor},
-    video::Window,
+use ::{
+    imgui::{ConfigFlags, Context, Key, MouseCursor},
+    sdl2::{
+        event::Event,
+        keyboard::Scancode,
+        mouse::{Cursor, SystemCursor},
+        video::Window,
+    },
 };
 
 /// SDL2 backend for ImGUI

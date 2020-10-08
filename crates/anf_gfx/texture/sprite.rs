@@ -1,9 +1,9 @@
 //! [`SubTextureData2d`] and [`SpriteData2d`]
 
-use fna3d::Color;
-
 pub use crate::texture::texture::{TextureData2d, TextureKind};
+
 use crate::{cmd::prelude::*, geom2d::*};
+use ::fna3d::Color;
 
 /// Conversion
 impl TextureData2d {

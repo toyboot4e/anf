@@ -21,7 +21,7 @@
 //! drawcback.
 
 // https://docs.rs/auto_ops/
-use auto_ops::*;
+use ::auto_ops::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec2f {

@@ -18,12 +18,13 @@
 //!
 //! TODO: note about the presentation parameters
 
-use std::ffi::NulError;
-
-use sdl2::{
-    sys::SDL_Window,
-    video::{FullscreenType, WindowPos},
-    EventPump, IntegerOrSdlError,
+use ::{
+    sdl2::{
+        sys::SDL_Window,
+        video::{FullscreenType, WindowPos},
+        EventPump, IntegerOrSdlError,
+    },
+    std::ffi::NulError,
 };
 
 /// Returns `(window, device, params): (SdlWindowHandle, fna3d::Device, fna3d::PresentationParameters)`

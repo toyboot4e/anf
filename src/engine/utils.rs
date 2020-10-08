@@ -1,6 +1,6 @@
 //! Framework utilities provided to user
 
-use std::time::Duration;
+use ::std::time::Duration;
 
 /// Frame rate counter
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]

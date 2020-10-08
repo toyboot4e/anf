@@ -4,9 +4,10 @@
 
 // The internals need refactoring
 
-use std::time::Duration;
-
-use sdl2::{event::Event, EventPump};
+use ::{
+    sdl2::{event::Event, EventPump},
+    std::time::Duration,
+};
 
 use crate::engine::{app::*, draw::*, time::*};
 
