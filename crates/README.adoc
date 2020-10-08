@@ -1,5 +1,14 @@
 = Crates
 
-* `rust-fna3d`: wrapper of FNA3D
-* `fna3d_hie`: wraps `fna3d` into more semantic form.. someday ;)
-* `anf_gfx`: wraps `fna3d` with `Batcher`
+== Dependent crates
+
+* `rust-fna3d`: Wrapper of FNA3D
+* `fna3d_hie`: Wraps `fna3d` into more semantic form.. someday ;)
+* `anf_gfx`: Wraps `fna3d` with `Batcher`
+
+== Optional crates
+
+* `xdl`: An extensional input layer on top of Rust-SDL2
+* `soloud-rs`: Rust bindings for the soloud audio engine library
+* `fontstash-rs`: Wrapper of fontstash
+* `imgui_fna3d`: ImGUI backend with Rust-SDL2 and renderer with FNA3D
