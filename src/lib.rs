@@ -22,19 +22,17 @@ pub use fna3d;
 pub use sdl2;
 
 pub mod engine;
-
 pub mod gfx;
-pub mod utils;
 pub mod vfs;
 
-#[cfg(feature="input")]
+#[cfg(feature = "input")]
 pub use xdl;
 
-#[cfg(feature="audio")]
+#[cfg(feature = "audio")]
 pub use soloud;
 
-#[cfg(feature="debug-gui")]
+#[cfg(feature = "debug-gui")]
 pub use imgui;
 
-#[cfg(feature="debug-gui")]
+#[cfg(feature = "debug-gui")]
 pub use imgui_fna3d;
