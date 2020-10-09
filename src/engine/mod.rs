@@ -22,7 +22,11 @@ mod builtin;
 pub mod prelude {
     //! Exports most of the ANF engine
 
-    pub use ::{fna3d::{self,Color}, sdl2};
+    pub use ::{
+        anyhow::Result,
+        fna3d::{self, Color},
+        sdl2,
+    };
 
     pub use crate::engine::{app::*, draw::*, lifecycle::*};
 }
