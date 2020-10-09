@@ -1,4 +1,31 @@
-//! Frames
+//! Creates lifecycle
+//!
+//! # Example
+//!
+//! ```no_run
+//! use ::{
+//!     anf::engine::time::GameClock,
+//!     sdl2::EventPump,
+//! };
+//!
+//! fn tick_one_frame(
+//!     clock: &mut GameClock,
+//!     events: &mut EventPump,
+//! ) {
+//!    for ev in events.poll_iter() {
+//!         // handle events
+//!    }
+//!
+//!     for dt in clock.tick() {
+//!         // update your game
+//!     }
+//!
+//!     let time_step = clock.timestep_draw();
+//!     // draw your game
+//!
+//!     // end of the frame
+//! }
+//! ```
 
 use ::std::time::{Duration, Instant};
 
@@ -11,14 +38,21 @@ pub enum TargetFps {
 /// Creates frames
 #[derive(Debug, Clone)]
 pub struct GameClock {
-    // states
+    /// Update/draw timestep duration
     time_step: Duration,
+    /// Accumulated duration to make update/render calls
     accum: Duration,
+    /// Total duration passed since the clock is created
     total: Duration,
+    /// Temporary value to accumulate time
     last_time: Instant,
+    /// [Fixed timestep only]
+    ///
+    /// The value is incremented by `n_updates - 1` on every tick
     lag: u32,
+    /// If the lag is too big, this is true (though the value is not provided to user for now)
     is_slow: bool,
-    // configuration
+    /// Configuration
     is_fixed_timestep: bool,
     updates_per_sec: f64,
 }
@@ -47,10 +81,10 @@ impl GameClock {
     }
 
     /// Returns way to tick one frame
-    pub fn tick(&mut self) -> GameClockTick {
+    pub fn tick(&mut self) -> GameClockOneFrameTick {
         let elapsed = {
-            let mut elapsed = self.wait_for_next_frame(self.accum);
             // Do not allow any update to take longer than our maximum.
+            let mut elapsed = self.wait_for_next_frame(self.accum);
             if elapsed > Self::max_elapsed() {
                 elapsed = Self::max_elapsed();
             }
@@ -58,14 +92,15 @@ impl GameClock {
         };
         self.accum = elapsed;
 
-        GameClockTick::new(self)
+        GameClockOneFrameTick::new(self)
     }
 
-    pub fn timestep(&self) -> Duration {
+    pub fn timestep_draw(&self) -> Duration {
         self.time_step.clone()
     }
 
-    fn wait_for_next_frame(&mut self, mut elapsed: Duration) -> Duration {
+    fn wait_for_next_frame(&mut self, accum: Duration) -> Duration {
+        let mut elapsed = accum;
         loop {
             // Advance the accumulated elapsed time.
             let now = Instant::now();
@@ -89,22 +124,22 @@ impl GameClock {
 }
 
 /// Iterator of one frame
-pub struct GameClockTick<'a> {
+pub struct GameClockOneFrameTick<'a> {
     clock: &'a mut GameClock,
     n_updates: u32,
 }
 
-impl<'a> GameClockTick<'a> {
+impl<'a> GameClockOneFrameTick<'a> {
     fn new(clock: &'a mut GameClock) -> Self {
         clock.time_step = clock.target_elapsed();
-        GameClockTick {
+        GameClockOneFrameTick {
             clock,
             n_updates: 0,
         }
     }
 }
 
-impl<'a> Iterator for GameClockTick<'a> {
+impl<'a> Iterator for GameClockOneFrameTick<'a> {
     type Item = Duration;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -117,7 +152,7 @@ impl<'a> Iterator for GameClockTick<'a> {
 }
 
 /// Internals
-impl<'a> GameClockTick<'a> {
+impl<'a> GameClockOneFrameTick<'a> {
     fn next_fixed(&mut self) -> Option<Duration> {
         let target_elapsed = self.clock.target_elapsed();
 
@@ -134,8 +169,7 @@ impl<'a> GameClockTick<'a> {
             self.clock.lag += self.n_updates - 1;
         }
 
-        // If we think we are running slowly, wait
-        // until the lag clears before resetting it
+        // Update slow/normal consideration
         match (self.clock.is_slow, self.clock.lag) {
             (true, 0) => self.clock.is_slow = false,
             (false, lag) if lag >= 5 => self.clock.is_slow = true,
@@ -148,6 +182,7 @@ impl<'a> GameClockTick<'a> {
             self.clock.lag -= 1;
         }
 
+        // Set timestep for drawing
         self.clock.time_step = target_elapsed * self.n_updates;
 
         None
@@ -173,5 +208,7 @@ impl<'a> GameClockTick<'a> {
         self.n_updates = 1;
 
         Some(self.clock.time_step.clone())
+
+        // On next call this method returns `None`
     }
 }

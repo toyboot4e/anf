@@ -1,4 +1,4 @@
-//! Virtual file system
+//! Not so much a virtual file system
 //!
 //! It just locates the root; not so much a file system for now.
 

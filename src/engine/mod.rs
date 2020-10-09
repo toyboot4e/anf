@@ -1,32 +1,41 @@
 //! Primitive framework
 //!
-//! Users need to write some boilerplate code to run their games.
+//! [`AnfLifecycle`] is very primitive; it doesn't contain specific stages such as `debug_render`.
+//! So you would build your own framework on top of it.
 //!
-//! # Lifecycle
+//! [`anf_samples`] contains an examples framework where context/user-data pattern lifecycle is
+//! run.
 //!
-//! [`lifecycle::AnfLifecycle`] provides a very primitive lifecycle. It doesn't contain specific
-//!  stages such as `debug_render`. So it's for building your own framework lifecycle on top of it!
-//!
-//! See [`examples`] to get started; it contains context/user-data patten lifecycle.
-//!
-//! [`examples`]: https://github.com/toyboot4e/anf_samples
+//! [`AnfLifecycle`]: crate::engine::prelude::AnfLifecycle
+//! [`anf_samples`]: https://github.com/toyboot4e/anf_samples
 
-pub mod app;
+pub mod core;
 pub mod draw;
-pub mod lifecycle;
-pub mod time;
 pub mod utils;
 
-mod builtin;
+mod embedded;
 
 pub mod prelude {
-    //! Exports most of the ANF engine
+    //! Exports the ANF engine, dependent crates and utility macros (`log` and `anyhow`)
 
     pub use ::{
-        anyhow::Result,
-        fna3d::{self, Color},
-        sdl2,
+        anyhow::{anyhow, bail, ensure, Context, Result},
+        log::{debug, error, info, trace, warn},
     };
 
-    pub use crate::engine::{app::*, draw::*, lifecycle::*};
+    pub use ::{
+        fna3d::{self, Color},
+        sdl2, soloud, xdl,
+    };
+
+    #[cfg(feature = "debug-gui")]
+    pub use ::{imgui, imgui_fna3d};
+
+    pub use crate::engine::{
+        core::{
+            lifecycle::{AnfFramework, AnfLifecycle, AnfResult},
+            window::{WindowConfig, WindowHandle},
+        },
+        draw::*,
+    };
 }

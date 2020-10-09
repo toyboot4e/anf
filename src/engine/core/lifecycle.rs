@@ -1,20 +1,22 @@
-//! Event/update/render lifecycle
-//!
-//! Build your own lifecycle on top of it.
+//! The primitive lifecycle
 
-// The internals need refactoring
-
-use ::{
-    sdl2::{event::Event, EventPump},
+use {
+    sdl2::{event::Event, sys::SDL_Window, EventPump},
     std::time::Duration,
 };
 
-use crate::engine::{app::*, draw::*, time::*};
+use crate::engine::{
+    core::{
+        clock::*,
+        window::{WindowConfig, WindowHandle},
+    },
+    draw::*,
+};
 
-/// Return type of ANF game
+/// ANF framework return type
 pub type AnfResult<T> = anyhow::Result<T>;
 
-/// Lifecycle provided by [`AnfFramework`]
+/// Primitive lifecycle run by [`AnfFramework`]
 ///
 /// Users are encouraged to build their own framework on top of it maybe specifying stages such as
 /// `debug_render`.
@@ -26,12 +28,12 @@ pub trait AnfLifecycle {
     }
 
     #[allow(unused_variables)]
-    fn update(&mut self, time_step: Duration) -> AnfResult<()> {
+    fn update(&mut self, dt: Duration) -> AnfResult<()> {
         Ok(())
     }
 
     #[allow(unused_variables)]
-    fn render(&mut self, time_step: Duration) -> AnfResult<()> {
+    fn render(&mut self, dt: Duration) -> AnfResult<()> {
         Ok(())
     }
 
@@ -40,7 +42,7 @@ pub trait AnfLifecycle {
     }
 }
 
-/// Runs the primitive [`AnfLifecycle`]
+/// Runs [`AnfLifecycle`]
 ///
 /// The entry point of ANF application.
 pub struct AnfFramework {
@@ -53,8 +55,8 @@ pub struct AnfFramework {
 impl AnfFramework {
     pub fn from_cfg(cfg: WindowConfig) -> Self {
         let (mut window, dcx) = {
-            let (window, device, params) = init_app(&cfg);
-            let dcx = DrawContext::new(device, crate::engine::builtin::SPRITE_EFFECT, params);
+            let (window, device, params) = crate::engine::core::init(&cfg);
+            let dcx = DrawContext::new(device, crate::engine::embedded::SPRITE_EFFECT, params);
             (window, dcx)
         };
 
@@ -105,11 +107,11 @@ fn tick_one_frame(
         return Ok(false);
     }
 
-    for time_step in clock.tick() {
-        state.update(time_step)?;
+    for dt in clock.tick() {
+        state.update(dt)?;
     }
 
-    let time_step = clock.timestep();
+    let time_step = clock.timestep_draw();
     state.render(time_step)?;
 
     state.on_end_frame()?;

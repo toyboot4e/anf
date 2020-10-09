@@ -1,6 +1,6 @@
 //! Object-oriented draw APIs
 //!
-//! [`DrawContext`] is the primary interface. `use anf::engine::draw::*` is recommended.
+//! [`DrawContext`] is the primary interface. It's recommended to do `use anf::engine::draw::*`.
 
 pub use ::anf_gfx::cmd::prelude::*;
 
@@ -13,7 +13,7 @@ use ::{
         cmd::{QuadParams, QuadPush, SpritePush},
         geom2d::*,
     },
-    fna3d::{self,Color,Device},
+    fna3d::{self, Color, Device},
     fna3d_hie::Pipeline,
     std::time::Duration,
 };
@@ -22,9 +22,9 @@ use crate::gfx::TextureData2d;
 
 /// The imperative draw API
 ///
-/// Draw calls are batched automatically. Owns FNA3D device.
+/// Owns FNA3D device. Batches draw calls are automatically.
 ///
-/// This type should be loved by users. If you don't.. please let me know!
+/// This type should be loved by users. If not.. please let me know!
 ///
 /// # Example
 ///
@@ -64,7 +64,7 @@ impl DrawContext {
         let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader_bytes);
         let batcher = Batcher::from_device(&mut device);
         let white_dot =
-            TextureData2d::from_undecoded_bytes(&mut device, crate::engine::builtin::WHITE_DOT)
+            TextureData2d::from_undecoded_bytes(&mut device, crate::engine::embedded::WHITE_DOT)
                 .unwrap();
 
         Self {
@@ -81,15 +81,6 @@ impl DrawContext {
     pub fn raw_window(&self) -> *mut sdl2::sys::SDL_Window {
         self.params.deviceWindowHandle as *mut _
     }
-
-    pub fn next_quad_mut_safe(&mut self, t: *mut fna3d::Texture) -> &mut QuadData {
-        self.batcher
-            .next_quad_mut_safe(t, &self.device, &mut self.pipe)
-    }
-
-    pub fn flush(&mut self) {
-        self.batcher.flush(&mut self.device, &mut self.pipe);
-    }
 }
 
 /// Context
@@ -99,8 +90,20 @@ impl DrawContext {
     }
 
     /// TODO: remove this
-    pub fn set_time_step(&mut self, ts: Duration) {
+    pub fn set_dt(&mut self, ts: Duration) {
         self.time_step = ts;
+    }
+}
+
+/// Batcher
+impl DrawContext {
+    pub fn next_quad_mut_safe(&mut self, t: *mut fna3d::Texture) -> &mut QuadData {
+        self.batcher
+            .next_quad_mut_safe(t, &self.device, &mut self.pipe)
+    }
+
+    pub fn flush(&mut self) {
+        self.batcher.flush(&mut self.device, &mut self.pipe);
     }
 }
 
@@ -121,8 +124,8 @@ impl DrawContext {
         .into()
     }
 
-    pub fn dt_secs_f32(&self) -> f32 {
-        self.time_step.as_secs_f32()
+    pub fn dt(&self) -> Duration {
+        self.time_step
     }
 }
 

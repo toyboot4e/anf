@@ -1,4 +1,4 @@
-//! Framework utilities provided to user
+//! Framework utilities
 
 use ::std::time::Duration;
 

@@ -1,4 +1,4 @@
-//! Data for drawing
+//! Graphics data types
 //!
 //! These structs implement draw API traits in [`crate::engine::draw`] so they can be drawn via
 //! [`DrawContext`].

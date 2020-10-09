@@ -3,14 +3,17 @@
 //! Note that ANF is unstable and experimental; ANF does not provide solutions in most areas -- you
 //! have to do it yourself.
 //!
+//! # Note
+//!
+//! * Right-handed coordinate system
+//! * Row-major matrices
+//!
 //! # Restrictions
 //!
 //! * One-window, single-threaded
 //! * Pre-defined game loop
 //!
-//! # Note
-//!
-//! * right-handed coordinate system
+//! FIXME: `cargo test` fails in ANF (so using `no_run` for now)
 //!
 //! [SDL]: https://www.sdl.com/
 //! [FNA3D]: https://github.com/FNA-XNA/FNA3D
