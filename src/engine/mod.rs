@@ -17,19 +17,7 @@ mod embedded;
 
 pub mod prelude {
     //! Exports the ANF engine, dependent crates and utility macros (`log` and `anyhow`)
-
-    pub use ::{
-        anyhow::{anyhow, bail, ensure, Context, Result},
-        log::{debug, error, info, trace, warn},
-    };
-
-    pub use ::{
-        fna3d::{self, Color},
-        sdl2, soloud, xdl,
-    };
-
-    #[cfg(feature = "debug-gui")]
-    pub use ::{imgui, imgui_fna3d};
+    pub use ::fna3d::{self, Color};
 
     pub use crate::engine::{
         core::{

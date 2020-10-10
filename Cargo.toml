@@ -17,9 +17,11 @@ audio = ["soloud"]
 debug-gui = ["imgui", "imgui_fna3d"]
 
 [dependencies]
-log = "0.4.11"
 num_enum = "0.5.1"
+
+log = "0.4.11"
 anyhow = "1.0.32"
+indoc = "1.0.2"
 
 sdl2 = "0.34.3"
 fna3d = { path = "crates/rust-fna3d" }

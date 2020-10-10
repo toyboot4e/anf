@@ -1,6 +1,6 @@
 //! The primitive lifecycle
 
-use {
+use ::{
     sdl2::{event::Event, sys::SDL_Window, EventPump},
     std::time::Duration,
 };
@@ -14,7 +14,7 @@ use crate::engine::{
 };
 
 /// ANF framework return type
-pub type AnfResult<T> = anyhow::Result<T>;
+pub type AnfResult<T> = ::anyhow::Result<T>;
 
 /// Primitive lifecycle run by [`AnfFramework`]
 ///
