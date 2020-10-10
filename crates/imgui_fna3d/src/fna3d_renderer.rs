@@ -115,7 +115,7 @@ impl ImGuiRenderer {
         Ok(ImGuiRenderer {
             textures: imgui::Textures::new(),
             font_texture,
-            batch: Batch::new(device),
+            batch: Batch::new(device.clone()),
         })
     }
 
@@ -311,7 +311,7 @@ impl ImGuiRenderer {
 ///
 /// Drops internal buffers automatically.
 struct Batch {
-    raw_device: *mut fna3d::sys::FNA3D_Device,
+    device: fna3d::Device,
     ibuf: GpuIndexBuffer,
     vbuf: GpuVertexBuffer,
     effect: *mut fna3d::Effect,
@@ -320,24 +320,23 @@ struct Batch {
 
 impl Drop for Batch {
     fn drop(&mut self) {
-        let device = unsafe { &mut *(self.raw_device as *mut fna3d::Device) };
-        device.add_dispose_index_buffer(self.ibuf.buf);
-        device.add_dispose_vertex_buffer(self.vbuf.buf);
-        device.add_dispose_effect(self.effect);
+        self.device.add_dispose_index_buffer(self.ibuf.buf);
+        self.device.add_dispose_vertex_buffer(self.vbuf.buf);
+        self.device.add_dispose_effect(self.effect);
     }
 }
 
 impl Batch {
-    fn new(device: &fna3d::Device) -> Self {
+    fn new(device: fna3d::Device) -> Self {
         const N_QUADS: usize = 2048; // buffers are pre-allocated for this number
-        let vbuf = GpuVertexBuffer::new(device, 4 * N_QUADS); // four vertices per quad
-        let ibuf = GpuIndexBuffer::new(device, 6 * N_QUADS); // six indices per quad
+        let vbuf = GpuVertexBuffer::new(&device, 4 * N_QUADS); // four vertices per quad
+        let ibuf = GpuIndexBuffer::new(&device, 6 * N_QUADS); // six indices per quad
 
-        let (effect, effect_data) = fna3d::mojo::from_bytes(device, crate::SHARDER).unwrap();
+        let (effect, effect_data) = fna3d::mojo::from_bytes(&device, crate::SHARDER).unwrap();
         fna3d::mojo::set_projection_matrix(effect_data, &fna3d::mojo::ORTHOGRAPHIC_MATRIX);
 
         Self {
-            raw_device: device.raw(),
+            device,
             vbuf,
             ibuf,
             effect,
