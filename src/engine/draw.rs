@@ -155,7 +155,12 @@ impl<'a> BatchPass<'a> {
     pub fn new(dcx: &'a mut DrawContext) -> Self {
         Self { dcx }
     }
+}
 
+/// Draw commands
+///
+/// TODO: consider using `Render` trait
+impl<'a> BatchPass<'a> {
     fn unsature(&mut self) {
         if self.dcx.batcher.is_satured() {
             self.dcx
@@ -164,35 +169,31 @@ impl<'a> BatchPass<'a> {
         }
     }
 
-    /// Creates [`SpritePush`] using [`SubTexture2d`] attributes
-    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePush<'_, T> {
+    fn next_quad_mut(&mut self, tex: &impl Texture2d) -> QuadPush {
         let data = {
             self.unsature();
-            unsafe { self.dcx.batcher.batch.next_quad_mut(texture.raw_texture()) }
+            unsafe { self.dcx.batcher.batch.next_quad_mut(tex.raw_texture()) }
         };
         self.dcx.push.reset_to_defaults();
 
-        let quad = QuadPush {
+        QuadPush {
             params: &mut self.dcx.push,
             data,
-        };
+        }
+    }
 
+    // TODO: use reference
+    // TODO: use traits for pusing
+
+    /// Creates [`SpritePush`] using [`SubTexture2d`] attributes
+    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePush<'_, T> {
+        let quad = self.next_quad_mut(&texture);
         SpritePush::from_sub_texture(quad, texture)
     }
 
     /// Creates [`SpritePush`] using [`Sprite`] attributes
     pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePush<'_, T> {
-        let data = {
-            self.unsature();
-            unsafe { self.dcx.batcher.batch.next_quad_mut(sprite.raw_texture()) }
-        };
-        self.dcx.push.reset_to_defaults();
-
-        let quad = QuadPush {
-            params: &mut self.dcx.push,
-            data,
-        };
-
+        let quad = self.next_quad_mut(&sprite);
         SpritePush::from_sprite(quad, sprite)
     }
 }

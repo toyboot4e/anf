@@ -25,7 +25,10 @@ impl Pipeline {
     ) -> Self {
         let mut shader =
             Shader::from_bytes(device, shader_bytes).expect("failed to load shader from bytes");
-        shader.set_projection_matrix_1d(&fna3d::mojo::ORTHOGRAPHIC_MATRIX);
+
+        // // initial projection matrix (don't use it dire)
+        // let mat = fna3d::mojo::orthographic_off_center(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        // shader.set_projection_matrix_1d(&mat);
 
         Self {
             vtx_attrs: GpuVertexAttributes::new(initial_vtx_decl),
@@ -77,14 +80,14 @@ impl SamplerSlots {
     pub fn from_device(device: &fna3d::Device) -> Self {
         let (max_tx, max_v_tx) = device.get_max_texture_slots();
 
-        log::info!("device max_textures: {}", max_tx);
-        log::info!("device max_vertex_textures: {}", max_v_tx);
+        log::info!("device max textures: {}", max_tx);
+        log::info!("device max vertex textures: {}", max_v_tx);
 
-        assert!(
-            max_tx != 0 && max_v_tx != 0,
-            "Error on max texture slots. FNA3D may have been compiled in a wrong way: max_textures={}, max_vertex_textures={}",
-            max_tx, max_v_tx
-        );
+        // assert!(
+        //     max_tx != 0 && max_v_tx != 0,
+        //     "Error on max texture slots. FNA3D may have been compiled in a wrong way: max_textures={}, max_vertex_textures={}",
+        //     max_tx, max_v_tx
+        // );
 
         let sampler = {
             let mut s = fna3d::SamplerState::linear_clamp();

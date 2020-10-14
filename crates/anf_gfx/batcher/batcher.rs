@@ -42,7 +42,7 @@ impl Batcher {
         Self {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
-            mat_proj: Mat4x4::orthographic(1.0, 1.0, 1.0, 0.0),
+            mat_proj: Mat4x4::orthographic(0.0, 0.0, 1.0, 0.0),
             mat_model_view: Mat4x4::identity(),
             mat_model_view_proj: Mat4x4::default(),
         }
@@ -132,17 +132,17 @@ impl Batcher {
         pipe.set_texture_raw(device, call.texture());
         pipe.set_vertex_attributes(&mut bufs.vbuf.inner, 0);
         pipe.upload_vertex_attributes(device, call.base_vertex() as u32);
-        self::draw_triangles(device, call, &bufs.ibuf);
+        Self::draw_triangles(device, call, &bufs.ibuf);
     }
-}
 
-fn draw_triangles(device: &fna3d::Device, call: SpriteDrawCall<'_>, ibuf: &GpuIndexBuffer) {
-    device.draw_indexed_primitives(
-        fna3d::PrimitiveType::TriangleList,
-        call.base_vertex() as u32, // the number of vertices to skip
-        call.base_index() as u32, // REMARK: our index buffer is cyclic and we don't need to actually calculate it
-        call.n_primitives() as u32,
-        ibuf.raw(),
-        ibuf.elem_size(),
-    );
+    fn draw_triangles(device: &fna3d::Device, call: SpriteDrawCall<'_>, ibuf: &GpuIndexBuffer) {
+        device.draw_indexed_primitives(
+            fna3d::PrimitiveType::TriangleList,
+            call.base_vertex() as u32, // the number of vertices to skip
+            call.base_index() as u32, // REMARK: our index buffer is cyclic and we don't need to actually calculate it
+            call.n_primitives() as u32,
+            ibuf.raw(),
+            ibuf.elem_size(),
+        );
+    }
 }

@@ -165,37 +165,6 @@ impl ImGuiRenderer {
         &self.font_texture.texture
     }
 
-    /// https://en.wikipedia.org/wiki/Orthographic_projection
-    fn ortho_matrix(draw_data: &imgui::DrawData) -> [f32; 16] {
-        let left = draw_data.display_pos[0];
-        let right = draw_data.display_pos[0] + draw_data.display_size[0];
-        let top = draw_data.display_pos[1];
-        let bottom = draw_data.display_pos[1] + draw_data.display_size[1];
-
-        // TODO: maybe use [[f32; 4]; 4]]
-        [
-            (2.0 / (right - left)),
-            0.0,
-            0.0,
-            -(right + left) / (right - left),
-            //
-            0.0,
-            2.0 / (top - bottom),
-            0.0,
-            -(top + bottom) / (top - bottom),
-            //
-            0.0,
-            0.0,
-            -1.0, // FIXME: is this right? (far/near plane)
-            0.0,
-            //
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-        ]
-    }
-
     /// Set render target to FNA3D device before/after calling this method
     pub fn render(&mut self, draw_data: &imgui::DrawData, device: &fna3d::Device) -> Result<()> {
         // TODO: restore/restore previous state
@@ -216,8 +185,25 @@ impl ImGuiRenderer {
             return Ok(());
         }
 
-        let matrix = Self::ortho_matrix(draw_data);
-        fna3d::mojo::set_projection_matrix(self.batch.effect_data, &matrix);
+        // set prjection matrix
+        let mat = fna3d::mojo::orthographic_off_center(
+            // left, right
+            draw_data.display_pos[0],
+            draw_data.display_pos[0] + draw_data.display_size[0],
+            // bottom, top
+            draw_data.display_pos[1] + draw_data.display_size[1],
+            draw_data.display_pos[1],
+            // near, far
+            1.0,
+            0.0,
+        );
+        unsafe {
+            let name = "MatrixTransform";
+            let name = std::ffi::CString::new(name).unwrap();
+            if !fna3d::mojo::set_param(self.batch.effect_data, &name, &mat) {
+                log::warn!("failed to set projection matrix in FNA3D ImGUI renderer");
+            }
+        }
 
         let clip_off = draw_data.display_pos;
         let clip_scale = draw_data.framebuffer_scale;
@@ -333,7 +319,6 @@ impl Batch {
         let ibuf = GpuIndexBuffer::new(&device, 6 * N_QUADS); // six indices per quad
 
         let (effect, effect_data) = fna3d::mojo::from_bytes(&device, crate::SHARDER).unwrap();
-        fna3d::mojo::set_projection_matrix(effect_data, &fna3d::mojo::ORTHOGRAPHIC_MATRIX);
 
         Self {
             device,

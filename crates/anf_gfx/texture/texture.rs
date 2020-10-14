@@ -5,6 +5,9 @@ use ::std::{
     io::{BufReader, Read, Seek},
 };
 
+/// Mipmap level (no mipmap)
+const LEVEL: u32 = 0;
+
 /// 2D texture handle
 ///
 /// # Safety
@@ -75,9 +78,8 @@ impl TextureData2d {
         fmt: fna3d::SurfaceFormat,
         kind: TextureKind,
     ) -> Self {
-        let level = 0; // np mipmap
         let fmt = self::get_init_format(fmt, TextureKind::Texture);
-        let raw = device.create_texture_2d(fmt, w, h, level, kind == TextureKind::RenderTarget);
+        let raw = device.create_texture_2d(fmt, w, h, LEVEL, kind == TextureKind::RenderTarget);
 
         Self { raw, w, h, fmt }
     }
@@ -145,7 +147,7 @@ impl TextureData2d {
 
     pub fn from_pixels(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
         let mut t = Self::with_size(device, w, h);
-        t.upload_pixels(device, 0, None, pixels);
+        t.upload_pixels(device, LEVEL, None, pixels);
         t
     }
 

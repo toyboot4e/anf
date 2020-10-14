@@ -166,6 +166,13 @@ impl<'a, T: Texture2d> SpritePush<'a, T> {
     }
 }
 
+/// impl default builder methods
+impl<'a, T: Texture2d> QuadParamsBuilder for SpritePush<'a, T> {
+    fn params(&mut self) -> &mut QuadParams {
+        &mut self.quad.params
+    }
+}
+
 impl<'a, T: SubTexture2d> SpritePush<'a, T> {
     /// Make sure the [`QuadPush`] is not satuerd
     pub fn from_sub_texture(mut quad: QuadPush<'a>, sub_texture: T) -> Self {
@@ -179,12 +186,5 @@ impl<'a, T: Sprite> SpritePush<'a, T> {
     pub fn from_sprite(mut quad: QuadPush<'a>, sub_texture: T) -> Self {
         quad.on_set_sprite(&sub_texture);
         Self::new(quad, sub_texture)
-    }
-}
-
-/// impl default builder methods
-impl<'a, T: Texture2d> QuadParamsBuilder for SpritePush<'a, T> {
-    fn params(&mut self) -> &mut QuadParams {
-        &mut self.quad.params
     }
 }

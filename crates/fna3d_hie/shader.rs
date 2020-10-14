@@ -60,7 +60,13 @@ impl Shader {
 
     /// Sets uniforms of vertex shader (i.e. projection matrix)
     pub fn set_projection_matrix_1d(&mut self, mat: &[f32; 16]) {
-        fna3d::mojo::set_projection_matrix(self.data, mat);
+        unsafe {
+            let name = "MatrixTransform";
+            let name = std::ffi::CString::new(name).unwrap();
+            if !fna3d::mojo::set_param(self.data, &name, &mat) {
+                log::warn!("failed to set projection matrix in shader");
+            }
+        }
     }
 
     pub fn param(&self, name: &CStr) -> Option<*mut c_void> {

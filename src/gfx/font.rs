@@ -1,6 +1,8 @@
 //! Font book on font stash
 
-pub use ::fontstash::{self, FonsTextIter, FontStash};
+pub use ::fontstash::{self, FontStash};
+
+use fontstash::FonsTextIter;
 
 pub struct FontBook {
     /// Keeps memory position of the renderer
