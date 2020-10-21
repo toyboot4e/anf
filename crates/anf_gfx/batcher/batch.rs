@@ -2,7 +2,7 @@
 
 use crate::batcher::bufspecs::{QuadData, MAX_QUADS};
 
-/// Sprite batch data
+/// Quads with textures tracked
 ///
 /// Sprites are technically textured quadliterals.
 #[derive(Debug)]

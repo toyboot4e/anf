@@ -1,4 +1,4 @@
-use crate::geom3d::{Mat4x4, Vec3f};
+use crate::geom3d::Vec3f;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane3f {

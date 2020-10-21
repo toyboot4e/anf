@@ -1,11 +1,8 @@
 //! Push command to `SpriteBatch`
 //!
 //! The internal implementation is based on `Batcher` in Nez
-//!
-//! * FiXME: array of struct vs struct of array
-//! * TODO: try rotations
-//! * TODO: try using transoform matrix
 
+#[allow(unused_imports)]
 use crate::{
     batcher::{batch::SpriteBatch, bufspecs::QuadData},
     geom2d::*,
@@ -98,10 +95,11 @@ impl QuadParams {
         &self,
         quad: &mut QuadData,
         texture: &impl Texture2d,
-        policy: DrawPolicy,
+        _policy: DrawPolicy,
         flips: Flips,
     ) {
-        let (src_rect, dest_rect) = self.geometry_normalized(policy, texture);
+        let (src_rect, dest_rect) = self.geometry_normalized(texture);
+
         // TODO: round
         // if policy.do_round {
         //     rect.x = rect.x.round();
@@ -110,7 +108,6 @@ impl QuadParams {
 
         self::push_texture2d(
             quad,
-            texture,
             self.origin,
             src_rect,
             dest_rect,
@@ -124,11 +121,7 @@ impl QuadParams {
 
     /// -> (src_rect, origin, dest_rect)
     #[inline]
-    fn geometry_normalized(
-        &self,
-        policy: DrawPolicy,
-        texture: &impl Texture2d,
-    ) -> (Rect2f, Rect2f) {
+    fn geometry_normalized(&self, texture: &impl Texture2d) -> (Rect2f, Rect2f) {
         let inv_tex_w = 1.0 / texture.w();
         let inv_tex_h = 1.0 / texture.h();
 
@@ -170,7 +163,6 @@ impl QuadParams {
 #[inline]
 fn push_texture2d(
     quad: &mut QuadData,
-    texture: &impl Texture2d,
     origin: Vec2f,
     src_rect: Rect2f,
     dest_rect: Rect2f,

@@ -1,6 +1,9 @@
 //! Font book on font stash
 
-pub use ::fontstash::{self, FontStash};
+pub use {
+    fontstash::{self, FontStash},
+    std::os::raw::{c_char, c_int, c_uchar, c_void},
+};
 
 use fontstash::FonsTextIter;
 
@@ -44,19 +47,18 @@ impl FontBook {
         return FontBook { inner };
 
         unsafe extern "C" fn fons_error_callback(
-            _uptr: *mut ::std::os::raw::c_void,
-            error_code: ::std::os::raw::c_int,
-            _val: ::std::os::raw::c_int,
+            _uptr: *mut c_void,
+            error_code: c_int,
+            _val: c_int,
         ) {
-            let error = match fontstash::ErrorCode::from_u32(error_code as u32) {
-                Some(error) => error,
+            match fontstash::ErrorCode::from_u32(error_code as u32) {
+                Some(error) => {
+                    log::warn!("fons error: {:?}", error);
+                }
                 None => {
                     log::warn!("fons error error: given broken erroor code");
-                    return;
                 }
-            };
-
-            // log::warn!("fons error: {:?}", error);
+            }
         }
     }
 }
@@ -87,6 +89,15 @@ impl Drop for FontBookInternal {
     }
 }
 
+/// Lifecycle
+impl FontBookInternal {
+    /// * TODO: render_update vs update
+    pub fn update(&mut self) {
+        self.is_dirty = true;
+    }
+}
+
+/// Interface
 impl FontBookInternal {
     pub fn texture(&self) -> *mut fna3d::Texture {
         self.texture
@@ -96,61 +107,26 @@ impl FontBookInternal {
         self.stash.clone()
     }
 
-    /// TTODO: resize when needed
     pub fn text_iter(&mut self, text: &str) -> fontstash::Result<FonsTextIter> {
-        let iter = self.stash.text_iter(text)?;
-        self.update_texture();
-        Ok(iter)
-    }
-
-    /// Updates GPU texure. Call it whenever drawing text
-    fn update_texture(&mut self) {
-        // TODO: correct dirty test
-        // let (is_dirty, _dirty_rect) = self.stash.dirty();
-        if !self.is_dirty {
-            return;
-        }
-        self.is_dirty = false;
-
-        log::trace!("fontbook: update font texture");
-
-        self.stash.with_pixels(|pixels, w, h| {
-            // need this?
-
-            let data = {
-                log::trace!("=> size: [{}, {}]", w, h);
-                let area = (w * h) as usize;
-                // four channels (RGBA)
-                let mut data = Vec::<u8>::with_capacity(4 * area);
-                for i in 0..area {
-                    data.push(255);
-                    data.push(255);
-                    data.push(255);
-                    data.push(pixels[i]);
-                }
-                data
-            };
-
-            self.device
-                .set_texture_data_2d(self.texture, 0, 0, w, h, 0, &data);
-        });
+        self.stash.text_iter(text)
     }
 }
+
+// --------------------------------------------------------------------------------
+// Callback and texture updating
 
 /// Renderer implementation
 ///
 /// Return `1` to represent success.
 unsafe impl fontstash::Renderer for FontBookInternal {
     /// Creates font texture
-    unsafe extern "C" fn create(
-        uptr: *mut std::os::raw::c_void,
-        width: std::os::raw::c_int,
-        height: std::os::raw::c_int,
-    ) -> std::os::raw::c_int {
-        log::trace!("fontbook: create ([{}, {}])", width, height);
+    unsafe extern "C" fn create(uptr: *mut c_void, width: c_int, height: c_int) -> c_int {
+        log::trace!("fontbook: create [{}, {}]", width, height);
+
         let me = &mut *(uptr as *const _ as *mut Self);
 
         if !me.texture.is_null() {
+            log::trace!("fontbook: - dispose old texture");
             me.device.add_dispose_texture(me.texture);
         }
 
@@ -169,39 +145,68 @@ unsafe impl fontstash::Renderer for FontBookInternal {
         return 1;
     }
 
-    unsafe extern "C" fn resize(
-        uptr: *mut std::os::raw::c_void,
-        width: std::os::raw::c_int,
-        height: std::os::raw::c_int,
-    ) -> std::os::raw::c_int {
+    unsafe extern "C" fn resize(uptr: *mut c_void, width: c_int, height: c_int) -> c_int {
         log::trace!("fontbook: resize");
+
         Self::create(uptr, width, height);
         1 // success
     }
 
-    /// Try to resize texture while the atlas is full
-    unsafe extern "C" fn expand(uptr: *mut std::os::raw::c_void) -> std::os::raw::c_int {
+    /// Try to double the texture size while the atlas is full
+    unsafe extern "C" fn expand(uptr: *mut c_void) -> c_int {
         log::trace!("fontbook: expand");
+
         let me = &mut *(uptr as *const _ as *mut Self);
         if let Err(why) = me.stash.expand_atlas(me.w * 2, me.h * 2) {
             log::warn!("fontstash: error on resize: {:?}", why);
             0 // fail
         } else {
-            1
+            1 // success
         }
     }
 
     unsafe extern "C" fn update(
-        uptr: *mut std::os::raw::c_void,
-        rect: *mut std::os::raw::c_int,
-        data: *const std::os::raw::c_uchar,
-    ) -> std::os::raw::c_int {
-        log::trace!("fontbook: update");
-        // FIXME: is this called?
-        // TODO: make use of rect and data
+        uptr: *mut c_void,
+        // TODO: what is the dirty rect
+        _rect: *mut c_int,
+        _data: *const c_uchar,
+    ) -> c_int {
         let me = &mut *(uptr as *const _ as *mut Self);
-        me.is_dirty = true;
-        // me.update_texture();
+        me.maybe_update_texture();
+
         1
+    }
+}
+
+impl FontBookInternal {
+    /// Updates GPU texure. Call it whenever drawing text
+    fn maybe_update_texture(&mut self) {
+        if !self.is_dirty {
+            // TODO: this looks very odd but works
+            self.is_dirty = true;
+            return;
+        }
+        self.is_dirty = false;
+
+        self.stash.with_pixels(|pixels, w, h| {
+            let data = {
+                log::trace!("fontbook: [{}, {}] update GPU texture", w, h);
+
+                // FIXME: address boundary error
+                let area = (w * h) as usize;
+                // four channels (RGBA)
+                let mut data = Vec::<u8>::with_capacity(4 * area);
+                for i in 0..area {
+                    data.push(255);
+                    data.push(255);
+                    data.push(255);
+                    data.push(pixels[i]);
+                }
+                data
+            };
+
+            self.device
+                .set_texture_data_2d(self.texture, 0, 0, w, h, 0, &data);
+        });
     }
 }

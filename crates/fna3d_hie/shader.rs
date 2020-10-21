@@ -58,22 +58,12 @@ impl Shader {
         device.apply_effect(self.effect, pass, &state_changes);
     }
 
-    /// Sets uniforms of vertex shader (i.e. projection matrix)
-    pub fn set_projection_matrix_1d(&mut self, mat: &[f32; 16]) {
-        unsafe {
-            let name = "MatrixTransform";
-            let name = std::ffi::CString::new(name).unwrap();
-            if !fna3d::mojo::set_param(self.data, &name, &mat) {
-                log::warn!("failed to set projection matrix in shader");
-            }
-        }
-    }
-
     pub fn param(&self, name: &CStr) -> Option<*mut c_void> {
         fna3d::mojo::find_param(self.data, name)
     }
 
-    pub unsafe fn set_param<T>(&self, name: &CStr, value: &T) {
-        fna3d::mojo::set_param(self.data, name, value);
+    pub unsafe fn set_param<T>(&self, name: &str, value: &T) {
+        let name = std::ffi::CString::new(name).unwrap();
+        fna3d::mojo::set_param(self.data, &name, value);
     }
 }

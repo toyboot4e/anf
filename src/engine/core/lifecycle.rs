@@ -1,7 +1,7 @@
 //! The primitive lifecycle
 
 use ::{
-    sdl2::{event::Event, sys::SDL_Window, EventPump},
+    sdl2::{event::Event, EventPump},
     std::time::Duration,
 };
 

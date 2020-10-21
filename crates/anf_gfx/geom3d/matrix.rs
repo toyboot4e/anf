@@ -341,7 +341,7 @@ impl Mat4x4 {
                     }
                 }
             } else {
-                let mut num = rot_axis.x * Vec3f::forward().x
+                let num = rot_axis.x * Vec3f::forward().x
                     + rot_axis.y * Vec3f::forward().y
                     + rot_axis.z * Vec3f::forward().z;
 
@@ -735,7 +735,7 @@ impl Mat4x4 {
     }
 
     pub fn from_world(pos: Vec3f, forward: Vec3f, up: Vec3f) -> Self {
-        let mut z = forward.normalize();
+        let z = forward.normalize();
 
         let mut x = forward.cross(&up);
         x.normalize_mut();

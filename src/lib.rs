@@ -56,17 +56,3 @@ pub mod prim {
 
     pub use crate::{engine::prelude::*, gfx::prelude::*, vfs};
 }
-
-pub use ::{fna3d, sdl2};
-
-#[cfg(feature = "input")]
-pub use ::xdl;
-
-#[cfg(feature = "audio")]
-pub use ::soloud;
-
-#[cfg(feature = "debug-gui")]
-pub use ::imgui;
-
-#[cfg(feature = "debug-gui")]
-pub use ::imgui_fna3d;

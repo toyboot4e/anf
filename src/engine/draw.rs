@@ -1,10 +1,12 @@
 //! Object-oriented draw APIs
 //!
 //! [`DrawContext`] is the primary interface. It's recommended to do `use anf::engine::draw::*`.
+//!
+//! * TODO: better flushing
 
 pub use ::anf_gfx::cmd::prelude::*;
 
-use ::{
+use {
     anf_gfx::{
         batcher::{
             bufspecs::{ColoredVertexData, QuadData},
@@ -19,6 +21,8 @@ use ::{
 };
 
 use crate::gfx::TextureData2d;
+
+static mut WHITE_DOT: Option<TextureData2d> = None;
 
 /// The imperative draw API
 ///
@@ -45,14 +49,12 @@ pub struct DrawContext {
     batcher: Batcher,
     pipe: Pipeline,
     push: QuadParams,
-    // builtin
-    white_dot: TextureData2d,
-    /// dependency
+    /// Dependency
     device: Device,
-    /// dependency
+    /// Dependency
     params: fna3d::PresentationParameters,
-    /// interface
-    time_step: Duration,
+    /// Interface
+    dt: Duration,
 }
 
 impl DrawContext {
@@ -63,18 +65,23 @@ impl DrawContext {
     ) -> Self {
         let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader_bytes);
         let batcher = Batcher::from_device(&mut device);
-        let white_dot =
-            TextureData2d::from_undecoded_bytes(&mut device, crate::engine::embedded::WHITE_DOT)
-                .unwrap();
+
+        unsafe {
+            let white_dot = TextureData2d::from_undecoded_bytes(
+                &mut device,
+                crate::engine::embedded::WHITE_DOT,
+            )
+            .unwrap();
+            WHITE_DOT = Some(white_dot);
+        }
 
         Self {
             device,
             batcher,
             pipe,
-            white_dot,
             push: QuadParams::default(),
             params,
-            time_step: Duration::default(),
+            dt: Duration::default(),
         }
     }
 
@@ -91,15 +98,14 @@ impl DrawContext {
 
     /// TODO: remove this
     pub fn set_dt(&mut self, ts: Duration) {
-        self.time_step = ts;
+        self.dt = ts;
     }
 }
 
 /// Batcher
 impl DrawContext {
     pub fn next_quad_mut_safe(&mut self, t: *mut fna3d::Texture) -> &mut QuadData {
-        self.batcher
-            .next_quad_mut_safe(t, &self.device, &mut self.pipe)
+        self.batcher.next_quad_mut(t, &self.device, &mut self.pipe)
     }
 
     pub fn flush(&mut self) {
@@ -125,7 +131,7 @@ impl DrawContext {
     }
 
     pub fn dt(&self) -> Duration {
-        self.time_step
+        self.dt
     }
 }
 
@@ -161,24 +167,16 @@ impl<'a> BatchPass<'a> {
 ///
 /// TODO: consider using `Render` trait
 impl<'a> BatchPass<'a> {
-    fn unsature(&mut self) {
-        if self.dcx.batcher.is_satured() {
+    fn next_push_mut(&mut self, tex: &impl Texture2d) -> QuadPush<'_> {
+        let target =
             self.dcx
                 .batcher
-                .flush(&mut self.dcx.device, &mut self.dcx.pipe);
-        }
-    }
-
-    fn next_quad_mut(&mut self, tex: &impl Texture2d) -> QuadPush {
-        let data = {
-            self.unsature();
-            unsafe { self.dcx.batcher.batch.next_quad_mut(tex.raw_texture()) }
-        };
+                .next_quad_mut(tex.raw_texture(), &self.dcx.device, &mut self.dcx.pipe);
         self.dcx.push.reset_to_defaults();
 
         QuadPush {
             params: &mut self.dcx.push,
-            data,
+            target,
         }
     }
 
@@ -186,14 +184,14 @@ impl<'a> BatchPass<'a> {
     // TODO: use traits for pusing
 
     /// Creates [`SpritePush`] using [`SubTexture2d`] attributes
-    pub fn texture<T: SubTexture2d>(&mut self, texture: T) -> SpritePush<'_, T> {
-        let quad = self.next_quad_mut(&texture);
+    pub fn texture<T: SubTexture2d>(&mut self, texture: &T) -> SpritePush<T> {
+        let quad = self.next_push_mut(texture);
         SpritePush::from_sub_texture(quad, texture)
     }
 
     /// Creates [`SpritePush`] using [`Sprite`] attributes
-    pub fn sprite<T: Sprite>(&mut self, sprite: T) -> SpritePush<'_, T> {
-        let quad = self.next_quad_mut(&sprite);
+    pub fn sprite<T: Sprite>(&mut self, sprite: &T) -> SpritePush<T> {
+        let quad = self.next_push_mut(sprite);
         SpritePush::from_sprite(quad, sprite)
     }
 }
@@ -202,7 +200,7 @@ impl<'a> BatchPass<'a> {
 impl<'a> BatchPass<'a> {
     // TODO: add wrapper of primitive renderer
     pub fn white_dot(&mut self) -> SpritePush<'_, TextureData2d> {
-        self.texture(self.dcx.white_dot.clone())
+        unsafe { self.texture(WHITE_DOT.as_ref().unwrap()) }
     }
 
     pub fn line(&mut self, p1: impl Into<Vec2f>, p2: impl Into<Vec2f>, color: Color) {

@@ -23,12 +23,9 @@ impl Pipeline {
         initial_vtx_decl: fna3d::VertexDeclaration,
         shader_bytes: &[u8],
     ) -> Self {
-        let mut shader =
+        let shader =
             Shader::from_bytes(device, shader_bytes).expect("failed to load shader from bytes");
-
-        // // initial projection matrix (don't use it dire)
-        // let mat = fna3d::mojo::orthographic_off_center(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-        // shader.set_projection_matrix_1d(&mat);
+        // we don't set a projection matrix here
 
         Self {
             vtx_attrs: GpuVertexAttributes::new(initial_vtx_decl),
@@ -41,13 +38,6 @@ impl Pipeline {
 /// Rendering pipeline methods
 /// ---
 impl Pipeline {
-    // pub fn set_proj_mat(&mut self, mat: &Mat4) {}
-
-    /// * `FNA3D_ApplyEffect`
-    pub fn apply_effect(&mut self, device: &fna3d::Device, pass: u32) {
-        self.shader.apply_effect(device, pass);
-    }
-
     /// * `FNA3D_VerifySamplerState`
     pub fn set_texture_raw(&mut self, device: &fna3d::Device, texture: *mut fna3d::Texture) {
         self.sampler.set_texture_raw(device, texture);

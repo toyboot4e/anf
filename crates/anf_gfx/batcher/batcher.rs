@@ -1,6 +1,6 @@
 //! Re-exported to super module
 
-use ::fna3d_hie::{buffers::GpuIndexBuffer, Pipeline};
+use ::fna3d_hie::{buffers::GpuIndexBuffer, Pipeline, Shader};
 
 use crate::{
     batcher::{
@@ -13,7 +13,7 @@ use crate::{
 /// [`SpriteBatch`] with GPU vertex/index buffer handle
 #[derive(Debug)]
 pub struct Batcher {
-    pub batch: SpriteBatch,
+    batch: SpriteBatch,
     bufs: GpuViBuffer,
     /// The projection matrix (fixed to orthographic matrix)
     mat_proj: Mat4x4,
@@ -52,23 +52,19 @@ impl Batcher {
         self.batch.is_satured()
     }
 
-    pub fn next_quad_mut_safe(
-        &mut self,
+    pub fn next_quad_mut<'a>(
+        &'a mut self,
         texture: *mut fna3d::Texture,
         device: &fna3d::Device,
         pipe: &mut Pipeline,
-    ) -> &mut QuadData {
+    ) -> &'a mut QuadData {
         if self.batch.is_satured() {
             self.flush(device, pipe);
         }
 
         unsafe { self.batch.next_quad_mut(texture) }
     }
-}
 
-/// Batch cycle
-/// ---
-impl Batcher {
     /// Draws all the pushed sprites
     pub fn flush(&mut self, device: &fna3d::Device, pipe: &mut Pipeline) {
         if !self.batch.any_quads_pushed() {
@@ -79,29 +75,13 @@ impl Batcher {
     }
 
     fn flush_impl(&mut self, device: &fna3d::Device, pipe: &mut Pipeline) {
-        // Material (blend, sampler, depth/stencil, rasterizer)
-        // viewport, scissors rect
-
-        // update shader matrix
         // FIXME: get viewport
-        self.mat_proj = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
+        self.set_proj_mat(&mut pipe.shader);
+        pipe.shader.apply_effect(device, 0);
 
-        unsafe {
-            let name = std::ffi::CString::new("MatrixTransform").unwrap();
-            self.mat_model_view_proj = Mat4x4::multiply(&self.mat_model_view, &self.mat_proj);
-            // internally, MojoShader uses column-major matrices so we transpose it
-            pipe.shader
-                .set_param(&name, &self.mat_model_view_proj.transpose());
-            // TODO: use inlined transposed orthographic matrix for efficiency
-        }
-
-        // `FNA3D_ApplyEffect`
-        pipe.apply_effect(device, 0);
-
-        // `FNA3D_SetVertexBufferData`
         self.upload_vertices(device);
+        pipe.set_vertex_attributes(&mut self.bufs.vbuf.inner, 0);
 
-        // `FNA3D_DrawIndexedPrimitives`
         for call in self.batch.iter() {
             Self::make_draw_call(device, pipe, &mut self.bufs, call);
         }
@@ -113,6 +93,14 @@ impl Batcher {
 /// Sub procedures of [`Batcher::flush`]
 /// ---
 impl Batcher {
+    fn set_proj_mat(&mut self, shader: &mut Shader) {
+        self.mat_proj = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
+        self.mat_model_view_proj = Mat4x4::multiply(&self.mat_model_view, &self.mat_proj);
+        unsafe {
+            shader.set_param("MatrixTransform", &self.mat_model_view_proj.transpose());
+        }
+    }
+
     /// Copies vertex data from CPU to GPU ([`SpriteBatch::vertex_data`] to [`VertexBuffer`])
     fn upload_vertices(&mut self, device: &fna3d::Device) {
         let offset = 0;
@@ -130,7 +118,6 @@ impl Batcher {
         call: SpriteDrawCall<'_>,
     ) {
         pipe.set_texture_raw(device, call.texture());
-        pipe.set_vertex_attributes(&mut bufs.vbuf.inner, 0);
         pipe.upload_vertex_attributes(device, call.base_vertex() as u32);
         Self::draw_triangles(device, call, &bufs.ibuf);
     }
@@ -139,7 +126,7 @@ impl Batcher {
         device.draw_indexed_primitives(
             fna3d::PrimitiveType::TriangleList,
             call.base_vertex() as u32, // the number of vertices to skip
-            call.base_index() as u32, // REMARK: our index buffer is cyclic and we don't need to actually calculate it
+            call.base_index() as u32, // NOTE: our index buffer is cyclic and we don't need to actually calculate it
             call.n_primitives() as u32,
             ibuf.raw(),
             ibuf.elem_size(),
