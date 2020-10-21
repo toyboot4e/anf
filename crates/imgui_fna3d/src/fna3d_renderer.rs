@@ -36,7 +36,7 @@ impl Drop for Texture2dDrop {
     }
 }
 
-/// Reference counted version of [`Texture2d`]
+/// Reference counted version of [`Texture2dDrop`]
 pub struct RcTexture2d {
     pub texture: Rc<Texture2dDrop>,
 }

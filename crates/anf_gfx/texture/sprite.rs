@@ -1,5 +1,3 @@
-//! [`SubTextureData2d`] and [`SpriteData2d`]
-
 pub use crate::texture::texture::{TextureData2d, TextureKind};
 
 use crate::{cmd::prelude::*, geom2d::*};

@@ -1,10 +1,8 @@
 //! Primitive framework
 //!
 //! [`AnfLifecycle`] is very primitive; it doesn't contain specific stages such as `debug_render`.
-//! So you would build your own framework on top of it.
-//!
-//! [`anf_samples`] contains an examples framework where context/user-data pattern lifecycle is
-//! run.
+//! So you would build your own framework on top of it. One example is [`anf_samples`], where
+//! context/user-data pattern lifecycle is run.
 //!
 //! [`AnfLifecycle`]: crate::engine::prelude::AnfLifecycle
 //! [`anf_samples`]: https://github.com/toyboot4e/anf_samples

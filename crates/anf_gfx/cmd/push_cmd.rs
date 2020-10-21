@@ -7,13 +7,13 @@ use crate::{
 // TODO: put it here
 use crate::texture::TextureData2d;
 
-/// Texture with size data and region. Used by [`QuadPushBuilder`]
+/// Texture with size data and region. Used by [`QuadParamsBuilder`]
 pub trait SubTexture2d: Texture2d {
     /// [x, y, w, h]: Normalized rectangle that represents a regon in texture
     fn uv_rect(&self) -> [f32; 4];
 }
 
-/// Texture with size data, region and other geometry data. Used by [`QuadPushBuilder`]
+/// Texture with size data, region and other geometry data. Used by [`QuadParamsBuilder`]
 pub trait Sprite: SubTexture2d {
     /// Rotation in radian
     fn rot(&self) -> f32;
