@@ -1,12 +1,15 @@
 //! Font book on font stash
 
-pub use {
-    fontstash::{self, FontStash},
-    std::os::raw::{c_char, c_int, c_uchar, c_void},
+pub use fontstash::{self, FontStash};
+
+use {
+    fontstash::FonsTextIter,
+    std::os::raw::{c_int, c_uchar, c_void},
 };
 
-use fontstash::FonsTextIter;
-
+/// The shared ownership of [`FontBookInternal`]
+///
+/// It is required to use the internal variable so that the memory position is fixed.
 pub struct FontBook {
     /// Keeps memory position of the renderer
     inner: Box<FontBookInternal>,
@@ -65,7 +68,7 @@ impl FontBook {
 
 /// The internals of [`FontBook`]
 ///
-/// The memory location should be fixed.
+/// It is required to use the internal variable so that the memory position is fixed.
 pub struct FontBookInternal {
     stash: fontstash::FontStash,
     device: fna3d::Device,
@@ -142,14 +145,14 @@ unsafe impl fontstash::Renderer for FontBookInternal {
 
         me.is_dirty = true;
 
-        return 1;
+        true as c_int // success
     }
 
     unsafe extern "C" fn resize(uptr: *mut c_void, width: c_int, height: c_int) -> c_int {
         log::trace!("fontbook: resize");
 
         Self::create(uptr, width, height);
-        1 // success
+        true as c_int // success
     }
 
     /// Try to double the texture size while the atlas is full
@@ -157,11 +160,14 @@ unsafe impl fontstash::Renderer for FontBookInternal {
         log::trace!("fontbook: expand");
 
         let me = &mut *(uptr as *const _ as *mut Self);
+
+        // Self::create(uptr, (me.w * 2) as i32, (me.h * 2) as i32);
+
         if let Err(why) = me.stash.expand_atlas(me.w * 2, me.h * 2) {
             log::warn!("fontstash: error on resize: {:?}", why);
-            0 // fail
+            false as c_int // fail
         } else {
-            1 // success
+            true as c_int // success
         }
     }
 
@@ -173,8 +179,7 @@ unsafe impl fontstash::Renderer for FontBookInternal {
     ) -> c_int {
         let me = &mut *(uptr as *const _ as *mut Self);
         me.maybe_update_texture();
-
-        1
+        true as c_int // success
     }
 }
 

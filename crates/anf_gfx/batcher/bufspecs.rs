@@ -29,8 +29,9 @@ pub const MAX_INDICES: usize = MAX_QUADS * 6;
 pub struct ColoredVertexData {
     /// Destination position in pixels
     pub dest: Vec3f,
+    /// Vertex position
     pub color: fna3d::Color,
-    /// Normalized source position in texture (also known as texture coordinates or texels)
+    /// Normalized source position in texture (also known as texels or texture coordinates)
     pub uvs: Vec2f,
 }
 
@@ -70,34 +71,32 @@ impl Default for ColoredVertexData {
 }
 
 impl ColoredVertexData {
-    pub fn elems() -> &'static [fna3d::VertexElement] {
-        &[
-            fna3d::VertexElement {
-                offset: 0,
-                vertexElementFormat: fna3d::VertexElementFormat::Vector3 as u32,
-                vertexElementUsage: fna3d::VertexElementUsage::Position as u32,
-                usageIndex: 0, // TODO: what's this
-            },
-            fna3d::VertexElement {
-                offset: 12,
-                vertexElementFormat: fna3d::VertexElementFormat::Color as u32,
-                vertexElementUsage: fna3d::VertexElementUsage::Color as u32,
-                usageIndex: 0,
-            },
-            fna3d::VertexElement {
-                offset: 16,
-                vertexElementFormat: fna3d::VertexElementFormat::Vector2 as u32,
-                vertexElementUsage: fna3d::VertexElementUsage::TextureCoordinate as u32,
-                usageIndex: 0,
-            },
-        ]
-    }
+    const ELEMS: &'static [fna3d::VertexElement; 3] = &[
+        fna3d::VertexElement {
+            offset: 0,
+            vertexElementFormat: fna3d::VertexElementFormat::Vector3 as u32,
+            vertexElementUsage: fna3d::VertexElementUsage::Position as u32,
+            usageIndex: 0, // TODO: what's this
+        },
+        fna3d::VertexElement {
+            offset: 12,
+            vertexElementFormat: fna3d::VertexElementFormat::Color as u32,
+            vertexElementUsage: fna3d::VertexElementUsage::Color as u32,
+            usageIndex: 0,
+        },
+        fna3d::VertexElement {
+            offset: 16,
+            vertexElementFormat: fna3d::VertexElementFormat::Vector2 as u32,
+            vertexElementUsage: fna3d::VertexElementUsage::TextureCoordinate as u32,
+            usageIndex: 0,
+        },
+    ];
 
     pub fn decl() -> fna3d::VertexDeclaration {
         fna3d::VertexDeclaration {
             vertexStride: 24,
             elementCount: 3,
-            elements: Self::elems().as_ptr() as *mut _,
+            elements: Self::ELEMS as *const _ as *mut _,
         }
     }
 }
@@ -126,24 +125,10 @@ impl GpuViBuffer {
             false,
         );
 
-        ibuf.upload_indices(device, 0, &Self::gen_index_array());
+        let indices = fna3d_hie::gen_quad_indices!(self::MAX_QUADS);
+        ibuf.upload_indices(device, 0, &indices);
 
         GpuViBuffer { vbuf, ibuf }
-    }
-
-    fn gen_index_array() -> [i16; self::MAX_INDICES] {
-        let mut indices = [0; self::MAX_INDICES];
-        // for each quadliteral, we need two triangles (i.e. four verices and six indices)
-        for n in 0..self::MAX_QUADS as i16 {
-            let (i, v) = (n * 6, n * 4);
-            indices[i as usize] = v as i16;
-            indices[(i + 1) as usize] = v + 1 as i16;
-            indices[(i + 2) as usize] = v + 2 as i16;
-            indices[(i + 3) as usize] = v + 3 as i16;
-            indices[(i + 4) as usize] = v + 2 as i16;
-            indices[(i + 5) as usize] = v + 1 as i16;
-        }
-        indices
     }
 }
 

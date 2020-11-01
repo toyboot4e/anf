@@ -1,18 +1,17 @@
 //! Quad rendering command and API
 
-mod push_cmd;
-mod push_params;
+mod params;
+mod params_build;
 
+// data types
 pub use self::{
-    push_cmd::{QuadPush, SpritePush},
-    push_params::QuadParams,
+    params::{DrawPolicy, QuadParams},
+    params_build::{QuadPush, SpritePush},
 };
 
-pub mod prelude {
-    //! Traits to push quadliterals
-
+pub mod traits {
     pub use super::{
-        push_cmd::{QuadParamsBuilder, Sprite, SubTexture2d},
-        push_params::{DrawPolicy, QuadParams, Texture2d},
+        params::Texture2d,
+        params_build::{OnSpritePush, QuadParamsBuilder, Sprite, SubTexture2d},
     };
 }

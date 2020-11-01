@@ -39,9 +39,6 @@ impl<T> Scaled<T> {
     }
 }
 
-// --------------------------------------------------------------------------------
-// QuadPush
-
 /// Full-featured geometry parameters to push a quadliteral onto [`SpriteBatch`]
 #[derive(Debug)]
 pub struct QuadParams {
@@ -83,15 +80,9 @@ impl QuadParams {
         self.flips = Flips::NONE;
         self.skew = Skew2f::default();
     }
-}
 
-/// Run
-/// ---
-///
-/// Be sure to flush [`SpriteBatch`] before running if it's saturated.
-impl QuadParams {
-    /// Make sure the batcher is not satured
-    pub fn run_texture2d(
+    /// Be sure to flush [`SpriteBatch`] before running if it's saturated.
+    pub fn write_to_quad(
         &self,
         quad: &mut QuadData,
         texture: &impl Texture2d,

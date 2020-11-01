@@ -3,6 +3,8 @@
 //! * TODO: explain what "dynamic" buffer means and what options are available
 
 /// Marker to represent vertex data that can be sent to GPU memory
+///
+/// You might have to set `#[repr(C)]` to your vertex struct.
 pub trait VertexData {}
 
 // --------------------------------------------------------------------------------

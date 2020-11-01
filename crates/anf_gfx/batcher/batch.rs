@@ -40,10 +40,7 @@ impl SpriteBatch {
         self.n_quads += 1;
         quad
     }
-}
 
-/// For batcher
-impl SpriteBatch {
     pub fn any_quads_pushed(&self) -> bool {
         self.n_quads > 0
     }
@@ -68,6 +65,9 @@ impl SpriteBatch {
     }
 }
 
+// --------------------------------------------------------------------------------
+// Drawcall iterator
+
 /// Slices [`SpriteBatch`] into [`SpriteDrawCall`]
 #[derive(Debug)]
 pub struct SpriteDrawCallIter<'a> {
@@ -77,9 +77,9 @@ pub struct SpriteDrawCallIter<'a> {
 }
 
 impl<'a> Iterator for SpriteDrawCallIter<'a> {
-    type Item = SpriteDrawCall<'a>;
+    type Item = SpriteDrawCall;
 
-    fn next(&mut self) -> Option<SpriteDrawCall<'a>> {
+    fn next(&mut self) -> Option<SpriteDrawCall> {
         if self.current >= self.batch.n_quads {
             return None;
         }
@@ -96,7 +96,7 @@ impl<'a> Iterator for SpriteDrawCallIter<'a> {
             self.current = hi;
             return Some(SpriteDrawCall {
                 span: BatchSpan { lo, hi },
-                batch: self.batch,
+                texture: self.batch.raw_texture_track[lo],
             });
         }
 
@@ -105,21 +105,21 @@ impl<'a> Iterator for SpriteDrawCallIter<'a> {
         self.current = hi;
         return Some(SpriteDrawCall {
             span: BatchSpan { lo, hi },
-            batch: self.batch,
+            texture: self.batch.raw_texture_track[lo],
         });
     }
 }
 
 /// Smart span of [`SpriteBatch`] to make a draw call
 #[derive(Debug)]
-pub struct SpriteDrawCall<'a> {
+pub struct SpriteDrawCall {
     span: BatchSpan,
-    batch: &'a SpriteBatch,
+    texture: *mut fna3d::Texture,
 }
 
-impl<'a> SpriteDrawCall<'a> {
+impl SpriteDrawCall {
     pub fn texture(&self) -> *mut fna3d::Texture {
-        self.batch.raw_texture_track[self.span.lo]
+        self.texture
     }
 
     pub fn base_vertex(&self) -> usize {

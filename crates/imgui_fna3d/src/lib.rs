@@ -12,7 +12,7 @@ mod helper;
 mod sdl2_backend;
 
 pub use crate::{
-    fna3d_renderer::{ImGuiRendererError, RcTexture2d, Result, Texture2dDrop},
+    fna3d_renderer::{ImGuiRendererError, RcTexture2d, Result, TextureData2d},
     helper::Fna3dImgui,
 };
 

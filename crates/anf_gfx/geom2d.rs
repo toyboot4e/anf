@@ -17,12 +17,18 @@
 //! let e: Rect2f = ([0.0, 0.0], size).into(); // from (T, U) where T: Into<Vec2f>, U: Into<Vec2f>
 //! ```
 //!
-//! They have public fields so they we can easily be modified, but they're not indexed as the
-//! drawcback.
+//! They have public fields so they we can easily be modified.
+//!
+//! # Notes
+//!
+//! * Why prefer `f32`? Because it's natural to use `f32` in rendering code considering scalings.
+//! * Whe no indexer? Preferring simplicity.
+//! * Whe another geometry crate? Just because I'm comfortable.
 
 // https://docs.rs/auto_ops/
-use ::auto_ops::*;
+use auto_ops::*;
 
+/// 2D vector, intended for both positions and sizes
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec2f {
     pub x: f32,

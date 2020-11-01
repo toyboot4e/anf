@@ -1,7 +1,7 @@
 use ::sdl2::{event::Event, video::Window};
 
 use crate::{
-    fna3d_renderer::{ImGuiRenderer, RcTexture2d, Texture2dDrop},
+    fna3d_renderer::{ImGuiRenderer, RcTexture2d, TextureData2d},
     sdl2_backend::ImguiSdl2,
 };
 
@@ -50,7 +50,7 @@ impl Fna3dImgui {
         self.icx.io_mut()
     }
 
-    pub fn font_texture(&self) -> &Texture2dDrop {
+    pub fn font_texture(&self) -> &TextureData2d {
         self.part.renderer.font_texture()
     }
 

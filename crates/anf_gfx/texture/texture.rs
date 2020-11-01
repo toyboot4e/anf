@@ -1,30 +1,87 @@
 //! [`TextureData2d`]
 
-use ::std::{
+use std::{
     fs::File,
     io::{BufReader, Read, Seek},
+    rc::Rc,
 };
 
 /// Mipmap level (no mipmap)
 const LEVEL: u32 = 0;
 
-/// 2D texture handle
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TextureKind {
+    Texture,
+    RenderTarget,
+}
+
+/// 2D GPU texture handle
 ///
-/// # Safety
-///
-/// It's NOT guaranteed that the internal texture is still alive because it's using a pointer.
-#[derive(Debug, PartialEq, Clone)]
-pub struct TextureData2d {
+/// Automatically disposes the FNA3D texture when dropping.
+#[derive(Debug, Clone)]
+pub struct Texture2dDrop {
     raw: *mut fna3d::Texture,
+    device: fna3d::Device,
     pub(crate) w: u32,
     pub(crate) h: u32,
     pub(crate) fmt: fna3d::SurfaceFormat,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum TextureKind {
-    Texture,
-    RenderTarget,
+impl PartialEq<Self> for Texture2dDrop {
+    fn eq(&self, other: &Self) -> bool {
+        self.raw == other.raw && self.w == other.w && self.h == other.h && self.fmt == other.fmt
+    }
+}
+
+impl Drop for Texture2dDrop {
+    fn drop(&mut self) {
+        self.device.add_dispose_texture(self.raw);
+    }
+}
+
+/// Accessors
+impl Texture2dDrop {
+    /// Size in `f32`
+    ///
+    /// `f32` is is reasonable in rendering context
+    pub fn size(&self) -> [f32; 2] {
+        [self.w as f32, self.h as f32]
+    }
+
+    /// Size in pixels
+    pub fn size_px(&self) -> [u32; 2] {
+        [self.w, self.h]
+    }
+
+    /// Upload pixels to the GPU (VRAM?) texture data
+    pub fn upload_pixels(
+        &self,
+        device: &fna3d::Device,
+        level: u32,
+        rect: Option<[u32; 4]>,
+        data: &[u8],
+    ) {
+        let (x, y, w, h) = if let Some(xs) = rect {
+            (xs[0], xs[1], xs[2], xs[3])
+        } else {
+            (
+                0,
+                0,
+                std::cmp::max(self.w >> level, 1),
+                std::cmp::max(self.h >> level, 1),
+            )
+        };
+
+        device.set_texture_data_2d(self.raw, x, y, w, h, level, data);
+    }
+
+    // /// VERY HEAVY task
+    // pub fn save_to_png(&self, path: &Path) {
+    //     let pixels = Vec::with_capacity(32 * self.w as usize * self.h as usize);
+    //     self.device
+    //         .get_texture_data_2d(self.raw, self.x, self.y, self.w, self.h, 0, &mut pixels);
+    //     // TODO:
+    // }
 }
 
 fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::SurfaceFormat {
@@ -53,22 +110,23 @@ fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::Surfa
     }
 }
 
+/// Reference counted 2D GPU texture
+#[derive(Debug, PartialEq, Clone)]
+pub struct TextureData2d {
+    inner: Rc<Texture2dDrop>,
+}
+
+impl std::ops::Deref for TextureData2d {
+    type Target = Texture2dDrop;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
 impl TextureData2d {
     pub fn raw(&self) -> *mut fna3d::Texture {
         self.raw
-    }
-
-    pub fn from_raw(raw: *mut fna3d::Texture, w: u32, h: u32, fmt: fna3d::SurfaceFormat) -> Self {
-        Self { raw, w, h, fmt }
-    }
-
-    pub fn empty() -> Self {
-        Self {
-            raw: std::ptr::null_mut(),
-            w: 0,
-            h: 0,
-            fmt: fna3d::SurfaceFormat::Color,
-        }
     }
 
     pub fn new(
@@ -81,7 +139,17 @@ impl TextureData2d {
         let fmt = self::get_init_format(fmt, TextureKind::Texture);
         let raw = device.create_texture_2d(fmt, w, h, LEVEL, kind == TextureKind::RenderTarget);
 
-        Self { raw, w, h, fmt }
+        let inner = Texture2dDrop {
+            device: device.clone(),
+            raw,
+            w,
+            h,
+            fmt,
+        };
+
+        Self {
+            inner: Rc::new(inner),
+        }
     }
 
     pub fn with_size(device: &fna3d::Device, w: u32, h: u32) -> Self {
@@ -95,32 +163,28 @@ impl TextureData2d {
     }
 }
 
-/// Accessors
-impl TextureData2d {
-    /// Size in `f32`
-    ///
-    /// `f32` is is reasonable in rendering context
-    pub fn size(&self) -> [f32; 2] {
-        [self.w as f32, self.h as f32]
-    }
-
-    /// Size in pixels
-    pub fn size_px(&self) -> [u32; 2] {
-        [self.w, self.h]
-    }
-}
-
 /// Texture loading methods
 /// ---
 impl TextureData2d {
     pub fn from_path(device: &fna3d::Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
         let path = path.as_ref();
+
         // TODO: return error
         let reader = File::open(path).unwrap_or_else(|err| {
-            panic!("failed to open file `{}`. io error {}", path.display(), err)
+            panic!(
+                "failed to open file `{}`. io error: {}",
+                path.display(),
+                err
+            )
         });
         let reader = BufReader::new(reader); // FIXME: is this good?
+
         Self::from_reader(device, reader)
+    }
+
+    /// Helper for embedded file bytes
+    pub fn from_encoded_bytes(device: &fna3d::Device, bytes: &[u8]) -> Option<Self> {
+        Self::from_reader(device, std::io::Cursor::new(bytes))
     }
 
     pub fn from_reader<R: Read + Seek>(device: &fna3d::Device, reader: R) -> Option<Self> {
@@ -130,50 +194,19 @@ impl TextureData2d {
             return None;
         }
 
-        let texture = {
+        let gpu_texture = {
             let pixels_slice = unsafe { std::slice::from_raw_parts(pixels_ptr, len as usize) };
-            Self::from_pixels(device, pixels_slice, w, h)
+            Self::from_decoded_bytes(device, pixels_slice, w, h)
         };
 
         fna3d::img::free(pixels_ptr as *mut _);
-        return Some(texture);
+
+        return Some(gpu_texture);
     }
 
-    /// Helper for embedded file bytes
-    pub fn from_undecoded_bytes(device: &fna3d::Device, bytes: &[u8]) -> Option<Self> {
-        let reader = std::io::Cursor::new(bytes);
-        Self::from_reader(device, reader)
-    }
-
-    pub fn from_pixels(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
-        let mut t = Self::with_size(device, w, h);
+    pub fn from_decoded_bytes(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+        let t = Self::with_size(device, w, h);
         t.upload_pixels(device, LEVEL, None, pixels);
         t
     }
-
-    /// Sets GPU texture data
-    pub fn upload_pixels(
-        &mut self,
-        device: &fna3d::Device,
-        level: u32,
-        rect: Option<[u32; 4]>,
-        data: &[u8],
-    ) {
-        let (x, y, w, h) = if let Some(xs) = rect {
-            (xs[0], xs[1], xs[2], xs[3])
-        } else {
-            (
-                0,
-                0,
-                std::cmp::max(self.w >> level, 1),
-                std::cmp::max(self.h >> level, 1),
-            )
-        };
-
-        device.set_texture_data_2d(self.raw, x, y, w, h, level, data);
-    }
-
-    // pub fn save_to_png(&self, device: &fna3d::Device, path: impl AsRef<Path>) {
-    //     device.get_texture_data_2d(texture, x, y, w, h, level, data)
-    // }
 }

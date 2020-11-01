@@ -23,28 +23,28 @@ pub enum ImGuiRendererError {
 pub type Result<T> = std::result::Result<T, ImGuiRendererError>;
 
 /// GPU texture with size
-pub struct Texture2dDrop {
+pub struct TextureData2d {
     pub raw: *mut fna3d::Texture,
     device: fna3d::Device,
     pub w: u32,
     pub h: u32,
 }
 
-impl Drop for Texture2dDrop {
+impl Drop for TextureData2d {
     fn drop(&mut self) {
         self.device.add_dispose_texture(self.raw);
     }
 }
 
-/// Reference counted version of [`Texture2dDrop`]
+/// Reference counted version of [`TextureData2d`]
 pub struct RcTexture2d {
-    pub texture: Rc<Texture2dDrop>,
+    pub texture: Rc<TextureData2d>,
 }
 
 impl RcTexture2d {
     pub fn new(raw: *mut fna3d::Texture, device: fna3d::Device, w: u32, h: u32) -> Self {
         Self {
-            texture: Rc::new(Texture2dDrop { raw, device, w, h }),
+            texture: Rc::new(TextureData2d { raw, device, w, h }),
         }
     }
 }
@@ -141,7 +141,7 @@ impl ImGuiRenderer {
             gpu_texture
         };
 
-        let font_texture = Texture2dDrop {
+        let font_texture = TextureData2d {
             raw,
             device: device.clone(),
             w,
@@ -161,7 +161,7 @@ impl ImGuiRenderer {
     }
 
     /// Be warned that the font texture is  non-premultiplied alpha
-    pub fn font_texture(&self) -> &Texture2dDrop {
+    pub fn font_texture(&self) -> &TextureData2d {
         &self.font_texture.texture
     }
 

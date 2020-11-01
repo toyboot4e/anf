@@ -4,7 +4,8 @@
 //!
 //! * TODO: better flushing
 
-pub use ::anf_gfx::cmd::prelude::*;
+// re-export draw traits
+pub use anf_gfx::cmd::traits::*;
 
 use {
     anf_gfx::{
@@ -67,11 +68,9 @@ impl DrawContext {
         let batcher = Batcher::from_device(&mut device);
 
         unsafe {
-            let white_dot = TextureData2d::from_undecoded_bytes(
-                &mut device,
-                crate::engine::embedded::WHITE_DOT,
-            )
-            .unwrap();
+            let white_dot =
+                TextureData2d::from_encoded_bytes(&device, crate::engine::embedded::WHITE_DOT)
+                    .unwrap();
             WHITE_DOT = Some(white_dot);
         }
 
@@ -172,7 +171,6 @@ impl<'a> BatchPass<'a> {
             self.dcx
                 .batcher
                 .next_quad_mut(tex.raw_texture(), &self.dcx.device, &mut self.dcx.pipe);
-        self.dcx.push.reset_to_defaults();
 
         QuadPush {
             params: &mut self.dcx.push,
@@ -180,27 +178,19 @@ impl<'a> BatchPass<'a> {
         }
     }
 
-    // TODO: use reference
-    // TODO: use traits for pusing
-
-    /// Creates [`SpritePush`] using [`SubTexture2d`] attributes
-    pub fn texture<T: SubTexture2d>(&mut self, texture: &T) -> SpritePush<T> {
-        let quad = self.next_push_mut(texture);
-        SpritePush::from_sub_texture(quad, texture)
-    }
-
-    /// Creates [`SpritePush`] using [`Sprite`] attributes
-    pub fn sprite<T: Sprite>(&mut self, sprite: &T) -> SpritePush<T> {
-        let quad = self.next_push_mut(sprite);
-        SpritePush::from_sprite(quad, sprite)
+    /// Push texture or sprite
+    pub fn push<S>(&mut self, sprite: &S) -> SpritePush
+    where
+        S: OnSpritePush + Texture2d,
+    {
+        SpritePush::new(self.next_push_mut(sprite), sprite)
     }
 }
 
 /// Outline drawing
 impl<'a> BatchPass<'a> {
-    // TODO: add wrapper of primitive renderer
-    pub fn white_dot(&mut self) -> SpritePush<'_, TextureData2d> {
-        unsafe { self.texture(WHITE_DOT.as_ref().unwrap()) }
+    pub fn white_dot(&mut self) -> SpritePush {
+        unsafe { self.push(WHITE_DOT.as_ref().unwrap()) }
     }
 
     pub fn line(&mut self, p1: impl Into<Vec2f>, p2: impl Into<Vec2f>, color: Color) {

@@ -5,15 +5,27 @@ authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
 [workspace]
-members = ["crates/anf_gfx", "crates/fna3d_hie", "crates/imgui_fna3d", "crates/xdl", "crates/fontstash-rs"]
+members = [
+    "crates/anf_gfx",
+    "crates/ass",
+    "crates/fna3d_hie",
+    "crates/fontstash-rs",
+    "crates/imgui_fna3d",
+    "crates/rust-fna3d",
+    # "crates/soloud-rs/soloud",
+    "crates/xdl"
+]
+
 exclude = ["crates/soloud-rs"]
 
 [features]
-default = ["font", "input", "audio"]
+default = ["asset", "font", "input", "audio"]
 
+asset = ["ass"]
 font = ["fontstash"]
 input = ["xdl"]
 audio = ["soloud"]
+
 debug-gui = ["imgui", "imgui_fna3d"]
 
 [dependencies]
@@ -28,8 +40,12 @@ fna3d = { path = "crates/rust-fna3d" }
 fna3d_hie = { path = "crates/fna3d_hie" }
 anf_gfx = { path = "crates/anf_gfx" }
 
+# optional dependencies (included by default)
+ass = { path = "crates/ass", optional = true }
 fontstash = { path = "crates/fontstash-rs", optional = true }
 xdl = { path = "crates/xdl", optional = true }
 soloud = { path = "crates/soloud-rs/soloud", optional = true }
+
+# optional dependencies (exluded by default)
 imgui = { version = "0.5.0", optional = true }
 imgui_fna3d = { path = "crates/imgui_fna3d", optional = true }
