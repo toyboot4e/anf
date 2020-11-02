@@ -142,14 +142,16 @@ impl GpuDynamicVertexBuffer {
     }
 
     /// Sends vertex data to GPU memory
+    ///
+    /// The vertex data is send by bytes so it can be something like `Quad([Vertex; 4])`.
     pub fn upload_vertices<T: VertexData>(
         &mut self,
         device: &fna3d::Device,
         buf_offset_in_bytes: u32,
-        vdata: &mut [T],
+        vtx_data: &[T],
         opts: fna3d::SetDataOptions,
     ) {
-        device.set_vertex_buffer_data(self.inner.raw(), buf_offset_in_bytes, vdata, opts);
+        device.set_vertex_buffer_data(self.inner.raw(), buf_offset_in_bytes, vtx_data, opts);
     }
 }
 

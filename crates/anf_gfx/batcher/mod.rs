@@ -3,11 +3,11 @@
 pub mod batch;
 pub mod bufspecs;
 
-use fna3d_hie::{buffers::GpuIndexBuffer, Pipeline, Shader};
+use fna3d_hie::{Pipeline, Shader};
 
 use crate::{
     batcher::{
-        batch::{SpriteBatch, SpriteDrawCall},
+        batch::{DrawCall, SpriteBatch},
         bufspecs::{GpuViBuffer, QuadData},
     },
     geom3d::Mat4x4,
@@ -33,7 +33,7 @@ pub struct Batcher {
     /// * P_clip = M_proj (M_view M_model) P_local
     /// * M_transform = (M_view M_model)
     ///
-    /// In row-major sence,
+    /// In row-major sence (XNA), they're transposed:
     ///
     /// * P_clip = P_local (M_model M_view) M_proj
     /// * M_transform = (M_view M_model)
@@ -74,19 +74,41 @@ impl Batcher {
         self.set_proj_mat(&mut pipe.shader);
         pipe.shader.apply_effect(device, 0);
 
-        self.upload_vertices(device);
+        self.bufs.vbuf.upload_vertices(
+            device,
+            0, // vertex offset
+            self.batch.pushed_quads(),
+            fna3d::SetDataOptions::None,
+        );
+
+        pipe.shader.apply_effect(device, 0);
+
         pipe.set_vertex_attributes(&mut self.bufs.vbuf.inner, 0);
 
         for call in self.batch.iter() {
-            Self::make_draw_call(device, pipe, &mut self.bufs, call);
+            self.draw(&call, device, pipe);
         }
 
         self.batch.clear();
     }
+
+    fn draw(&self, call: &DrawCall, device: &fna3d::Device, pipe: &mut Pipeline) {
+        pipe.set_texture_raw(device, call.tex);
+        pipe.upload_vertex_attributes(device, call.base_vtx() as u32);
+
+        device.draw_indexed_primitives(
+            fna3d::PrimitiveType::TriangleList,
+            call.base_vtx() as u32, // the number of vertices to skip
+            0,
+            call.n_verts() as u32,
+            call.base_idx() as u32, // NOTE: our index buffer is cyclic and we don't need to actually calculate it
+            call.n_triangles() as u32,
+            self.bufs.ibuf.raw(),
+            self.bufs.ibuf.elem_size(),
+        );
+    }
 }
 
-/// Sub procedures of [`Batcher::flush`]
-/// ---
 impl Batcher {
     fn set_proj_mat(&mut self, shader: &mut Shader) {
         self.mat_proj = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
@@ -94,39 +116,5 @@ impl Batcher {
         unsafe {
             shader.set_param("MatrixTransform", &self.mat_model_view_proj.transpose());
         }
-    }
-
-    /// Copies vertex data from CPU to GPU ([`SpriteBatch::vertex_data`] to [`VertexBuffer`])
-    fn upload_vertices(&mut self, device: &fna3d::Device) {
-        let offset = 0;
-        let data = &mut self.batch.quads_mut();
-        self.bufs
-            .vbuf
-            .upload_vertices(device, offset, data, fna3d::SetDataOptions::None);
-    }
-
-    /// Runs [`SpriteDrawCall`] got from [`SpriteBatch`]
-    fn make_draw_call(
-        device: &fna3d::Device,
-        pipe: &mut Pipeline,
-        bufs: &mut GpuViBuffer,
-        call: SpriteDrawCall,
-    ) {
-        pipe.set_texture_raw(device, call.texture());
-        pipe.upload_vertex_attributes(device, call.base_vertex() as u32);
-        Self::draw_triangles(device, call, &bufs.ibuf);
-    }
-
-    fn draw_triangles(device: &fna3d::Device, call: SpriteDrawCall, ibuf: &GpuIndexBuffer) {
-        device.draw_indexed_primitives(
-            fna3d::PrimitiveType::TriangleList,
-            call.base_vertex() as u32, // the number of vertices to skip
-            0,
-            call.n_primitives() as u32 * 2, // n_vertices
-            call.base_index() as u32, // NOTE: our index buffer is cyclic and we don't need to actually calculate it
-            call.n_primitives() as u32,
-            ibuf.raw(),
-            ibuf.elem_size(),
-        );
     }
 }

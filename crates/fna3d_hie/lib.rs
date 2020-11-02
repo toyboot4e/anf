@@ -16,7 +16,7 @@ pub use crate::{pipeline::Pipeline, shader::Shader};
 #[macro_export]
 macro_rules! gen_quad_indices {
     ( $n_quads:expr ) => {{
-        let mut indices = [0; 6 * $n_quads];
+        let mut indices = [0; 6 * $n_quads as usize];
 
         for n in 0..$n_quads as i16 {
             let (i, v) = (n * 6, n * 4);
