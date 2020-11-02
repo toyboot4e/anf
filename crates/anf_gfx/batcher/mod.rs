@@ -13,7 +13,7 @@ use crate::{
     geom3d::Mat4x4,
 };
 
-/// [`SpriteBatch`] with GPU vertex/index buffer handle
+/// Push quads and flush
 #[derive(Debug)]
 pub struct Batcher {
     batch: SpriteBatch,
@@ -121,6 +121,8 @@ impl Batcher {
         device.draw_indexed_primitives(
             fna3d::PrimitiveType::TriangleList,
             call.base_vertex() as u32, // the number of vertices to skip
+            0,
+            call.n_primitives() as u32 * 2, // n_vertices
             call.base_index() as u32, // NOTE: our index buffer is cyclic and we don't need to actually calculate it
             call.n_primitives() as u32,
             ibuf.raw(),

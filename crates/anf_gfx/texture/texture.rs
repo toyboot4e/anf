@@ -6,9 +6,6 @@ use std::{
     rc::Rc,
 };
 
-/// Mipmap level (no mipmap)
-const LEVEL: u32 = 0;
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TextureKind {
     Texture,
@@ -27,6 +24,9 @@ pub struct Texture2dDrop {
     pub(crate) fmt: fna3d::SurfaceFormat,
 }
 
+unsafe impl Send for Texture2dDrop {}
+unsafe impl Sync for Texture2dDrop {}
+
 impl PartialEq<Self> for Texture2dDrop {
     fn eq(&self, other: &Self) -> bool {
         self.raw == other.raw && self.w == other.w && self.h == other.h && self.fmt == other.fmt
@@ -36,6 +36,81 @@ impl PartialEq<Self> for Texture2dDrop {
 impl Drop for Texture2dDrop {
     fn drop(&mut self) {
         self.device.add_dispose_texture(self.raw);
+    }
+}
+
+impl Texture2dDrop {
+    pub fn new(
+        device: &fna3d::Device,
+        w: u32,
+        h: u32,
+        fmt: fna3d::SurfaceFormat,
+        kind: TextureKind,
+    ) -> Self {
+        let fmt = self::get_init_format(fmt, TextureKind::Texture);
+        let raw = device.create_texture_2d(fmt, w, h, 1, kind == TextureKind::RenderTarget);
+
+        Texture2dDrop {
+            device: device.clone(),
+            raw,
+            w,
+            h,
+            fmt,
+        }
+    }
+
+    pub fn with_size(device: &fna3d::Device, w: u32, h: u32) -> Self {
+        Self::new(
+            device,
+            w,
+            h,
+            fna3d::SurfaceFormat::Color,
+            TextureKind::Texture,
+        )
+    }
+
+    pub fn from_path(device: &fna3d::Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
+        let path = path.as_ref();
+
+        // TODO: return error
+        let reader = File::open(path).unwrap_or_else(|err| {
+            panic!(
+                "failed to open file `{}`. io error: {}",
+                path.display(),
+                err
+            )
+        });
+        let reader = BufReader::new(reader); // FIXME: is this good?
+
+        Self::from_reader(device, reader)
+    }
+
+    /// Helper for embedded file bytes
+    pub fn from_encoded_bytes(device: &fna3d::Device, bytes: &[u8]) -> Option<Self> {
+        Self::from_reader(device, std::io::Cursor::new(bytes))
+    }
+
+    pub fn from_reader<R: Read + Seek>(device: &fna3d::Device, reader: R) -> Option<Self> {
+        let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
+
+        if pixels_ptr == std::ptr::null_mut() {
+            return None;
+        }
+
+        let gpu_texture = {
+            let pixels_slice = unsafe { std::slice::from_raw_parts(pixels_ptr, len as usize) };
+            Self::from_decoded_bytes(device, pixels_slice, w, h)
+        };
+
+        fna3d::img::free(pixels_ptr as *mut _);
+
+        return Some(gpu_texture);
+    }
+
+    pub fn from_decoded_bytes(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+        let t = Self::with_size(device, w, h);
+        t.upload_pixels(device, 0, None, pixels);
+        t
     }
 }
 
@@ -57,7 +132,7 @@ impl Texture2dDrop {
     pub fn upload_pixels(
         &self,
         device: &fna3d::Device,
-        level: u32,
+        target_mipmap_level: u32,
         rect: Option<[u32; 4]>,
         data: &[u8],
     ) {
@@ -67,12 +142,12 @@ impl Texture2dDrop {
             (
                 0,
                 0,
-                std::cmp::max(self.w >> level, 1),
-                std::cmp::max(self.h >> level, 1),
+                std::cmp::max(self.w >> target_mipmap_level, 1),
+                std::cmp::max(self.h >> target_mipmap_level, 1),
             )
         };
 
-        device.set_texture_data_2d(self.raw, x, y, w, h, level, data);
+        device.set_texture_data_2d(self.raw, x, y, w, h, target_mipmap_level, data);
     }
 
     // /// VERY HEAVY task
@@ -136,19 +211,8 @@ impl TextureData2d {
         fmt: fna3d::SurfaceFormat,
         kind: TextureKind,
     ) -> Self {
-        let fmt = self::get_init_format(fmt, TextureKind::Texture);
-        let raw = device.create_texture_2d(fmt, w, h, LEVEL, kind == TextureKind::RenderTarget);
-
-        let inner = Texture2dDrop {
-            device: device.clone(),
-            raw,
-            w,
-            h,
-            fmt,
-        };
-
         Self {
-            inner: Rc::new(inner),
+            inner: Rc::new(Texture2dDrop::new(device, w, h, fmt, kind)),
         }
     }
 
@@ -166,47 +230,26 @@ impl TextureData2d {
 /// Texture loading methods
 /// ---
 impl TextureData2d {
+    pub fn from_drop(d: Texture2dDrop) -> Self {
+        Self { inner: Rc::new(d) }
+    }
+
     pub fn from_path(device: &fna3d::Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
-        let path = path.as_ref();
-
-        // TODO: return error
-        let reader = File::open(path).unwrap_or_else(|err| {
-            panic!(
-                "failed to open file `{}`. io error: {}",
-                path.display(),
-                err
-            )
-        });
-        let reader = BufReader::new(reader); // FIXME: is this good?
-
-        Self::from_reader(device, reader)
+        Some(Self::from_drop(Texture2dDrop::from_path(device, path)?))
     }
 
     /// Helper for embedded file bytes
     pub fn from_encoded_bytes(device: &fna3d::Device, bytes: &[u8]) -> Option<Self> {
-        Self::from_reader(device, std::io::Cursor::new(bytes))
+        Some(Self::from_drop(Texture2dDrop::from_encoded_bytes(
+            device, bytes,
+        )?))
     }
 
     pub fn from_reader<R: Read + Seek>(device: &fna3d::Device, reader: R) -> Option<Self> {
-        let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
-
-        if pixels_ptr == std::ptr::null_mut() {
-            return None;
-        }
-
-        let gpu_texture = {
-            let pixels_slice = unsafe { std::slice::from_raw_parts(pixels_ptr, len as usize) };
-            Self::from_decoded_bytes(device, pixels_slice, w, h)
-        };
-
-        fna3d::img::free(pixels_ptr as *mut _);
-
-        return Some(gpu_texture);
+        Some(Self::from_drop(Texture2dDrop::from_reader(device, reader)?))
     }
 
     pub fn from_decoded_bytes(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
-        let t = Self::with_size(device, w, h);
-        t.upload_pixels(device, LEVEL, None, pixels);
-        t
+        Self::from_drop(Texture2dDrop::from_decoded_bytes(device, pixels, w, h))
     }
 }

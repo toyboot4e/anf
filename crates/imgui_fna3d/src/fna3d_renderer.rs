@@ -134,9 +134,8 @@ impl ImGuiRenderer {
         // create GPU texture
         let raw = {
             let fmt = fna3d::SurfaceFormat::Color;
-            let level = 0; // no mipmap
-            let gpu_texture = device.create_texture_2d(fmt, w, h, level, false);
-            device.set_texture_data_2d(gpu_texture, 0, 0, w, h, level, pixels);
+            let gpu_texture = device.create_texture_2d(fmt, w, h, 1, false);
+            device.set_texture_data_2d(gpu_texture, 0, 0, w, h, 0, pixels);
 
             gpu_texture
         };
@@ -264,10 +263,14 @@ impl ImGuiRenderer {
                             );
 
                             // `count` is actually `n_indices`
+                            let n_vertices = count as u32 * 2 / 3; // n_verts : n_idx = 4 : 6
                             let n_primitives = count / 3;
+
                             device.draw_indexed_primitives(
                                 fna3d::PrimitiveType::TriangleList,
                                 vtx_offset as u32,
+                                0,
+                                n_vertices,
                                 idx_offset as u32,
                                 n_primitives as u32,
                                 self.batch.ibuf.buf,
@@ -276,8 +279,7 @@ impl ImGuiRenderer {
                         }
                     }
                     DrawCmd::ResetRenderState => {
-                        log::info!("fna3d-imgui-rs: ResetRenderState not implemented");
-                        // TODO: what?
+                        log::warn!("fna3d-imgui-rs: ResetRenderState not implemented");
                     }
                     DrawCmd::RawCallback { callback, raw_cmd } => unsafe {
                         callback(draw_list.raw(), raw_cmd)
