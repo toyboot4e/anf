@@ -18,7 +18,7 @@ pub type AnfResult<T> = ::anyhow::Result<T>;
 
 /// Primitive lifecycle run by [`AnfFramework`]
 ///
-/// Users are encouraged to build their own framework on top of it maybe specifying stages such as
+/// Users are encouraged to build their own framework on top of it, maybe specifying stages such as
 /// `debug_render`.
 pub trait AnfLifecycle {
     // TODO: lifecycle with `EventPump` with window?
@@ -42,7 +42,7 @@ pub trait AnfLifecycle {
     }
 }
 
-/// Runs [`AnfLifecycle`]
+/// Runs a game that implemenents [`AnfLifecycle`]
 ///
 /// The entry point of ANF application.
 pub struct AnfFramework {
@@ -84,11 +84,11 @@ impl AnfFramework {
         let mut clock = GameClock::new();
         let mut state = user_data_constructor(window, &cfg, dcx);
 
-        self::visit_lifecycle(&mut clock, &mut events, &mut state)
+        self::run_game_loop(&mut clock, &mut events, &mut state)
     }
 }
 
-fn visit_lifecycle(
+fn run_game_loop(
     clock: &mut GameClock,
     events: &mut EventPump,
     state: &mut impl AnfLifecycle,

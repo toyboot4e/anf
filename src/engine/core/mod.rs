@@ -4,7 +4,7 @@ pub mod clock;
 pub mod lifecycle;
 pub mod window;
 
-use ::sdl2::sys::SDL_Window;
+use sdl2::sys::SDL_Window;
 
 use self::window::{WindowConfig, WindowHandle};
 

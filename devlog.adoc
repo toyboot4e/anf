@@ -51,15 +51,15 @@ I made a wrapper of FNA3D myself. If you're interested in it, there's some https
 
 === Using FNA3D
 
-I was new to graphics programming and {fna3d} was a bit hard for me. Before "kicking the rendering pipeline", I had to setup some properties of `Device` and it was not documented in `FNA3D.h`. So for long time I couldn't do other than clearing the screen.
+I was new to graphics programming and {fna3d} was a bit hard for me. Before "kicking the rendering pipeline", I had to setup some properties of `Device`, which was not documented in `FNA3D.h`. So for long time I couldn't do other than clearing the screen.
 
-I had to learn more. I read some chapters of {learnopengl} and got some vocabraries and ideas. Basic shaders are just about pixel mappings. GPU has special, fast memory for them and I can disose CPU side of textures after sending them to GPU. Makes sense!
+I had to learn more. I read some chapters of {learnopengl} and got some vocabraries and ideas. Basic shaders are just about pixel mappings. GPU has special, fast memory for them and I can dispose CPU side of textures after copying ("sending" or "uploading") them to GPU. Makes sense!
 
-I tried to learn from {fna}, but it was a total mistake. {fna} is an accurate re-implementing {xna} and it's not a comfortable code base to read through. So I learned from simpler frameworks by others that are using FNA3D.
+I tried to learn from {fna}, but it was a total mistake. {fna} is an accurate re-implementation of the old {xna} framework and it's not a beginner-friendly code base to read through. So I learned from simpler frameworks made by others that are using FNA3D.
 
-Setting up {ortho-mat} was hard. FNA's looks like transposed from the one in Wiki. I asked about it and got answer: OpenGL uses column-major matrices while XNA uses row-major matrices. I thought it was about encoding (memory layout).. but it was not. When I searched about https://www.google.com/search?q=translation+matrix&client=safari&rls=en&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiIm6aO1o_sAhUIPnAKHV1DB4UQ_AUoAXoECBMQAw&biw=1920&bih=1081&dpr=2[translation matrix], I saw two kinds of matrices. They're transposed and I was like "hey man which is correct". Then I realized that in "row-major" style position matrices are row vectors. OK, finally I got it.
+Setting up {ortho-mat} was hard. FNA's one looked like transposed from the one in the wiki. I asked about it and got an answer: GLSL (i.e., a shader language) uses column-major matrices while XNA uses row-major matrices. I thought it was about encoding (memory layout).. but, it was not exactly. When I searched about https://www.google.com/search?q=translation+matrix&client=safari&rls=en&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiIm6aO1o_sAhUIPnAKHV1DB4UQ_AUoAXoECBMQAw&biw=1920&bih=1081&dpr=2[translation matrix], I saw two kinds of matrices. They're transposed and I was like "hey man which is correct". Then I realized that in "row-major" style position matrices are row vectors. OK, finally I got it. And they're transposed before sending to MojoShader, because it's a column-major shader system of FNA3D. Good bye misteries!
 
 === Sokol
 
-Other option to {fna3d} is {sokol}. {sokol} has beautiful API and it's becoming a fascinating option. But it's a bit harder to think about cross-platform compilation so I'm satisfies with {fna3d}.
+Alternative to {fna3d} would be {sokol}. {sokol} has modern, beautiful API and it's very well documented. It's becoming a fascinating option. But it's a bit harder to do cross-platform compilation so I'm satisfied with {fna3d}.
 

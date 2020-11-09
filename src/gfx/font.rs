@@ -129,7 +129,7 @@ unsafe impl fontstash::Renderer for FontBookInternal {
         let me = &mut *(uptr as *const _ as *mut Self);
 
         if !me.texture.is_null() {
-            log::trace!("fontbook: - dispose old texture");
+            log::trace!("fontbook: create -- dispose old texture");
             me.device.add_dispose_texture(me.texture);
         }
 
@@ -137,7 +137,7 @@ unsafe impl fontstash::Renderer for FontBookInternal {
             fna3d::SurfaceFormat::Color,
             width as u32,
             height as u32,
-            0,
+            1,
             false,
         );
         me.w = width as u32;
@@ -212,6 +212,8 @@ impl FontBookInternal {
 
             self.device
                 .set_texture_data_2d(self.texture, 0, 0, w, h, 0, &data);
+
+            log::trace!("<after upload>");
         });
     }
 }

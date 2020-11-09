@@ -1,31 +1,32 @@
-//! Creates lifecycle
-//!
-//! # Example
-//!
-//! ```no_run
-//! use ::{
-//!     anf::engine::time::GameClock,
-//!     sdl2::EventPump,
-//! };
-//!
-//! fn tick_one_frame(
-//!     clock: &mut GameClock,
-//!     events: &mut EventPump,
-//! ) {
-//!    for ev in events.poll_iter() {
-//!         // handle events
-//!    }
-//!
-//!     for dt in clock.tick() {
-//!         // update your game
-//!     }
-//!
-//!     let time_step = clock.timestep_draw();
-//!     // draw your game
-//!
-//!     // end of the frame
-//! }
-//! ```
+/*! Creates lifecycle
+
+# Example
+
+```no_run
+use {
+    anf::engine::time::GameClock,
+    sdl2::EventPump,
+};
+
+fn tick_one_frame(
+    clock: &mut GameClock,
+    events: &mut EventPump,
+) {
+   for ev in events.poll_iter() {
+        // handle events
+   }
+
+    for dt in clock.tick() {
+        // update your game
+    }
+
+    let time_step = clock.timestep_draw();
+    // draw your game
+
+    // end of the frame
+}
+```
+!*/
 
 use ::std::time::{Duration, Instant};
 

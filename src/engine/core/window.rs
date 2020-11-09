@@ -1,6 +1,6 @@
 //! Creation of SDL window and FNA3D device
 
-use ::{
+use {
     sdl2::{
         sys::SDL_Window,
         video::{FullscreenType, WindowPos},

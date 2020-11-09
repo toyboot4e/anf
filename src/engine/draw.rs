@@ -1,8 +1,9 @@
-//! Object-oriented draw APIs
-//!
-//! [`DrawContext`] is the primary interface. It's recommended to do `use anf::engine::draw::*`.
-//!
-//! * TODO: better flushing
+/*! Object-oriented draw APIs
+
+[`DrawContext`] is the primary interface. It's recommended to do `use anf::engine::draw::*`.
+
+* TODO: better flushing
+!*/
 
 // re-export draw traits
 pub use anf_gfx::cmd::traits::*;
