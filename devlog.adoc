@@ -14,6 +14,8 @@
 :rust-fna3d: https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D]
 :soloud-rs: https://github.com/MoAlyousef/soloud-rs[soloud-rs]
 :imgui-rs: https://github.com/Gekkio/imgui-rs[imgui-rs]
+:learnopengl: https://learnopengl.com/[Learn OpenGL]
+:ortho-mat: https://en.wikipedia.org/wiki/Orthographic_projection[orthographic projection matrix]
 
 == Primer
 
@@ -40,8 +42,24 @@ C has stable ABI and C can be used from almost any other programming language. I
 * {sdl}: window creation and event handling
 * {fna3d}: graphics
 * {fontstash}: TTF handling
-* {soulid-rs}: audio
+* {soloud-rs}: audio
 * {imgui-rs}: developer UI
 
-I made a wrapper of FNA3D. If you're interested in it, there's some https://github.com/toyboot4e/rust-fna3d/tree/master/docs[note] on it.
+I made a wrapper of FNA3D myself. If you're interested in it, there's some https://github.com/toyboot4e/rust-fna3d/blob/master/docs/wrapping_c.md[note] on it.
+
+== Devlog
+
+=== Using FNA3D
+
+I was new to graphics programming and {fna3d} was a bit hard for me. Before "kicking the rendering pipeline", I had to setup some properties of `Device` and it was not documented in `FNA3D.h`. So for long time I couldn't do other than clearing the screen.
+
+I had to learn more. I read some chapters of {learnopengl} and got some vocabraries and ideas. Basic shaders are just about pixel mappings. GPU has special, fast memory for them and I can disose CPU side of textures after sending them to GPU. Makes sense!
+
+I tried to learn from {fna}, but it was a total mistake. {fna} is an accurate re-implementing {xna} and it's not a comfortable code base to read through. So I learned from simpler frameworks by others that are using FNA3D.
+
+Setting up {ortho-mat} was hard. FNA's looks like transposed from the one in Wiki. I asked about it and got answer: OpenGL uses column-major matrices while XNA uses row-major matrices. I thought it was about encoding (memory layout).. but it was not. When I searched about https://www.google.com/search?q=translation+matrix&client=safari&rls=en&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiIm6aO1o_sAhUIPnAKHV1DB4UQ_AUoAXoECBMQAw&biw=1920&bih=1081&dpr=2[translation matrix], I saw two kinds of matrices. They're transposed and I was like "hey man which is correct". Then I realized that in "row-major" style position matrices are row vectors. OK, finally I got it.
+
+=== Sokol
+
+Other option to {fna3d} is {sokol}. {sokol} has beautiful API and it's becoming a fascinating option. But it's a bit harder to think about cross-platform compilation so I'm satisfies with {fna3d}.
 
