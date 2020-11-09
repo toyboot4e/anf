@@ -1,19 +1,25 @@
 = ANF devlog
 :toc:
 :toc-placement!:
+
 :odin: https://github.com/odin-lang/Odin[Odin]
 :zig: https://ziglang.org/[Zig]
 :rust: https://www.rust-lang.org/[Rust]
+
 :fna3d: https://github.com/FNA-XNA/FNA3D[FNA3D]
 :fna: https://github.com/FNA-XNA/FNA[FNA]
 :xna: https://en.wikipedia.org/wiki/Microsoft_XNA[XNA]
 :sdl: https://www.sdl.com/[SDL]
 :sokol: https://github.com/floooh/sokol[Sokol]
+
 :fontstash: https://github.com/memononen/fontstash[fontstash]
 :rust-sdl2: https://github.com/Rust-SDL2/rust-sdl2[Rust-SDL2]
 :rust-fna3d: https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D]
+:soloud: https://github.com/jarikomppa/soloud[SoLoud]
 :soloud-rs: https://github.com/MoAlyousef/soloud-rs[soloud-rs]
+:imgui: https://github.com/ocornut/imgui[ImGUI]
 :imgui-rs: https://github.com/Gekkio/imgui-rs[imgui-rs]
+
 :learnopengl: https://learnopengl.com/[Learn OpenGL]
 :ortho-mat: https://en.wikipedia.org/wiki/Orthographic_projection[orthographic projection matrix]
 
@@ -39,11 +45,11 @@ C has stable ABI and C can be used from almost any other programming language. I
 
 === Dependent C libraries
 
-* {sdl}: window creation and event handling
-* {fna3d}: graphics
+* {sdl} ({rust-sdl2}): window creation and event handling
+* {fna3d} ({rust-fna3d}): graphics
 * {fontstash}: TTF handling
-* {soloud-rs}: audio
-* {imgui-rs}: developer UI
+* {soloud} ({soloud-rs}) (C++): audio
+* {imgui} ({imgui-rs}) (C++): developer UI
 
 I made a wrapper of FNA3D myself. If you're interested in it, there's some https://github.com/toyboot4e/rust-fna3d/blob/master/docs/wrapping_c.md[note] on it.
 
@@ -57,7 +63,7 @@ I had to learn more. I read some chapters of {learnopengl} and got some vocabrar
 
 I tried to learn from {fna}, but it was a total mistake. {fna} is an accurate re-implementation of the old {xna} framework and it's not a beginner-friendly code base to read through. So I learned from simpler frameworks made by others that are using FNA3D.
 
-Setting up {ortho-mat} was hard. FNA's one looked like transposed from the one in the wiki. I asked about it and got an answer: GLSL (i.e., a shader language) uses column-major matrices while XNA uses row-major matrices. I thought it was about encoding (memory layout).. but, it was not exactly. When I searched about https://www.google.com/search?q=translation+matrix&client=safari&rls=en&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiIm6aO1o_sAhUIPnAKHV1DB4UQ_AUoAXoECBMQAw&biw=1920&bih=1081&dpr=2[translation matrix], I saw two kinds of matrices. They're transposed and I was like "hey man which is correct". Then I realized that in "row-major" style position matrices are row vectors. OK, finally I got it. And they're transposed before sending to MojoShader, because it's a column-major shader system of FNA3D. Good bye misteries!
+Setting up {ortho-mat} was hard. FNA's one looked like transposed from the one in the wiki. I asked about it and got an answer: GLSL (i.e., a shader language) uses column-major matrices while XNA uses row-major matrices. I thought it was about encoding (memory layout).. but, it was not exactly. When I searched about https://www.google.com/search?q=translation+matrix&client=safari&rls=en&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiIm6aO1o_sAhUIPnAKHV1DB4UQ_AUoAXoECBMQAw&biw=1920&bih=1081&dpr=2[translation matrix], I saw two kinds of matrices. They're transposed and I was like "hey man which is correct". Then I realized that in "row-major" style position vectors are row vectors. OK, finally I got it. And they're transposed before sending to MojoShader, because it's a column-major shader system of FNA3D. Good bye misteries!
 
 === Sokol
 
