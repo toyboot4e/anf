@@ -31,9 +31,9 @@ ANF is a 2D game framework in Rust. It's build on top of some C libraries.
 
 * Why {rust}?
 +
-Because it's comfortable to me. There's no GC, there's a reliable build tool, there are good defaults such as `Result`, and there's always some answer to my question when I search about programming in Rust.
+Because it's comfortable to me. There's no GC, there's a reliable build tool, there are good defaults such as `Result`, and there's always some answers to my question when I search about programming in Rust.
 +
-Rust force us borrow rules. I'm liking it, but it's not guaraneteed that it always works fine footnote:[Actually those intelligent people who moved me to make ANF framework were not interested in using Rust for their games. That's fair because they knew what they wanted to do and the borrow rules just bothered them.]. So someday I might want to switch to another language.
+Rust force us borrow rules. I'm liking it, but it's not guaraneteed that it always leads us to better architecture footnote:[Actually those intelligent people who moved me to make ANF framework were not interested in using Rust for their games. That's fair because they knew what they wanted to do and the borrow rules just bothered them.]. So someday I might want to switch to another language.
 
 * Why making a framework?
 +
@@ -63,9 +63,58 @@ I had to learn more. I read some chapters of {learnopengl} and got some vocabrar
 
 I tried to learn from {fna}, but it was a total mistake. {fna} is an accurate re-implementation of the old {xna} framework and it's not a beginner-friendly code base to read through. So I learned from simpler frameworks made by others that are using FNA3D.
 
-Setting up {ortho-mat} was hard. FNA's one looked like transposed from the one in the wiki. I asked about it and got an answer: GLSL (i.e., a shader language) uses column-major matrices while XNA uses row-major matrices. I thought it was about encoding (memory layout).. but, it was not exactly. When I searched about https://www.google.com/search?q=translation+matrix&client=safari&rls=en&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiIm6aO1o_sAhUIPnAKHV1DB4UQ_AUoAXoECBMQAw&biw=1920&bih=1081&dpr=2[translation matrix], I saw two kinds of matrices. They're transposed and I was like "hey man which is correct". Then I realized that in "row-major" style position vectors are row vectors. OK, finally I got it. And they're transposed before sending to MojoShader, because it's a column-major shader system of FNA3D. Good bye misteries!
+Setting up {ortho-mat} was hard. FNA's one looked like transposed from the one in the wiki. I asked about it and got an answer: GLSL (i.e., a shader language) uses "column-major" matrices while XNA uses "row-major" matrices. I thought it was about encoding (memory layout).. but, it was not exactly. When I searched about https://www.google.com/search?q=translation+matrix&client=safari&rls=en&source=lnms&tbm=isch&sa=X&ved=2ahUKEwiIm6aO1o_sAhUIPnAKHV1DB4UQ_AUoAXoECBMQAw&biw=1920&bih=1081&dpr=2[translation matrix], I saw two kinds of matrices. They're transposed and I was like "hey man which is correct!!". Then I realized that in "row-major" style, position vectors are row vectors. OK, finally I got it. And they're transposed before sending to MojoShader, because it's a column-major shader system of FNA3D. Good bye misteries!
 
 === Sokol
 
 Alternative to {fna3d} would be {sokol}. {sokol} has modern, beautiful API and it's very well documented. It's becoming a fascinating option. But it's a bit harder to do cross-platform compilation so I'm satisfied with {fna3d}.
+
+=== World/context separation
+
+I'm using Rust and it force borrow rules. One point is that mutable references are exclusive; when we're mutably referencing to a variable, we can't make another reference to it.
+
+This is an example:
+
+[source,rust]
+----
+pub struct GameData {
+    pub world: World,
+    // dependencies to update run the game world
+    pub gfx: Graphics,
+    pub input: Input,
+    pub audio: Audio,
+}
+
+impl GameData {
+    pub fn update(&mut self) { // <1>
+        self.world // <2>
+            .update(self); // <3>
+    }
+}
+----
+<1> This function doesn't compile! Because,
+<2> we're mutably borrowing `self.world`, while
+<3> we're mutably borrowing `self`, which contains `self.world`.
+
+So we're making two mutable references to `self.world` so Rust doesn't accept the code.
+
+Let's refactor a bit:
+
+[source,rust]
+----
+pub struct GameData {
+    pub world: World,
+    /// Dependencies to update run the game world
+    pub context: Contetx,
+}
+
+impl GameData {
+    pub fn update(&mut self) {
+        self.context.update();
+        self.world(&mut self.context);
+    }
+}
+----
+
+It compiles and I think this is better even if I'm not using Rust. Borrow rules lead me to a better architecture! Hope that happens everywhere.
 
