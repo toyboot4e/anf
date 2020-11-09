@@ -1,0 +1,47 @@
+= ANF devlog
+:toc:
+:toc-placement!:
+:odin: https://github.com/odin-lang/Odin[Odin]
+:zig: https://ziglang.org/[Zig]
+:rust: https://www.rust-lang.org/[Rust]
+:fna3d: https://github.com/FNA-XNA/FNA3D[FNA3D]
+:fna: https://github.com/FNA-XNA/FNA[FNA]
+:xna: https://en.wikipedia.org/wiki/Microsoft_XNA[XNA]
+:sdl: https://www.sdl.com/[SDL]
+:sokol: https://github.com/floooh/sokol[Sokol]
+:fontstash: https://github.com/memononen/fontstash[fontstash]
+:rust-sdl2: https://github.com/Rust-SDL2/rust-sdl2[Rust-SDL2]
+:rust-fna3d: https://github.com/toyboot4e/rust-fna3d[Rust-FNA3D]
+:soloud-rs: https://github.com/MoAlyousef/soloud-rs[soloud-rs]
+:imgui-rs: https://github.com/Gekkio/imgui-rs[imgui-rs]
+
+== Primer
+
+=== What is ANF?
+
+ANF is a 2D game framework in Rust. It's build on top of some C libraries.
+
+* Why {rust}?
++
+Because it's comfortable to me. There's no GC, there's a reliable build tool, there are good defaults such as `Result`, and there's always some answer to my question when I search about programming in Rust.
++
+Rust force us borrow rules. I'm liking it, but it's not guaraneteed that it always works fine footnote:[Actually those intelligent people who moved me to make ANF framework were not interested in using Rust for their games. That's fair because they knew what they wanted to do and the borrow rules just bothered them.]. So someday I might want to switch to another language.
+
+* Why making a framework?
++
+For my fun. Also, this experience would be helpful for me when using other programming languages such as {zig} or {odin}.
+
+* Why C libraries?
++
+C has stable ABI and C can be used from almost any other programming language. I thought it's fascinating and I wanted to give it a try.
+
+=== Dependent C libraries
+
+* {sdl}: window creation and event handling
+* {fna3d}: graphics
+* {fontstash}: TTF handling
+* {soulid-rs}: audio
+* {imgui-rs}: developer UI
+
+I made a wrapper of FNA3D. If you're interested in it, there's some https://github.com/toyboot4e/rust-fna3d/tree/master/docs[note] on it.
+
