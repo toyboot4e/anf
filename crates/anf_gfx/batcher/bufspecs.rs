@@ -4,12 +4,19 @@
 
 use crate::{geom2d::*, geom3d::Vec3f};
 use ::fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer};
+use fna3h::{
+    buf::{
+        BufferUsage, IndexElementSize, VertexDeclaration, VertexElement, VertexElementFormat,
+        VertexElementUsage,
+    },
+    Color, Device,
+};
 
 // --------------------------------------------------------------------------------
 // Constants
 
 /// We use 16 bits for vertex index
-pub const INDEX_ELEM_SIZE: fna3d::IndexElementSize = fna3d::IndexElementSize::Bits16;
+pub const INDEX_ELEM_SIZE: IndexElementSize = IndexElementSize::Bits16;
 
 /// 2048
 pub const MAX_QUADS: usize = 2048;
@@ -30,7 +37,7 @@ pub struct ColoredVertexData {
     /// Destination position in pixels
     pub dest: Vec3f,
     /// Vertex position
-    pub color: fna3d::Color,
+    pub color: Color,
     /// Normalized source position in texture (also known as texels or texture coordinates)
     pub uvs: Vec2f,
 }
@@ -61,7 +68,7 @@ impl fna3d_hie::buffers::VertexData for QuadData {}
 
 impl Default for ColoredVertexData {
     fn default() -> Self {
-        let color = fna3d::Color::rgba(0, 0, 0, 0);
+        let color = Color::rgba(0, 0, 0, 0);
         Self {
             dest: Vec3f::default(),
             color,
@@ -71,29 +78,29 @@ impl Default for ColoredVertexData {
 }
 
 impl ColoredVertexData {
-    const ELEMS: &'static [fna3d::VertexElement; 3] = &[
-        fna3d::VertexElement {
+    const ELEMS: &'static [VertexElement; 3] = &[
+        VertexElement {
             offset: 0,
-            vertexElementFormat: fna3d::VertexElementFormat::Vector3 as u32,
-            vertexElementUsage: fna3d::VertexElementUsage::Position as u32,
+            vertexElementFormat: VertexElementFormat::Vector3 as u32,
+            vertexElementUsage: VertexElementUsage::Position as u32,
             usageIndex: 0, // TODO: what's this
         },
-        fna3d::VertexElement {
+        VertexElement {
             offset: 12,
-            vertexElementFormat: fna3d::VertexElementFormat::Color as u32,
-            vertexElementUsage: fna3d::VertexElementUsage::Color as u32,
+            vertexElementFormat: VertexElementFormat::Color as u32,
+            vertexElementUsage: VertexElementUsage::Color as u32,
             usageIndex: 0,
         },
-        fna3d::VertexElement {
+        VertexElement {
             offset: 16,
-            vertexElementFormat: fna3d::VertexElementFormat::Vector2 as u32,
-            vertexElementUsage: fna3d::VertexElementUsage::TextureCoordinate as u32,
+            vertexElementFormat: VertexElementFormat::Vector2 as u32,
+            vertexElementUsage: VertexElementUsage::TextureCoordinate as u32,
             usageIndex: 0,
         },
     ];
 
-    pub fn decl() -> fna3d::VertexDeclaration {
-        fna3d::VertexDeclaration {
+    pub fn decl() -> VertexDeclaration {
+        VertexDeclaration {
             vertexStride: 24,
             elementCount: 3,
             elements: Self::ELEMS as *const _ as *mut _,
@@ -109,19 +116,19 @@ pub struct GpuViBuffer {
 }
 
 impl GpuViBuffer {
-    pub fn from_device(device: &fna3d::Device) -> Self {
+    pub fn from_device(device: &Device) -> Self {
         let vbuf = GpuDynamicVertexBuffer::new(
             device,
             ColoredVertexData::decl(),
             self::MAX_VERTICES as u32,
-            fna3d::BufferUsage::WriteOnly,
+            BufferUsage::WriteOnly,
         );
 
         let mut ibuf = GpuIndexBuffer::new(
             device,
             self::INDEX_ELEM_SIZE,
             self::MAX_INDICES as u32,
-            fna3d::BufferUsage::WriteOnly, // what is this
+            BufferUsage::WriteOnly, // what is this
             false,
         );
 

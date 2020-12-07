@@ -423,7 +423,7 @@ impl Into<[f32; 4]> for &Rect2f {
     }
 }
 
-fna3d::bitflags::bitflags! {
+bitflags::bitflags! {
     pub struct Flips: u8 {
         /// Render the sprite as it is
         const NONE = 0;

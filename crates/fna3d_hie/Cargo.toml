@@ -5,7 +5,7 @@ authors = ["toyboot4e <toyboot4e@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-fna3d = { path = "../rust-fna3d/fna3d" }
+fna3h = { path = "../rust-fna3d/fna3h" }
 log = "0.4.11"
 
 [lib]

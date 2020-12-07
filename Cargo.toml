@@ -33,8 +33,8 @@ anyhow = "1.0.32"
 indoc = "1.0.2"
 
 sdl2 = "0.34.3"
-fna3d = { path = "crates/rust-fna3d/fna3d" }
-# fna3h = { path = "crates/rust-fna3d/fna3h" }
+# fna3d = { path = "crates/rust-fna3d/fna3d" }
+fna3h = { path = "crates/rust-fna3d/fna3h" }
 fna3d_hie = { path = "crates/fna3d_hie" }
 anf_gfx = { path = "crates/anf_gfx" }
 

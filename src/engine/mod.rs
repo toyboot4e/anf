@@ -16,7 +16,7 @@ mod embedded;
 
 pub mod prelude {
     //! Exports the ANF engine, dependent crates and utility macros (`log` and `anyhow`)
-    pub use ::fna3d::{self, Color};
+    pub use fna3h::{self, Color};
 
     pub use crate::engine::{
         core::{

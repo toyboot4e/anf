@@ -8,6 +8,8 @@ use crate::{
     geom2d::*,
 };
 
+use fna3h::{tex::Texture, Color};
+
 /// Round or not. TODO: utilize it
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DrawPolicy {
@@ -17,7 +19,7 @@ pub struct DrawPolicy {
 
 /// Texture with size data. Used by [`QuadParams`]
 pub trait Texture2d {
-    fn raw_texture(&self) -> *mut fna3d::Texture;
+    fn raw_texture(&self) -> *mut Texture;
     /// Pixel
     fn w(&self) -> f32;
     /// Pixel
@@ -47,7 +49,7 @@ pub struct QuadParams {
     pub dest_rect: Scaled<Rect2f>,
     /// Normalized origin
     pub origin: Vec2f,
-    pub color: fna3d::Color,
+    pub color: Color,
     pub rot: f32,
     pub depth: f32,
     pub flips: Flips,
@@ -60,7 +62,7 @@ impl Default for QuadParams {
             src_rect: Scaled::Normalized(Rect2f::unit()),
             dest_rect: Scaled::Normalized(Rect2f::default()),
             origin: Vec2f::default(),
-            color: fna3d::Color::white(),
+            color: Color::white(),
             rot: 0.0,
             depth: 0.0,
             flips: Flips::NONE,
@@ -74,7 +76,7 @@ impl QuadParams {
         self.src_rect = Scaled::Normalized(Rect2f::unit());
         self.dest_rect = Scaled::Normalized(Rect2f::default());
         self.origin = Vec2f::default();
-        self.color = fna3d::Color::white();
+        self.color = Color::white();
         self.rot = 0.0;
         self.depth = 0.0;
         self.flips = Flips::NONE;
@@ -158,7 +160,7 @@ fn push_texture2d(
     src_rect: Rect2f,
     dest_rect: Rect2f,
     skew: Skew2f,
-    color: fna3d::Color,
+    color: Color,
     rot: f32,
     depth: f32,
     flips: Flips,
@@ -182,7 +184,7 @@ fn set_quad(
     origin: Vec2f,
     src_rect: Rect2f,
     dest_rect: Rect2f,
-    color: fna3d::Color,
+    color: Color,
     rot: f32,
     depth: f32,
     flips: Flips,

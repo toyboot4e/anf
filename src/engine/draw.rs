@@ -18,8 +18,8 @@ use {
         cmd::{QuadParams, QuadPush, SpritePush},
         geom2d::*,
     },
-    fna3d::{self, Color, Device},
     fna3d_hie::Pipeline,
+    fna3h::{self, tex::Texture, win::PresentationParameters, Color, Device},
     std::time::Duration,
 };
 
@@ -55,7 +55,7 @@ pub struct DrawContext {
     /// Dependency
     device: Device,
     /// Dependency
-    params: fna3d::PresentationParameters,
+    params: PresentationParameters,
     /// Interface
     dt: Duration,
 }
@@ -64,7 +64,7 @@ impl DrawContext {
     pub fn new(
         mut device: Device,
         default_shader_bytes: &[u8],
-        params: fna3d::PresentationParameters,
+        params: PresentationParameters,
     ) -> Self {
         let pipe = Pipeline::new(&mut device, ColoredVertexData::decl(), default_shader_bytes);
         let batcher = Batcher::from_device(&mut device);
@@ -105,7 +105,7 @@ impl DrawContext {
 
 /// Batcher
 impl DrawContext {
-    pub fn next_quad_mut_safe(&mut self, t: *mut fna3d::Texture) -> &mut QuadData {
+    pub fn next_quad_mut_safe(&mut self, t: *mut Texture) -> &mut QuadData {
         self.batcher.next_quad_mut(t, &self.device, &mut self.pipe)
     }
 

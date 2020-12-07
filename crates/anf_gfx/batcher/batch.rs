@@ -1,6 +1,7 @@
 //! [`SpriteBatch`] and iterator of it
 
 use crate::batcher::bufspecs::{QuadData, MAX_QUADS};
+use fna3h::tex::Texture;
 
 /// Quads with textures tracked
 ///
@@ -9,7 +10,7 @@ use crate::batcher::bufspecs::{QuadData, MAX_QUADS};
 pub struct SpriteBatch {
     quads: Vec<QuadData>,
     // TODO: use run-length encoding
-    track: Vec<*mut fna3d::Texture>,
+    track: Vec<*mut Texture>,
     n_quads: usize,
 }
 
@@ -33,7 +34,7 @@ impl SpriteBatch {
     }
 
     /// Make sure the [`SpriteBatch`] is not satured before calling this method
-    pub unsafe fn next_quad_mut(&mut self, texture: *mut fna3d::Texture) -> &mut QuadData {
+    pub unsafe fn next_quad_mut(&mut self, texture: *mut Texture) -> &mut QuadData {
         self.track[self.n_quads] = texture;
         let quad = &mut self.quads[self.n_quads];
         self.n_quads += 1;
@@ -112,7 +113,7 @@ impl<'a> Iterator for DrawCallIter<'a> {
 /// Smart span of [`SpriteBatch`] that corresponds to a draw call
 #[derive(Debug)]
 pub struct DrawCall {
-    pub tex: *mut fna3d::Texture,
+    pub tex: *mut Texture,
     /// low (inclusive)
     pub lo: usize,
     /// high (exclusive)

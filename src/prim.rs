@@ -11,7 +11,7 @@ use {anf::prim::*, xdl::Keyboard};
 
 pub use {
     anyhow::{anyhow, bail, ensure, Context, Result},
-    fna3d::{self, Color, Device},
+    fna3h::{self, Color, Device},
     indoc::indoc,
     log::{debug, error, info, trace, warn},
     sdl2,

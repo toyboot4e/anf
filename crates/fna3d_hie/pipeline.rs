@@ -1,5 +1,12 @@
 //! Re-exported to the root of the module
 
+use fna3h::{
+    buf::VertexDeclaration,
+    draw::pip::{SamplerState, TextureAddressMode, TextureFilter},
+    tex::Texture,
+    Device,
+};
+
 use crate::{
     buffers::{GpuVertexAttributes, GpuVertexBuffer},
     shader::Shader,
@@ -18,11 +25,7 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-    pub fn new(
-        device: &fna3d::Device,
-        initial_vtx_decl: fna3d::VertexDeclaration,
-        shader_bytes: &[u8],
-    ) -> Self {
+    pub fn new(device: &Device, initial_vtx_decl: VertexDeclaration, shader_bytes: &[u8]) -> Self {
         let shader =
             Shader::from_bytes(device, shader_bytes).expect("failed to load shader from bytes");
         // we don't set a projection matrix here
@@ -39,7 +42,7 @@ impl Pipeline {
 /// ---
 impl Pipeline {
     /// * `FNA3D_VerifySamplerState`
-    pub fn set_texture_raw(&mut self, device: &fna3d::Device, texture: *mut fna3d::Texture) {
+    pub fn set_texture_raw(&mut self, device: &Device, texture: *mut Texture) {
         self.sampler.set_texture_raw(device, texture);
     }
 
@@ -51,7 +54,7 @@ impl Pipeline {
     /// * `FNA3D_ApplyVertexBufferBindings`
     ///
     /// "The very last thing to call when making a draw call".
-    pub fn upload_vertex_attributes(&mut self, device: &fna3d::Device, base_vertex: u32) {
+    pub fn upload_vertex_attributes(&mut self, device: &Device, base_vertex: u32) {
         self.vtx_attrs.upload_vertex_attributes(device, base_vertex);
     }
 }
@@ -62,12 +65,12 @@ impl Pipeline {
 /// Slots of texture sampling methods
 #[derive(Debug)]
 struct SamplerSlots {
-    pub samplers: Vec<fna3d::SamplerState>,
-    pub v_samplers: Vec<fna3d::SamplerState>,
+    pub samplers: Vec<SamplerState>,
+    pub v_samplers: Vec<SamplerState>,
 }
 
 impl SamplerSlots {
-    pub fn from_device(device: &fna3d::Device) -> Self {
+    pub fn from_device(device: &Device) -> Self {
         let (max_tx, max_v_tx) = device.get_max_texture_slots();
 
         log::info!("device max textures: {}", max_tx);
@@ -80,9 +83,9 @@ impl SamplerSlots {
         // );
 
         let sampler = {
-            let mut s = fna3d::SamplerState::linear_clamp();
-            s.set_address_u(fna3d::TextureAddressMode::Wrap);
-            s.set_filter(fna3d::TextureFilter::Point);
+            let mut s = SamplerState::linear_clamp();
+            s.set_address_u(TextureAddressMode::Wrap);
+            s.set_filter(TextureFilter::Point);
             s
         };
 
@@ -92,7 +95,7 @@ impl SamplerSlots {
         }
     }
 
-    pub fn set_texture_raw(&mut self, device: &fna3d::Device, texture: *mut fna3d::Texture) {
+    pub fn set_texture_raw(&mut self, device: &Device, texture: *mut Texture) {
         let slot = 0;
         device.verify_sampler(slot as u32, texture, &self.samplers[slot]);
     }

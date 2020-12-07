@@ -11,14 +11,14 @@ pub use self::{
 };
 
 use crate::cmd::traits::*;
-use fna3d::Color;
+use fna3h::{tex::Texture, Color};
 
 // --------------------------------------------------------------------------------
 // impl texture/sprite traits
 
 // TextureData2d
 impl Texture2d for TextureData2d {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
+    fn raw_texture(&self) -> *mut Texture {
         self.raw()
     }
 
@@ -39,7 +39,7 @@ impl SubTexture2d for TextureData2d {
 
 // SubTexuteData2d (delegated to `Texture2d`)
 impl Texture2d for SubTextureData2d {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
+    fn raw_texture(&self) -> *mut Texture {
         self.texture.raw()
     }
 
@@ -60,7 +60,7 @@ impl SubTexture2d for SubTextureData2d {
 
 // Sprite (delegated to `TextureData2d`)
 impl Texture2d for SpriteData {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
+    fn raw_texture(&self) -> *mut Texture {
         self.texture.raw_texture()
     }
     fn w(&self) -> f32 {
@@ -95,7 +95,7 @@ impl Sprite for SpriteData {
 // trait implementations for reference types
 
 impl<T: Texture2d> Texture2d for &T {
-    fn raw_texture(&self) -> *mut fna3d::Texture {
+    fn raw_texture(&self) -> *mut Texture {
         (*self).raw_texture()
     }
     fn w(&self) -> f32 {

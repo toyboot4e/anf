@@ -1,10 +1,12 @@
-//! Hierarchy, the wrapper of [`fna3d`]
+//! Even higher layer to [`fna3h`] (or `fna3d`)
 //!
 //! * TODO: full-featured resource binding object (buffers and textures)
 //! ** textures with name `fs_textures`
 //! * TODO: full-featured pipeline state object
 
 pub mod buffers;
+pub mod pass;
+
 mod pipeline;
 mod shader;
 
@@ -13,6 +15,8 @@ pub use crate::{pipeline::Pipeline, shader::Shader};
 // macros are always exported to the root of the crate
 
 /// Creates index buffer for quadliterals
+///
+/// Vertex order: left-up, right-up, left-down and right-down.
 #[macro_export]
 macro_rules! gen_quad_indices {
     ( $n_quads:expr ) => {{

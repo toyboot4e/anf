@@ -6,6 +6,7 @@ use crate::{
 };
 
 use crate::texture::TextureData2d;
+use fna3h::Color;
 
 // --------------------------------------------------------------------------------
 // traits
@@ -29,7 +30,7 @@ pub trait Sprite: SubTexture2d {
     fn scale(&self) -> [f32; 2];
     /// Normalized origin
     fn origin(&self) -> [f32; 2];
-    fn color(&self) -> fna3d::Color;
+    fn color(&self) -> Color;
 }
 
 /// Comes with default implementation
@@ -96,7 +97,7 @@ pub trait QuadParamsBuilder {
     }
 
     /// Alpha value is considered here, too
-    fn color(&mut self, color: fna3d::Color) -> &mut Self {
+    fn color(&mut self, color: Color) -> &mut Self {
         self.params().color = color;
         self
     }

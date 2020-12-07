@@ -3,7 +3,10 @@
 pub mod batch;
 pub mod bufspecs;
 
-use fna3d_hie::{Pipeline, Shader};
+use {
+    fna3d_hie::{Pipeline, Shader},
+    fna3h::{buf::SetDataOptions, draw::PrimitiveType, tex::Texture, Device},
+};
 
 use crate::{
     batcher::{
@@ -41,7 +44,7 @@ pub struct Batcher {
 }
 
 impl Batcher {
-    pub fn from_device(device: &fna3d::Device) -> Self {
+    pub fn from_device(device: &Device) -> Self {
         Self {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
@@ -53,8 +56,8 @@ impl Batcher {
 
     pub fn next_quad_mut<'a>(
         &'a mut self,
-        texture: *mut fna3d::Texture,
-        device: &fna3d::Device,
+        texture: *mut Texture,
+        device: &Device,
         pipe: &mut Pipeline,
     ) -> &'a mut QuadData {
         if self.batch.is_satured() {
@@ -65,7 +68,7 @@ impl Batcher {
     }
 
     /// Draws all the pushed sprites
-    pub fn flush(&mut self, device: &fna3d::Device, pipe: &mut Pipeline) {
+    pub fn flush(&mut self, device: &Device, pipe: &mut Pipeline) {
         if !self.batch.any_quads_pushed() {
             return;
         }
@@ -78,7 +81,7 @@ impl Batcher {
             device,
             0, // vertex offset
             self.batch.pushed_quads(),
-            fna3d::SetDataOptions::None,
+            SetDataOptions::None,
         );
 
         pipe.shader.apply_effect(device, 0);
@@ -92,12 +95,12 @@ impl Batcher {
         self.batch.clear();
     }
 
-    fn draw(&self, call: &DrawCall, device: &fna3d::Device, pipe: &mut Pipeline) {
+    fn draw(&self, call: &DrawCall, device: &Device, pipe: &mut Pipeline) {
         pipe.set_texture_raw(device, call.tex);
         pipe.upload_vertex_attributes(device, call.base_vtx() as u32);
 
         device.draw_indexed_primitives(
-            fna3d::PrimitiveType::TriangleList,
+            PrimitiveType::TriangleList,
             call.base_vtx() as u32, // the number of vertices to skip
             0,
             call.n_verts() as u32,

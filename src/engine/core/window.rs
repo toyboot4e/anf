@@ -1,6 +1,7 @@
 //! Creation of SDL window and FNA3D device
 
 use {
+    fna3h::{win::PresentationParameters, Device},
     sdl2::{
         sys::SDL_Window,
         video::{FullscreenType, WindowPos},
@@ -53,7 +54,7 @@ impl AsRef<sdl2::video::Window> for WindowHandle {
 // display orientation
 impl WindowHandle {
     pub fn from_cfg(cfg: &WindowConfig) -> Self {
-        let flags = fna3d::prepare_window_attributes();
+        let flags = fna3h::win::prepare_window_attributes();
         let sdl = sdl2::init().unwrap();
         let win = self::create_sdl_window(cfg, &sdl, flags.0);
 
@@ -74,8 +75,8 @@ impl WindowHandle {
     pub fn set_screen_size(
         &mut self,
         size: [u32; 2],
-        device: &fna3d::Device,
-        params: &mut fna3d::PresentationParameters,
+        device: &Device,
+        params: &mut PresentationParameters,
     ) {
         self.win.set_size(size[0], size[1]).unwrap();
         params.backBufferWidth = size[0] as i32;

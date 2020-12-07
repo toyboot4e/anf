@@ -1,5 +1,7 @@
 //! Re-exported to super module
 
+use fna3h::{draw::mojo, Device};
+
 use ::std::{
     ffi::{c_void, CStr},
     path::Path,
@@ -15,25 +17,22 @@ use ::std::{
 /// * TODO: drop
 #[derive(Debug)]
 pub struct Shader {
-    effect: *mut fna3d::Effect,
-    data: *mut fna3d::mojo::Effect,
+    effect: *mut fna3h::fna3d::Effect,
+    data: *mut mojo::Effect,
 }
 
 impl Shader {
-    pub fn from_file(
-        device: &fna3d::Device,
-        shader_path: impl AsRef<Path>,
-    ) -> fna3d::mojo::Result<Self> {
-        let (effect, data) = fna3d::mojo::from_file(device, shader_path)?;
+    pub fn from_file(device: &Device, shader_path: impl AsRef<Path>) -> mojo::Result<Self> {
+        let (effect, data) = mojo::from_file(device, shader_path)?;
         Ok(Self { effect, data })
     }
 
-    pub fn from_bytes(device: &fna3d::Device, shader_bytes: &[u8]) -> fna3d::mojo::Result<Self> {
-        let (effect, data) = fna3d::mojo::from_bytes(device, shader_bytes)?;
+    pub fn from_bytes(device: &Device, shader_bytes: &[u8]) -> mojo::Result<Self> {
+        let (effect, data) = mojo::from_bytes(device, shader_bytes)?;
         Ok(Self { effect, data })
     }
 
-    pub fn destroy(self, device: &fna3d::Device) {
+    pub fn destroy(self, device: &Device) {
         // both (effect, data) are destroied:
         device.add_dispose_effect(self.effect);
     }
@@ -45,9 +44,9 @@ impl Shader {
     /// * `FNA3D_ApplyEffect`
     ///
     /// * TODO: what is `pass`? is it actually typed?
-    pub fn apply_effect(&mut self, device: &fna3d::Device, pass: u32) {
+    pub fn apply_effect(&mut self, device: &Device, pass: u32) {
         // no effect state change
-        let state_changes = fna3d::mojo::EffectStateChanges {
+        let state_changes = mojo::EffectStateChanges {
             render_state_change_count: 0,
             render_state_changes: std::ptr::null(),
             sampler_state_change_count: 0,
@@ -59,11 +58,11 @@ impl Shader {
     }
 
     pub fn param(&self, name: &CStr) -> Option<*mut c_void> {
-        fna3d::mojo::find_param(self.data, name)
+        mojo::find_param(self.data, name)
     }
 
     pub unsafe fn set_param<T>(&self, name: &str, value: &T) {
         let name = std::ffi::CString::new(name).unwrap();
-        fna3d::mojo::set_param(self.data, &name, value);
+        mojo::set_param(self.data, &name, value);
     }
 }

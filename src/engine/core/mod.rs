@@ -4,7 +4,14 @@ pub mod clock;
 pub mod lifecycle;
 pub mod window;
 
-use sdl2::sys::SDL_Window;
+use {
+    fna3h::{
+        draw::{blend::BlendState, pip::RasterizerState, Viewport},
+        win::PresentationParameters,
+        Device,
+    },
+    sdl2::sys::SDL_Window,
+};
 
 use self::window::{WindowConfig, WindowHandle};
 
@@ -16,10 +23,10 @@ use self::window::{WindowConfig, WindowHandle};
 /// * viewport with size of the screen
 ///
 /// TODO: note about the presentation parameters
-fn init(cfg: &WindowConfig) -> (WindowHandle, fna3d::Device, fna3d::PresentationParameters) {
+fn init(cfg: &WindowConfig) -> (WindowHandle, Device, PresentationParameters) {
     // setup FNA3D
-    log::info!("FNA version {}", fna3d::linked_version());
-    fna3d::utils::hook_log_functions_default();
+    log::info!("FNA version {}", fna3h::fna3d::linked_version());
+    fna3h::win::hook_log_functions_default();
 
     let win = WindowHandle::from_cfg(&cfg);
     let (params, device) = self::create_fna3d_device(cfg, win.raw_window());
@@ -30,15 +37,16 @@ fn init(cfg: &WindowConfig) -> (WindowHandle, fna3d::Device, fna3d::Presentation
 fn create_fna3d_device(
     cfg: &WindowConfig,
     raw_window: *mut SDL_Window,
-) -> (fna3d::PresentationParameters, fna3d::Device) {
+) -> (PresentationParameters, Device) {
     let params = {
-        let mut params = fna3d::utils::default_params_from_window_handle(raw_window as *mut _);
+        let mut params =
+            fna3h::fna3d::utils::default_params_from_window_handle(raw_window as *mut _);
         params.backBufferWidth = cfg.w as i32;
         params.backBufferHeight = cfg.h as i32;
         params
     };
 
-    let mut device = fna3d::Device::from_params(params, cfg.is_debug);
+    let mut device = Device::from_params(params, cfg.is_debug);
     self::init_device(&mut device, &params);
 
     (params, device)
@@ -49,11 +57,11 @@ fn create_fna3d_device(
 /// FNA3D requires us to set viewport/rasterizer/blend state. **If this is skipped, we can't
 /// draw anything** (we only can clear the screen)
 fn init_device(
-    device: &fna3d::Device,
+    device: &Device,
     // batcher: &mut Batcher,
-    params: &fna3d::PresentationParameters,
+    params: &PresentationParameters,
 ) {
-    let viewport = fna3d::Viewport {
+    let viewport = Viewport {
         x: 0,
         y: 0,
         w: params.backBufferWidth as i32,
@@ -63,10 +71,10 @@ fn init_device(
     };
     device.set_viewport(&viewport);
 
-    let rst = fna3d::RasterizerState::default();
+    let rst = RasterizerState::default();
     device.apply_rasterizer_state(&rst);
 
     // multiplied alpha blend
-    let bst = fna3d::BlendState::alpha_blend();
+    let bst = BlendState::alpha_blend();
     device.set_blend_state(&bst);
 }

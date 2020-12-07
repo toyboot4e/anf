@@ -6,6 +6,8 @@ use std::{
     rc::Rc,
 };
 
+use fna3h::{tex::Texture, Device, SurfaceFormat};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TextureKind {
     Texture,
@@ -17,11 +19,11 @@ pub enum TextureKind {
 /// Automatically disposes the FNA3D texture when dropping.
 #[derive(Debug, Clone)]
 pub struct Texture2dDrop {
-    raw: *mut fna3d::Texture,
-    device: fna3d::Device,
+    raw: *mut Texture,
+    device: Device,
     pub(crate) w: u32,
     pub(crate) h: u32,
-    pub(crate) fmt: fna3d::SurfaceFormat,
+    pub(crate) fmt: SurfaceFormat,
 }
 
 unsafe impl Send for Texture2dDrop {}
@@ -40,13 +42,7 @@ impl Drop for Texture2dDrop {
 }
 
 impl Texture2dDrop {
-    pub fn new(
-        device: &fna3d::Device,
-        w: u32,
-        h: u32,
-        fmt: fna3d::SurfaceFormat,
-        kind: TextureKind,
-    ) -> Self {
+    pub fn new(device: &Device, w: u32, h: u32, fmt: SurfaceFormat, kind: TextureKind) -> Self {
         let fmt = self::get_init_format(fmt, TextureKind::Texture);
         let raw = device.create_texture_2d(fmt, w, h, 1, kind == TextureKind::RenderTarget);
 
@@ -59,17 +55,11 @@ impl Texture2dDrop {
         }
     }
 
-    pub fn with_size(device: &fna3d::Device, w: u32, h: u32) -> Self {
-        Self::new(
-            device,
-            w,
-            h,
-            fna3d::SurfaceFormat::Color,
-            TextureKind::Texture,
-        )
+    pub fn with_size(device: &Device, w: u32, h: u32) -> Self {
+        Self::new(device, w, h, SurfaceFormat::Color, TextureKind::Texture)
     }
 
-    pub fn from_path(device: &fna3d::Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
+    pub fn from_path(device: &Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
         let path = path.as_ref();
 
         // TODO: return error
@@ -86,12 +76,12 @@ impl Texture2dDrop {
     }
 
     /// Helper for embedded file bytes
-    pub fn from_encoded_bytes(device: &fna3d::Device, bytes: &[u8]) -> Option<Self> {
+    pub fn from_encoded_bytes(device: &Device, bytes: &[u8]) -> Option<Self> {
         Self::from_reader(device, std::io::Cursor::new(bytes))
     }
 
-    pub fn from_reader<R: Read + Seek>(device: &fna3d::Device, reader: R) -> Option<Self> {
-        let (pixels_ptr, len, [w, h]) = fna3d::img::from_reader(reader, None);
+    pub fn from_reader<R: Read + Seek>(device: &Device, reader: R) -> Option<Self> {
+        let (pixels_ptr, len, [w, h]) = fna3h::img::from_reader(reader, None);
 
         if pixels_ptr == std::ptr::null_mut() {
             return None;
@@ -102,12 +92,12 @@ impl Texture2dDrop {
             Self::from_decoded_bytes(device, pixels_slice, w, h)
         };
 
-        fna3d::img::free(pixels_ptr as *mut _);
+        fna3h::img::free(pixels_ptr as *mut _);
 
         return Some(gpu_texture);
     }
 
-    pub fn from_decoded_bytes(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+    pub fn from_decoded_bytes(device: &Device, pixels: &[u8], w: u32, h: u32) -> Self {
         let t = Self::with_size(device, w, h);
         t.upload_pixels(device, 0, None, pixels);
         t
@@ -131,7 +121,7 @@ impl Texture2dDrop {
     /// Upload pixels to the GPU (VRAM?) texture data
     pub fn upload_pixels(
         &self,
-        device: &fna3d::Device,
+        device: &Device,
         target_mipmap_level: u32,
         rect: Option<[u32; 4]>,
         data: &[u8],
@@ -159,10 +149,9 @@ impl Texture2dDrop {
     // }
 }
 
-fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::SurfaceFormat {
+fn get_init_format(fmt: SurfaceFormat, kind: TextureKind) -> SurfaceFormat {
     let is_render_target = kind == TextureKind::RenderTarget;
 
-    use fna3d::SurfaceFormat;
     if !is_render_target
         || !matches!(
             fmt,
@@ -179,7 +168,7 @@ fn get_init_format(fmt: fna3d::SurfaceFormat, kind: TextureKind) -> fna3d::Surfa
                 | SurfaceFormat::HdrBlendable
         )
     {
-        fna3d::SurfaceFormat::Color
+        SurfaceFormat::Color
     } else {
         fmt
     }
@@ -200,30 +189,18 @@ impl std::ops::Deref for TextureData2d {
 }
 
 impl TextureData2d {
-    pub fn raw(&self) -> *mut fna3d::Texture {
+    pub fn raw(&self) -> *mut Texture {
         self.raw
     }
 
-    pub fn new(
-        device: &fna3d::Device,
-        w: u32,
-        h: u32,
-        fmt: fna3d::SurfaceFormat,
-        kind: TextureKind,
-    ) -> Self {
+    pub fn new(device: &Device, w: u32, h: u32, fmt: SurfaceFormat, kind: TextureKind) -> Self {
         Self {
             inner: Rc::new(Texture2dDrop::new(device, w, h, fmt, kind)),
         }
     }
 
-    pub fn with_size(device: &fna3d::Device, w: u32, h: u32) -> Self {
-        Self::new(
-            device,
-            w,
-            h,
-            fna3d::SurfaceFormat::Color,
-            TextureKind::Texture,
-        )
+    pub fn with_size(device: &Device, w: u32, h: u32) -> Self {
+        Self::new(device, w, h, SurfaceFormat::Color, TextureKind::Texture)
     }
 }
 
@@ -234,22 +211,22 @@ impl TextureData2d {
         Self { inner: Rc::new(d) }
     }
 
-    pub fn from_path(device: &fna3d::Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
+    pub fn from_path(device: &Device, path: impl AsRef<std::path::Path>) -> Option<Self> {
         Some(Self::from_drop(Texture2dDrop::from_path(device, path)?))
     }
 
     /// Helper for embedded file bytes
-    pub fn from_encoded_bytes(device: &fna3d::Device, bytes: &[u8]) -> Option<Self> {
+    pub fn from_encoded_bytes(device: &Device, bytes: &[u8]) -> Option<Self> {
         Some(Self::from_drop(Texture2dDrop::from_encoded_bytes(
             device, bytes,
         )?))
     }
 
-    pub fn from_reader<R: Read + Seek>(device: &fna3d::Device, reader: R) -> Option<Self> {
+    pub fn from_reader<R: Read + Seek>(device: &Device, reader: R) -> Option<Self> {
         Some(Self::from_drop(Texture2dDrop::from_reader(device, reader)?))
     }
 
-    pub fn from_decoded_bytes(device: &fna3d::Device, pixels: &[u8], w: u32, h: u32) -> Self {
+    pub fn from_decoded_bytes(device: &Device, pixels: &[u8], w: u32, h: u32) -> Self {
         Self::from_drop(Texture2dDrop::from_decoded_bytes(device, pixels, w, h))
     }
 }
