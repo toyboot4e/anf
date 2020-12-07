@@ -30,6 +30,6 @@ pub use soloud;
 pub use imgui;
 
 #[cfg(feature = "debug-gui")]
-pub use imgui_fna3d;
+pub use fna3d_imgui;
 
 pub use crate::{engine::prelude::*, gfx::prelude::*, vfs};

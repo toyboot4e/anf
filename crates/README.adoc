@@ -10,6 +10,5 @@
 
 * `ass`: ANF asset manager
 * `fontstash-rs`: Wrapper of fontstash
-* `imgui_fna3d`: ImGUI backend with Rust-SDL2 and renderer with FNA3D
 * `soloud-rs`: Rust bindings for the soloud audio engine library
 * `xdl`: An extensional input layer on top of Rust-SDL2

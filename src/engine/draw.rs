@@ -3,6 +3,7 @@
 [`DrawContext`] is the primary interface. It's recommended to do `use anf::engine::draw::*`.
 
 * TODO: better flushing
+* TODO: offscreen rendering
 !*/
 
 // re-export draw traits

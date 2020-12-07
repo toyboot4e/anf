@@ -96,7 +96,7 @@ impl GameData {
 <2> we're mutably borrowing `self.world`, while
 <3> we're mutably borrowing `self`, which contains `self.world`.
 
-So we're making two mutable references to `self.world` so Rust doesn't accept the code.
+So we're making two mutable references to `self.world`; Rust doesn't accept the code.
 
 Let's refactor a bit:
 
@@ -116,5 +116,5 @@ impl GameData {
 }
 ----
 
-It compiles and I think this is better even if I'm not using Rust. Borrow rules lead me to a better architecture! Hope that happens everywhere.
+It compiles. I think this is better even if I were not using Rust. Borrow rules lead me to a better architecture! Hope that happens everywhere.
 

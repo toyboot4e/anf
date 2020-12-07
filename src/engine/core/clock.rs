@@ -28,7 +28,7 @@ fn tick_one_frame(
 ```
 !*/
 
-use ::std::time::{Duration, Instant};
+use std::time::{Duration, Instant};
 
 /// TODO: use this
 pub enum TargetFps {
@@ -41,12 +41,12 @@ pub enum TargetFps {
 pub struct GameClock {
     /// Update/draw timestep duration
     time_step: Duration,
-    /// Accumulated duration to make update/render calls
+    /// Accumulated duration for update/render calls
     accum: Duration,
     /// Total duration passed since the clock is created
     total: Duration,
     /// Temporary value to accumulate time
-    last_time: Instant,
+    pub(crate) last_time: Instant,
     /// [Fixed timestep only]
     ///
     /// The value is incremented by `n_updates - 1` on every tick
@@ -83,15 +83,15 @@ impl GameClock {
 
     /// Returns way to tick one frame
     pub fn tick(&mut self) -> GameClockOneFrameTick {
-        let elapsed = {
+        self.accum = {
             // Do not allow any update to take longer than our maximum.
-            let mut elapsed = self.wait_for_next_frame(self.accum);
+            let elapsed = self.wait_for_next_frame(self.accum);
             if elapsed > Self::max_elapsed() {
-                elapsed = Self::max_elapsed();
+                Self::max_elapsed()
+            } else {
+                elapsed
             }
-            elapsed
         };
-        self.accum = elapsed;
 
         GameClockOneFrameTick::new(self)
     }
@@ -115,11 +115,11 @@ impl GameClock {
             let target_elapsed = self.target_elapsed();
             if elapsed > target_elapsed {
                 break elapsed;
+            } else {
+                // sleep (inaccurate but enough for making frames)
+                let remaining = target_elapsed - elapsed;
+                std::thread::sleep(remaining);
             }
-
-            // sleep (inaccurate but enough for making frames)
-            let remaining = target_elapsed - elapsed;
-            std::thread::sleep(remaining);
         }
     }
 }
@@ -162,6 +162,17 @@ impl<'a> GameClockOneFrameTick<'a> {
             self.clock.total += target_elapsed;
             self.clock.accum -= target_elapsed;
             self.n_updates += 1;
+
+            if self.n_updates > 1 {
+                // FIXME:
+                log::trace!(
+                    "lag: Update more than once a frame: {} | {:?}",
+                    self.n_updates,
+                    self.clock.accum
+                );
+            }
+
+            // update
             return Some(self.clock.time_step.clone());
         }
 

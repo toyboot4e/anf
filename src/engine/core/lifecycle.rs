@@ -42,9 +42,7 @@ pub trait AnfLifecycle {
     }
 }
 
-/// Runs a game that implemenents [`AnfLifecycle`]
-///
-/// The entry point of ANF application.
+/// The entry point of ANF application; runs a game that implemenents [`AnfLifecycle`]
 pub struct AnfFramework {
     cfg: WindowConfig,
     window: WindowHandle,
@@ -72,7 +70,7 @@ impl AnfFramework {
 
     pub fn run<T: AnfLifecycle>(
         self,
-        user_data_constructor: impl FnOnce(WindowHandle, &WindowConfig, DrawContext) -> T,
+        gen_user_data: impl FnOnce(WindowHandle, &WindowConfig, DrawContext) -> T,
     ) -> AnfResult<()> {
         let AnfFramework {
             cfg,
@@ -81,52 +79,45 @@ impl AnfFramework {
             mut events,
         } = self;
 
-        let mut clock = GameClock::new();
-        let mut state = user_data_constructor(window, &cfg, dcx);
+        let mut state = gen_user_data(window, &cfg, dcx);
 
-        self::run_game_loop(&mut clock, &mut events, &mut state)
+        self::run_game_loop(&mut events, &mut state)
     }
 }
 
-fn run_game_loop(
-    clock: &mut GameClock,
-    events: &mut EventPump,
-    state: &mut impl AnfLifecycle,
-) -> AnfResult<()> {
-    while tick_one_frame(clock, events, state)? {}
-    Ok(())
-}
-
-/// Returns `true` if we continue to the next frame
-fn tick_one_frame(
-    clock: &mut GameClock,
-    events: &mut EventPump,
-    state: &mut impl AnfLifecycle,
-) -> AnfResult<bool> {
-    if !self::pump_events(state, events)? {
-        return Ok(false);
+fn run_game_loop(events: &mut EventPump, state: &mut impl AnfLifecycle) -> AnfResult<()> {
+    // HACK: skip the first 1 frame so that the window opens
+    if self::pump_events(state, events)? {
+        unreachable!();
     }
 
-    for dt in clock.tick() {
-        state.update(dt)?;
+    let mut clock = GameClock::new();
+
+    loop {
+        if self::pump_events(state, events)? {
+            return Ok(()); // close the game window
+        }
+
+        for dt in clock.tick() {
+            state.update(dt)?;
+        }
+
+        let time_step = clock.timestep_draw();
+        state.render(time_step)?;
+
+        state.on_end_frame()?;
     }
-
-    let time_step = clock.timestep_draw();
-    state.render(time_step)?;
-
-    state.on_end_frame()?;
-
-    Ok(true)
 }
 
+/// Returns `true` if the window should be closed
 fn pump_events(state: &mut impl AnfLifecycle, events: &mut EventPump) -> AnfResult<bool> {
     for ev in events.poll_iter() {
         match ev {
-            Event::Quit { .. } => return Ok(false),
+            Event::Quit { .. } => return Ok(true),
             ev => {
                 state.event(&ev)?;
             }
         }
     }
-    Ok(true)
+    Ok(false)
 }
