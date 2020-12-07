@@ -1,9 +1,6 @@
 [submodule "rust-fna3d"]
 	path = crates/rust-fna3d
 	url = https://github.com/toyboot4e/rust-fna3d
-[submodule "crates/fontstash-rs"]
-	path = crates/fontstash-rs
-	url = https://github.com/toyboot4e/fontstash-rs
 [submodule "crates/soloud-rs"]
 	path = crates/soloud-rs
 	url = https://github.com/MoAlyousef/soloud-rs

@@ -9,7 +9,6 @@ members = [
     "crates/anf_gfx",
     "crates/ass",
     "crates/fna3d_hie",
-    "crates/fontstash-rs",
     # "crates/soloud-rs/soloud",
     "crates/xdl"
 ]
@@ -20,7 +19,7 @@ exclude = ["crates/soloud-rs", "crates/rust-fna3d"]
 default = ["asset", "font", "input", "audio"]
 
 asset = ["ass"]
-font = ["fontstash"]
+font = ["fna3d-fontstash"]
 input = ["xdl"]
 audio = ["soloud"]
 
@@ -40,8 +39,8 @@ fna3d_hie = { path = "crates/fna3d_hie" }
 anf_gfx = { path = "crates/anf_gfx" }
 
 # optional dependencies (included by default)
+fna3d-fontstash = { path = "crates/rust-fna3d/fna3d-fontstash", optional = true }
 ass = { path = "crates/ass", optional = true }
-fontstash = { path = "crates/fontstash-rs", optional = true }
 xdl = { path = "crates/xdl", optional = true }
 soloud = { path = "crates/soloud-rs/soloud", optional = true }
 

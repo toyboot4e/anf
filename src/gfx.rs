@@ -14,7 +14,7 @@ pub use ::{
 };
 
 #[cfg(feature = "font")]
-pub mod font;
+pub use fna3d_fontstash as font;
 
 pub mod prelude {
     //! All of the 2D graphics data types (not 3D)
