@@ -1,4 +1,6 @@
 //! Internals of quad rendering
+//!
+//! Note that ANF uses row-major linear algebra and right-handed coordinate system.
 
 pub mod batch;
 pub mod bufspecs;
@@ -21,26 +23,11 @@ use crate::{
 pub struct Batcher {
     batch: SpriteBatch,
     bufs: GpuViBuffer,
-    /// The projection matrix (fixed to orthographic matrix)
-    mat_proj: Mat4x4,
-    /// The transformation matrix
-    mat_model_view: Mat4x4,
-    /// The view projection matrix used by vertex shader
-    ///
-    /// # Coordinate systems
-    ///
-    /// See https://learnopengl.com/Getting-started/Coordinate-Systems
-    ///
-    /// In column-major sence,
-    ///
-    /// * P_clip = M_proj (M_view M_model) P_local
-    /// * M_transform = (M_view M_model)
-    ///
-    /// In row-major sence (XNA), they're transposed:
-    ///
-    /// * P_clip = P_local (M_model M_view) M_proj
-    /// * M_transform = (M_view M_model)
-    mat_model_view_proj: Mat4x4,
+    /// Projection matrix (orthographic matrix)
+    p: Mat4x4,
+    /// Transformation matrix
+    mv: Mat4x4,
+    mvp: Mat4x4,
 }
 
 impl Batcher {
@@ -48,9 +35,9 @@ impl Batcher {
         Self {
             batch: SpriteBatch::new(),
             bufs: GpuViBuffer::from_device(device),
-            mat_proj: Mat4x4::orthographic(0.0, 0.0, 1.0, 0.0),
-            mat_model_view: Mat4x4::identity(),
-            mat_model_view_proj: Mat4x4::default(),
+            p: Mat4x4::orthographic(0.0, 0.0, 1.0, 0.0),
+            mv: Mat4x4::identity(),
+            mvp: Mat4x4::default(),
         }
     }
 
@@ -114,10 +101,10 @@ impl Batcher {
 
 impl Batcher {
     fn set_proj_mat(&mut self, shader: &mut Shader) {
-        self.mat_proj = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
-        self.mat_model_view_proj = Mat4x4::multiply(&self.mat_model_view, &self.mat_proj);
+        self.p = Mat4x4::orthographic_off_center(0.0, 1280.0, 720.0, 0.0, 1.0, 0.0);
+        self.mvp = Mat4x4::multiply(&self.mv, &self.p);
         unsafe {
-            shader.set_param("MatrixTransform", &self.mat_model_view_proj.transpose());
+            shader.set_param("MatrixTransform", &self.mvp.transpose());
         }
     }
 }

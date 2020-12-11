@@ -3,12 +3,15 @@
 //! [`SpriteBatch`]: crate::batcher::batch::SpriteBatch
 
 use crate::{geom2d::*, geom3d::Vec3f};
-use ::fna3d_hie::buffers::{GpuDynamicVertexBuffer, GpuIndexBuffer};
+
+use fna3d_hie::buf::{GpuDynamicVertexBuffer, GpuIndexBuffer};
+
 use fna3h::{
     buf::{
         BufferUsage, IndexElementSize, VertexDeclaration, VertexElement, VertexElementFormat,
         VertexElementUsage,
     },
+    tex::Texture,
     Color, Device,
 };
 
@@ -63,8 +66,8 @@ impl std::ops::DerefMut for QuadData {
 }
 
 // mark them as data that can be set to vertex buffer in GPU memory
-impl fna3d_hie::buffers::VertexData for ColoredVertexData {}
-impl fna3d_hie::buffers::VertexData for QuadData {}
+impl fna3d_hie::buf::VertexData for ColoredVertexData {}
+impl fna3d_hie::buf::VertexData for QuadData {}
 
 impl Default for ColoredVertexData {
     fn default() -> Self {

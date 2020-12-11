@@ -1,16 +1,11 @@
 //! Even higher layer to [`fna3h`] (or `fna3d`)
-//!
-//! * TODO: full-featured resource binding object (buffers and textures)
-//! ** textures with name `fs_textures`
-//! * TODO: full-featured pipeline state object
 
-pub mod buffers;
+pub mod buf;
 pub mod pass;
 
-mod pipeline;
-mod shader;
+mod pip;
 
-pub use crate::{pipeline::Pipeline, shader::Shader};
+pub use crate::pip::{Pipeline, Shader};
 
 // macros are always exported to the root of the crate
 
@@ -35,3 +30,9 @@ macro_rules! gen_quad_indices {
         indices
     }};
 }
+
+// pub struct StaticMesh {
+//     pub vbuf: GpuDynamicVertexBuffer,
+//     pub ibuf: GpuIndexBuffer,
+//     pub imgs: [*mut Textue; 8],
+// }
